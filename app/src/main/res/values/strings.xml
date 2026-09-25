@@ -1,3 +1,21 @@
 <resources>
     <string name="app_name">ModaViva</string>
+
+    <string name="register_title">Crea tu cuenta</string>
+    <string name="register_subtitle">Registrate para comprar en ModaViva desde tu celular.</string>
+    <string name="register_cta">Registrarme</string>
+    <string name="register_checking">Verificando disponibilidad…</string>
+
+    <string name="field_nombres">Nombres</string>
+    <string name="field_apellidos">Apellidos</string>
+    <string name="field_documento">Documento (DNI)</string>
+    <string name="field_telefono">Celular</string>
+    <string name="field_email">Correo electrónico</string>
+    <string name="field_password">Contraseña</string>
+    <string name="field_confirm_password">Confirmar contraseña</string>
+
+    <string name="support_documento">8 dígitos, sin letras</string>
+    <string name="support_password">Mínimo 8 caracteres, con mayúscula, minúscula y un número</string>
+
+    <string name="cd_toggle_password">Mostrar u ocultar contraseña</string>
 </resources>
