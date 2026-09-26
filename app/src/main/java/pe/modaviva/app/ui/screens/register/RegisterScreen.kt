@@ -81,6 +81,7 @@ fun RegisterScreen(
             onValueChange = viewModel::onNombresChange,
             label = stringResource(R.string.field_nombres),
             errorMessage = state.errorFor(RegisterField.NOMBRES),
+            onFocusLost = { viewModel.onFieldTouched(RegisterField.NOMBRES) },
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
                 imeAction = ImeAction.Next,
@@ -93,6 +94,7 @@ fun RegisterScreen(
             onValueChange = viewModel::onApellidosChange,
             label = stringResource(R.string.field_apellidos),
             errorMessage = state.errorFor(RegisterField.APELLIDOS),
+            onFocusLost = { viewModel.onFieldTouched(RegisterField.APELLIDOS) },
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
                 imeAction = ImeAction.Next,
@@ -105,6 +107,7 @@ fun RegisterScreen(
             onValueChange = viewModel::onDocumentoChange,
             label = stringResource(R.string.field_documento),
             errorMessage = state.errorFor(RegisterField.DOCUMENTO),
+            onFocusLost = { viewModel.onFieldTouched(RegisterField.DOCUMENTO) },
             supportingText = stringResource(R.string.support_documento),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number,
@@ -118,6 +121,7 @@ fun RegisterScreen(
             onValueChange = viewModel::onTelefonoChange,
             label = stringResource(R.string.field_telefono),
             errorMessage = state.errorFor(RegisterField.TELEFONO),
+            onFocusLost = { viewModel.onFieldTouched(RegisterField.TELEFONO) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Phone,
                 imeAction = ImeAction.Next,
@@ -130,6 +134,7 @@ fun RegisterScreen(
             onValueChange = viewModel::onEmailChange,
             label = stringResource(R.string.field_email),
             errorMessage = state.errorFor(RegisterField.EMAIL),
+            onFocusLost = { viewModel.onFieldTouched(RegisterField.EMAIL) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next,
@@ -142,6 +147,7 @@ fun RegisterScreen(
             onValueChange = viewModel::onPasswordChange,
             label = stringResource(R.string.field_password),
             errorMessage = state.errorFor(RegisterField.PASSWORD),
+            onFocusLost = { viewModel.onFieldTouched(RegisterField.PASSWORD) },
             supportingText = stringResource(R.string.support_password),
             visualTransformation = if (state.showPassword) {
                 VisualTransformation.None
@@ -172,6 +178,7 @@ fun RegisterScreen(
             onValueChange = viewModel::onConfirmPasswordChange,
             label = stringResource(R.string.field_confirm_password),
             errorMessage = state.errorFor(RegisterField.CONFIRM_PASSWORD),
+            onFocusLost = { viewModel.onFieldTouched(RegisterField.CONFIRM_PASSWORD) },
             visualTransformation = if (state.showPassword) {
                 VisualTransformation.None
             } else {
