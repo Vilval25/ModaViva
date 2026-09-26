@@ -2,6 +2,14 @@
 
 Este documento consolida las épicas, historias de usuario, criterios de aceptación y especificaciones técnicas planificadas para el desarrollo de la aplicación móvil de **ModaViva**.
 
+### Convenciones de estado
+
+| Marca | Significado |
+| :--- | :--- |
+| `[x]` | Criterio cumplido y verificado de extremo a extremo |
+| `[~]` | Parcial: la interfaz y la lógica están listas, pero falta la integración con Firebase / Firestore |
+| `[ ]` | Pendiente |
+
 ---
 
 ## E1. Cuenta y acceso
@@ -21,11 +29,11 @@ _Como cliente quiero crear mi cuenta o vincularla con la que ya tengo en la web 
 | **Requerimiento Académico** | 1 (Autenticación), 5 (MVVM/Clean Code), 4 (Material Design) |
 
 #### Criterios de Aceptación
-- [ ] Formulario con datos personales y contraseña
+- [x] Formulario con datos personales y contraseña
 - [ ] Vinculación automática con cuenta web existente (~45,000 clientes)
 - [ ] Historial de pedidos previos visible tras vincular
-- [ ] Unicidad de correo y documento
-- [ ] Validación de contraseña (8+ caract., mayúscula, minúscula, número)
+- [~] Unicidad de correo y documento
+- [~] Validación de contraseña (8+ caract., mayúscula, minúscula, número)
 - [ ] Verificación de correo (24h)
 - [ ] Aceptación de T&C y Política de Privacidad con registro de versión
 
