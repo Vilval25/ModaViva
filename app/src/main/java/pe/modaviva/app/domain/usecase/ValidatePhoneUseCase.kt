@@ -4,6 +4,10 @@ import javax.inject.Inject
 
 class ValidatePhoneUseCase @Inject constructor() {
 
+    private companion object {
+        const val PHONE_LENGTH = 9
+    }
+
     operator fun invoke(telefono: String): String? {
         val value = telefono.trim()
         if (value.isEmpty()) return "Ingresa tu celular"
@@ -13,7 +17,4 @@ class ValidatePhoneUseCase @Inject constructor() {
         return null
     }
 
-    private companion object {
-        const val PHONE_LENGTH = 9
-    }
 }

@@ -4,6 +4,10 @@ import javax.inject.Inject
 
 class ValidateDocumentoUseCase @Inject constructor() {
 
+    private companion object {
+        const val DOCUMENTO_LENGTH = 8
+    }
+
     operator fun invoke(documento: String): String? {
         val value = documento.trim()
         if (value.isEmpty()) return "Ingresa tu documento"
@@ -15,7 +19,4 @@ class ValidateDocumentoUseCase @Inject constructor() {
 
     fun isValid(documento: String): Boolean = invoke(documento) == null
 
-    private companion object {
-        const val DOCUMENTO_LENGTH = 8
-    }
 }

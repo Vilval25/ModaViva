@@ -8,6 +8,10 @@ import javax.inject.Inject
  */
 class ValidatePasswordUseCase @Inject constructor() {
 
+    private companion object {
+        const val MIN_LENGTH = 8
+    }
+
     operator fun invoke(password: String): String? {
         if (password.isEmpty()) return "Ingresa una contraseña"
         if (password.length < MIN_LENGTH) {
@@ -22,7 +26,5 @@ class ValidatePasswordUseCase @Inject constructor() {
         return null
     }
 
-    private companion object {
-        const val MIN_LENGTH = 8
-    }
+
 }
