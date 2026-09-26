@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
-import pe.modaviva.app.navigation.AppNavHost
+import pe.modaviva.app.ui.navigation.AppNavHost
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

@@ -4,7 +4,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import pe.modaviva.app.data.repository.AuthRepository
+import pe.modaviva.app.domain.repository.AuthRepository
 import pe.modaviva.app.data.repository.FakeAuthRepository
 import javax.inject.Singleton
 

@@ -1,7 +1,7 @@
-package pe.modaviva.app.data.repository
+package pe.modaviva.app.domain.repository
 
-import pe.modaviva.app.data.model.RegisterRequest
-import pe.modaviva.app.data.model.UserProfile
+import pe.modaviva.app.domain.model.RegisterRequest
+import pe.modaviva.app.domain.model.UserProfile
 
 interface AuthRepository {
 

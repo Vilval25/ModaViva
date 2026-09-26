@@ -1,4 +1,4 @@
-package pe.modaviva.app.ui.screens.register
+package pe.modaviva.app.ui.auth.register
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

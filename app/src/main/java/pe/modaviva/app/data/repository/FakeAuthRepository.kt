@@ -1,8 +1,9 @@
 package pe.modaviva.app.data.repository
 
 import kotlinx.coroutines.delay
-import pe.modaviva.app.data.model.RegisterRequest
-import pe.modaviva.app.data.model.UserProfile
+import pe.modaviva.app.domain.model.RegisterRequest
+import pe.modaviva.app.domain.model.UserProfile
+import pe.modaviva.app.domain.repository.AuthRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 

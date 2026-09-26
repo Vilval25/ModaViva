@@ -1,4 +1,4 @@
-package pe.modaviva.app.ui.screens.register
+package pe.modaviva.app.ui.auth.register
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,14 +10,23 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import pe.modaviva.app.data.model.RegisterRequest
-import pe.modaviva.app.data.model.Validation
-import pe.modaviva.app.data.repository.AuthRepository
+import pe.modaviva.app.domain.model.RegisterRequest
+import pe.modaviva.app.domain.repository.AuthRepository
+import pe.modaviva.app.domain.usecase.ValidateConfirmPasswordUseCase
+import pe.modaviva.app.domain.usecase.ValidateDocumentoUseCase
+import pe.modaviva.app.domain.usecase.ValidateEmailUseCase
+import pe.modaviva.app.domain.usecase.ValidatePasswordUseCase
+import pe.modaviva.app.domain.usecase.ValidatePhoneUseCase
 import javax.inject.Inject
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val validateEmail: ValidateEmailUseCase,
+    private val validateDocumento: ValidateDocumentoUseCase,
+    private val validatePhone: ValidatePhoneUseCase,
+    private val validatePassword: ValidatePasswordUseCase,
+    private val validateConfirmPassword: ValidateConfirmPasswordUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
@@ -26,14 +35,14 @@ class RegisterViewModel @Inject constructor(
     private var emailCheckJob: Job? = null
     private var documentoCheckJob: Job? = null
 
-    fun onNombresChange(value: String) = updateValue(value) { it.copy(nombres = value) }
-    fun onApellidosChange(value: String) = updateValue(value) { it.copy(apellidos = value) }
-    fun onDocumentoChange(value: String) = updateValue(value) { it.copy(documento = value) }
-    fun onTelefonoChange(value: String) = updateValue(value) { it.copy(telefono = value) }
-    fun onEmailChange(value: String) = updateValue(value) { it.copy(email = value) }
-    fun onPasswordChange(value: String) = updateValue(value) { it.copy(password = value) }
+    fun onNombresChange(value: String) = updateValue { it.copy(nombres = value) }
+    fun onApellidosChange(value: String) = updateValue { it.copy(apellidos = value) }
+    fun onDocumentoChange(value: String) = updateValue { it.copy(documento = value) }
+    fun onTelefonoChange(value: String) = updateValue { it.copy(telefono = value) }
+    fun onEmailChange(value: String) = updateValue { it.copy(email = value) }
+    fun onPasswordChange(value: String) = updateValue { it.copy(password = value) }
     fun onConfirmPasswordChange(value: String) =
-        updateValue(value) { it.copy(confirmPassword = value) }
+        updateValue { it.copy(confirmPassword = value) }
 
     fun onTogglePasswordVisibility() =
         _uiState.update { it.copy(showPassword = !it.showPassword) }
@@ -87,10 +96,7 @@ class RegisterViewModel @Inject constructor(
 
     fun onDismissGlobalError() = _uiState.update { it.copy(globalError = null) }
 
-    private fun updateValue(
-        value: String,
-        transform: (RegisterUiState) -> RegisterUiState,
-    ) {
+    private fun updateValue(transform: (RegisterUiState) -> RegisterUiState) {
         _uiState.update { state ->
             val updated = transform(state)
             updated.copy(errors = validate(updated))
@@ -100,7 +106,7 @@ class RegisterViewModel @Inject constructor(
     private fun checkEmailUniqueness() {
         val email = _uiState.value.email.trim()
         emailCheckJob?.cancel()
-        if (!Validation.isValidEmail(email)) {
+        if (validateEmail.isValid(email).not()) {
             _uiState.update { it.copy(isCheckingEmail = false, emailTaken = false) }
             return
         }
@@ -115,7 +121,7 @@ class RegisterViewModel @Inject constructor(
     private fun checkDocumentoUniqueness() {
         val documento = _uiState.value.documento.trim()
         documentoCheckJob?.cancel()
-        if (!Validation.isValidDocumento(documento)) {
+        if (validateDocumento.isValid(documento).not()) {
             _uiState.update { it.copy(isCheckingDocumento = false, documentoTaken = false) }
             return
         }
@@ -130,19 +136,11 @@ class RegisterViewModel @Inject constructor(
     private fun validate(state: RegisterUiState): Map<RegisterField, String> = buildMap {
         if (state.nombres.isBlank()) put(RegisterField.NOMBRES, "Ingresa tus nombres")
         if (state.apellidos.isBlank()) put(RegisterField.APELLIDOS, "Ingresa tus apellidos")
-        if (!Validation.isValidDocumento(state.documento)) {
-            put(RegisterField.DOCUMENTO, "El documento debe tener 8 dígitos")
-        }
-        if (!Validation.isValidPhone(state.telefono)) {
-            put(RegisterField.TELEFONO, "Ingresa un celular válido de 9 dígitos")
-        }
-        if (!Validation.isValidEmail(state.email)) {
-            put(RegisterField.EMAIL, "Ingresa un correo válido")
-        }
-        Validation.passwordError(state.password)?.let {
-            put(RegisterField.PASSWORD, it)
-        }
-        Validation.confirmPasswordError(state.confirmPassword, state.password)?.let {
+        validateDocumento(state.documento)?.let { put(RegisterField.DOCUMENTO, it) }
+        validatePhone(state.telefono)?.let { put(RegisterField.TELEFONO, it) }
+        validateEmail(state.email)?.let { put(RegisterField.EMAIL, it) }
+        validatePassword(state.password)?.let { put(RegisterField.PASSWORD, it) }
+        validateConfirmPassword(state.confirmPassword, state.password)?.let {
             put(RegisterField.CONFIRM_PASSWORD, it)
         }
     }

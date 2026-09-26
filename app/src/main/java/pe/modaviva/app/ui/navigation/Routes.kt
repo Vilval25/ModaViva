@@ -1,4 +1,4 @@
-package pe.modaviva.app.navigation
+package pe.modaviva.app.ui.navigation
 
 object Routes {
     const val LOGIN = "login"

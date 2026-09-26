@@ -1,4 +1,4 @@
-package pe.modaviva.app.data.model
+package pe.modaviva.app.domain.model
 
 data class RegisterRequest(
     val nombres: String,

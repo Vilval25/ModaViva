@@ -1,6 +1,6 @@
-package pe.modaviva.app.ui.screens.register
+package pe.modaviva.app.ui.auth.register
 
-import pe.modaviva.app.data.model.UserProfile
+import pe.modaviva.app.domain.model.UserProfile
 
 enum class RegisterField {
     NOMBRES,
