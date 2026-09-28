@@ -44,7 +44,6 @@ class LoginViewModel @Inject constructor(
                 errors = errors,
                 touched = AuthFormField.entries.toSet(),
                 globalError = null,
-                globalMessage = null,
             )
         }
         if (errors.isNotEmpty()) return
@@ -58,8 +57,6 @@ class LoginViewModel @Inject constructor(
                         it.copy(
                             isSubmitting = false,
                             password = "",
-                            globalMessage = "Sesión iniciada: ${profile.nombres} " +
-                                profile.apellidos,
                         )
                     }
                     onSuccess(LoginResult.Success(profile))
@@ -79,8 +76,8 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    fun onDismissMessage() =
-        _uiState.update { it.copy(globalError = null, globalMessage = null) }
+    fun onDismissError() =
+        _uiState.update { it.copy(globalError = null) }
 
     private fun updateValue(transform: (LoginUiState) -> LoginUiState) {
         _uiState.update { state ->

@@ -6,4 +6,5 @@ data class UserProfile(
     val documento: String,
     val telefono: String,
     val email: String,
+    val emailVerificado: Boolean = false,
 )

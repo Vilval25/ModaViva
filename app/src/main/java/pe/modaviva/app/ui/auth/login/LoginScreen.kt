@@ -10,33 +10,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pe.modaviva.app.R
 import pe.modaviva.app.domain.model.AuthFormField
+import pe.modaviva.app.ui.components.MvFormErrors
+import pe.modaviva.app.ui.components.MvPasswordField
 import pe.modaviva.app.ui.components.MvTextField
 
 @Composable
@@ -47,15 +38,6 @@ fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(state.globalError, state.globalMessage) {
-        val message = state.globalError ?: state.globalMessage
-        if (message != null) {
-            snackbarHostState.showSnackbar(message)
-            viewModel.onDismissMessage()
-        }
-    }
 
     Column(
         modifier = modifier
@@ -89,34 +71,16 @@ fun LoginScreen(
             ),
         )
 
-        MvTextField(
+        MvPasswordField(
             value = state.password,
             modifier = Modifier.fillMaxWidth(),
             onValueChange = viewModel::onPasswordChange,
             label = stringResource(R.string.field_password),
+            isVisible = state.showPassword,
+            onToggleVisibility = viewModel::onTogglePasswordVisibility,
             errorMessage = state.errorFor(AuthFormField.PASSWORD),
             onFocusLost = { viewModel.onFieldTouched(AuthFormField.PASSWORD) },
-            visualTransformation = if (state.showPassword) {
-                VisualTransformation.None
-            } else {
-                PasswordVisualTransformation()
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done,
-            ),
-            trailingIcon = {
-                IconButton(onClick = viewModel::onTogglePasswordVisibility) {
-                    Icon(
-                        imageVector = if (state.showPassword) {
-                            Icons.Filled.VisibilityOff
-                        } else {
-                            Icons.Filled.Visibility
-                        },
-                        contentDescription = stringResource(R.string.cd_toggle_password),
-                    )
-                }
-            },
+            imeAction = ImeAction.Done,
         )
 
         Button(
@@ -144,6 +108,9 @@ fun LoginScreen(
             Text(text = stringResource(R.string.login_register_cta))
         }
 
-        SnackbarHost(hostState = snackbarHostState)
+        MvFormErrors(
+            message = state.globalError,
+            onMessageShown = viewModel::onDismissError,
+        )
     }
 }

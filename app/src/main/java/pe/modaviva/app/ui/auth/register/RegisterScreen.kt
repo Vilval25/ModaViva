@@ -10,35 +10,26 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pe.modaviva.app.R
 import pe.modaviva.app.domain.model.AuthFormField
+import pe.modaviva.app.ui.components.MvFormErrors
+import pe.modaviva.app.ui.components.MvPasswordField
 import pe.modaviva.app.ui.components.MvTextField
 
 @Composable
@@ -49,15 +40,6 @@ fun RegisterScreen(
     viewModel: RegisterViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(state.globalError) {
-        val message = state.globalError
-        if (message != null) {
-            snackbarHostState.showSnackbar(message)
-            viewModel.onDismissGlobalError()
-        }
-    }
 
     Column(
         modifier = modifier
@@ -144,53 +126,27 @@ fun RegisterScreen(
             ),
         )
 
-        MvTextField(
+        MvPasswordField(
             value = state.password,
             modifier = Modifier.fillMaxWidth(),
             onValueChange = viewModel::onPasswordChange,
             label = stringResource(R.string.field_password),
+            isVisible = state.showPassword,
+            onToggleVisibility = viewModel::onTogglePasswordVisibility,
             errorMessage = state.errorFor(AuthFormField.PASSWORD),
             onFocusLost = { viewModel.onFieldTouched(AuthFormField.PASSWORD) },
             supportingText = stringResource(R.string.support_password),
-            visualTransformation = if (state.showPassword) {
-                VisualTransformation.None
-            } else {
-                PasswordVisualTransformation()
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Next,
-            ),
-            trailingIcon = {
-                IconButton(onClick = viewModel::onTogglePasswordVisibility) {
-                    Icon(
-                        imageVector = if (state.showPassword) {
-                            Icons.Filled.VisibilityOff
-                        } else {
-                            Icons.Filled.Visibility
-                        },
-                        contentDescription = stringResource(R.string.cd_toggle_password),
-                    )
-                }
-            },
         )
 
-        MvTextField(
+        MvPasswordField(
             value = state.confirmPassword,
             modifier = Modifier.fillMaxWidth(),
             onValueChange = viewModel::onConfirmPasswordChange,
             label = stringResource(R.string.field_confirm_password),
+            isVisible = state.showPassword,
             errorMessage = state.errorFor(AuthFormField.CONFIRM_PASSWORD),
             onFocusLost = { viewModel.onFieldTouched(AuthFormField.CONFIRM_PASSWORD) },
-            visualTransformation = if (state.showPassword) {
-                VisualTransformation.None
-            } else {
-                PasswordVisualTransformation()
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done,
-            ),
+            imeAction = ImeAction.Done,
         )
 
         Button(
@@ -227,6 +183,9 @@ fun RegisterScreen(
             Text(text = stringResource(R.string.register_login_cta))
         }
 
-        SnackbarHost(hostState = snackbarHostState)
+        MvFormErrors(
+            message = state.globalError,
+            onMessageShown = viewModel::onDismissGlobalError,
+        )
     }
 }

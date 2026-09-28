@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -52,10 +53,44 @@ class FirebaseAuthRepository @Inject constructor(
             return Result.failure(AuthException(AuthError.INVALID_CREDENTIALS))
         }
 
+        reflectEmailVerification(firebaseUser)
+
         return loadProfile(firebaseUser.uid, firebaseUser.email.orEmpty())
     }
 
+    /**
+     * Refleja la verificación del correo en `clientes/{uid}`. Después de
+     * pulsar el enlace, el estado vive en Firebase Auth; Firestore solo lo
+     * espeja. Es best effort: si la escritura falla, el perfil se devuelve
+     * igual y el detector de la pantalla de verificación reintentará.
+     */
+    private suspend fun reflectEmailVerification(firebaseUser: FirebaseUser) {
+        runCatching { firebaseUser.reload().await() }
+        if (firebaseUser.isEmailVerified) {
+            runCatching {
+                firestore.collection(CLIENTES).document(firebaseUser.uid)
+                    .update("emailVerificado", true)
+                    .await()
+            }
+        }
+    }
+
+    override suspend fun syncEmailVerification(): Boolean {
+        val firebaseUser = firebaseAuth.currentUser ?: return false
+        reflectEmailVerification(firebaseUser)
+        return firebaseUser.isEmailVerified
+    }
+
     override suspend fun register(request: RegisterRequest): Result<UserProfile> {
+        // Comprobación preventiva para avisar antes de crear la cuenta. No es
+        // la garantía: hay una condición de carrera entre esta lectura y la
+        // escritura, y las reglas pueden negarla a usuarios anónimos (en ese
+        // caso devuelve false y se sigue igual); la transacción de abajo es
+        // la que impone la unicidad de verdad.
+        if (isDocumentoTaken(request.documento)) {
+            return Result.failure(AuthException(AuthError.DOCUMENT_TAKEN))
+        }
+
         val firebaseUser = try {
             firebaseAuth
                 .createUserWithEmailAndPassword(request.email, request.password)
@@ -71,34 +106,40 @@ class FirebaseAuthRepository @Inject constructor(
 
         val uid = firebaseUser.uid
         val profile = request.toProfile()
+        var documentoLibre = false
 
         try {
             firestore.runTransaction { transaction ->
                 val documentoRef = firestore.collection(DOCUMENTOS).document(profile.documento)
-                if (transaction.get(documentoRef).exists()) {
-                    throw DocumentoYaRegistradoException()
+                val yaReservado = transaction.get(documentoRef).exists()
+                if (!yaReservado) {
+                    transaction.set(documentoRef, mapOf("authUid" to uid))
+                    transaction.set(
+                        firestore.collection(CLIENTES).document(uid),
+                        mapOf(
+                            "nombres" to profile.nombres,
+                            "apellidos" to profile.apellidos,
+                            "documento" to profile.documento,
+                            "telefono" to profile.telefono,
+                            "email" to profile.email,
+                            "emailVerificado" to false,
+                            "creadoEn" to FieldValue.serverTimestamp(),
+                        ),
+                    )
                 }
-                transaction.set(documentoRef, mapOf("authUid" to uid))
-                transaction.set(
-                    firestore.collection(CLIENTES).document(uid),
-                    mapOf(
-                        "nombres" to profile.nombres,
-                        "apellidos" to profile.apellidos,
-                        "documento" to profile.documento,
-                        "telefono" to profile.telefono,
-                        "email" to profile.email,
-                        "emailVerificado" to false,
-                        "creadoEn" to FieldValue.serverTimestamp(),
-                    ),
-                )
+                // Firestore puede reintentar la transacción; solo la invocación
+                // que confirma el commit deja este valor en firme.
+                documentoLibre = !yaReservado
                 null
             }.await()
-        } catch (e: DocumentoYaRegistradoException) {
-            firebaseAuth.signOut()
-            return Result.failure(AuthException(AuthError.DOCUMENT_TAKEN))
         } catch (e: Exception) {
-            firebaseAuth.signOut()
+            discardFailedRegistration(firebaseUser)
             return Result.failure(e.toAuthException())
+        }
+
+        if (!documentoLibre) {
+            discardFailedRegistration(firebaseUser)
+            return Result.failure(AuthException(AuthError.DOCUMENT_TAKEN))
         }
 
         // El envío del correo es best effort: si falla, la cuenta ya existe y
@@ -106,6 +147,18 @@ class FirebaseAuthRepository @Inject constructor(
         runCatching { firebaseUser.sendEmailVerification().await() }
 
         return Result.success(profile)
+    }
+
+    /**
+     * Elimina la cuenta recién creada cuando la transacción no pudo escribir
+     * el perfil. Sin esto quedaría un usuario de Auth huérfano: una cuenta
+     * sin `clientes/{uid}` que no podría iniciar sesión.
+     */
+    private suspend fun discardFailedRegistration(firebaseUser: FirebaseUser) {
+        // delete() exige sesión activa; por eso va antes de cerrar sesión. Si
+        // el borrado falla, se cierra igual para no dejar la app a medias.
+        runCatching { firebaseUser.delete().await() }
+        firebaseAuth.signOut()
     }
 
     override suspend fun isDocumentoTaken(documento: String): Boolean = try {
@@ -144,6 +197,7 @@ class FirebaseAuthRepository @Inject constructor(
                 documento = data["documento"] as? String ?: "",
                 telefono = data["telefono"] as? String ?: "",
                 email = data["email"] as? String ?: fallbackEmail,
+                emailVerificado = data["emailVerificado"] as? Boolean ?: false,
             )
         )
     }
@@ -161,8 +215,6 @@ private fun RegisterRequest.toProfile() = UserProfile(
     telefono = telefono,
     email = email,
 )
-
-private class DocumentoYaRegistradoException : Exception()
 
 /**
  * Traduce las excepciones de Firebase al vocabulario del dominio. La interfaz

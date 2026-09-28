@@ -17,6 +17,11 @@
     <string name="session_document">Documento: %1$s</string>
     <string name="session_signout">Cerrar sesión</string>
     <string name="session_empty">No hay ninguna sesión activa</string>
+    <string name="session_email_pending">Tu correo aún no está verificado. Revisa tu bandeja de entrada y la carpeta de spam.</string>
+
+    <string name="email_verify_title">Verifica tu correo</string>
+    <string name="email_verify_body">Te enviamos un enlace de verificación a %1$s.\n\nRevisa tu bandeja de entrada y también la carpeta de spam. El enlace es válido por 24 horas.</string>
+    <string name="email_verify_back">Volver al inicio</string>
 
     <string name="field_nombres">Nombres</string>
     <string name="field_apellidos">Apellidos</string>

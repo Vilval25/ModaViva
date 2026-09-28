@@ -11,7 +11,6 @@ data class LoginUiState(
     val showPassword: Boolean = false,
     val isSubmitting: Boolean = false,
     val globalError: String? = null,
-    val globalMessage: String? = null,
 ) {
     fun errorFor(field: AuthFormField): String? =
         if (field in touched) errors[field] else null

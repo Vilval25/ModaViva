@@ -13,11 +13,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import android.net.Uri
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import pe.modaviva.app.ui.auth.login.LoginScreen
 import pe.modaviva.app.ui.auth.register.RegisterScreen
+import pe.modaviva.app.ui.auth.verify.EmailVerifyScreen
 import pe.modaviva.app.ui.session.SessionScreen
 import pe.modaviva.app.ui.theme.ModaVivaTheme
 
@@ -48,14 +52,27 @@ fun AppNavHost() {
                 }
                 composable(Routes.REGISTER) {
                     RegisterScreen(
-                        onRegistered = { navController.navigate(Routes.EMAIL_VERIFY) },
+                        onRegistered = { success ->
+                            val route = Routes.EMAIL_VERIFY.replace(
+                                "{email}",
+                                Uri.encode(success.profile.email),
+                            )
+                            navController.navigate(route)
+                        },
                         onLoginClick = { navController.popBackStack() },
                     )
                 }
-                composable(Routes.EMAIL_VERIFY) {
-                    PlaceholderScreen(
-                        title = "Verifica tu correo",
-                        description = "HU-01: se implementa al integrar Firebase Auth.",
+                composable(
+                    route = Routes.EMAIL_VERIFY,
+                    arguments = listOf(
+                        navArgument("email") {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        },
+                    ),
+                ) { backStackEntry ->
+                    EmailVerifyScreen(
+                        email = backStackEntry.arguments?.getString("email").orEmpty(),
                         onBack = {
                             navController.popBackStack(Routes.LOGIN, inclusive = false)
                         },
