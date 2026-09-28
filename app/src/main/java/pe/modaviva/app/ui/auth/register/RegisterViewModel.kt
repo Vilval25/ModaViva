@@ -15,6 +15,7 @@ import pe.modaviva.app.domain.repository.AuthRepository
 import pe.modaviva.app.domain.usecase.ValidateConfirmPasswordUseCase
 import pe.modaviva.app.domain.usecase.ValidateDocumentoUseCase
 import pe.modaviva.app.domain.usecase.ValidateEmailUseCase
+import pe.modaviva.app.domain.usecase.ValidateNombreUseCase
 import pe.modaviva.app.domain.usecase.ValidatePasswordUseCase
 import pe.modaviva.app.domain.usecase.ValidatePhoneUseCase
 import javax.inject.Inject
@@ -22,6 +23,7 @@ import javax.inject.Inject
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val validateNombre: ValidateNombreUseCase,
     private val validateEmail: ValidateEmailUseCase,
     private val validateDocumento: ValidateDocumentoUseCase,
     private val validatePhone: ValidatePhoneUseCase,
@@ -114,7 +116,13 @@ class RegisterViewModel @Inject constructor(
         emailCheckJob = viewModelScope.launch {
             delay(DEBOUNCE_MS)
             val taken = authRepository.isEmailTaken(email)
-            _uiState.update { it.copy(isCheckingEmail = false, emailTaken = taken) }
+            _uiState.update { state ->
+                if (state.email.trim().equals(email, ignoreCase = true)) {
+                    state.copy(isCheckingEmail = false, emailTaken = taken)
+                } else {
+                    state.copy(isCheckingEmail = false)
+                }
+            }
         }
     }
 
@@ -129,13 +137,27 @@ class RegisterViewModel @Inject constructor(
         documentoCheckJob = viewModelScope.launch {
             delay(DEBOUNCE_MS)
             val taken = authRepository.isDocumentoTaken(documento)
-            _uiState.update { it.copy(isCheckingDocumento = false, documentoTaken = taken) }
+            _uiState.update { state ->
+                if (state.documento.trim() == documento) {
+                    state.copy(isCheckingDocumento = false, documentoTaken = taken)
+                } else {
+                    state.copy(isCheckingDocumento = false)
+                }
+            }
         }
     }
 
     private fun validate(state: RegisterUiState): Map<RegisterField, String> = buildMap {
-        if (state.nombres.isBlank()) put(RegisterField.NOMBRES, "Ingresa tus nombres")
-        if (state.apellidos.isBlank()) put(RegisterField.APELLIDOS, "Ingresa tus apellidos")
+        if (state.nombres.isBlank()) {
+            put(RegisterField.NOMBRES, "Ingresa tus nombres")
+        } else {
+            validateNombre(state.nombres)?.let { put(RegisterField.NOMBRES, it) }
+        }
+        if (state.apellidos.isBlank()) {
+            put(RegisterField.APELLIDOS, "Ingresa tus apellidos")
+        } else {
+            validateNombre(state.apellidos)?.let { put(RegisterField.APELLIDOS, it) }
+        }
         validateDocumento(state.documento)?.let { put(RegisterField.DOCUMENTO, it) }
         validatePhone(state.telefono)?.let { put(RegisterField.TELEFONO, it) }
         validateEmail(state.email)?.let { put(RegisterField.EMAIL, it) }
