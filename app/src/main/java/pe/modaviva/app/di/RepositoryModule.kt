@@ -6,7 +6,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import pe.modaviva.app.domain.repository.AuthRepository
 import pe.modaviva.app.domain.repository.SessionRepository
-import pe.modaviva.app.data.repository.FakeAuthRepository
+import pe.modaviva.app.data.repository.FirebaseAuthRepository
 import pe.modaviva.app.data.repository.InMemorySessionRepository
 import javax.inject.Singleton
 
@@ -16,7 +16,7 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindAuthRepository(impl: FakeAuthRepository): AuthRepository
+    abstract fun bindAuthRepository(impl: FirebaseAuthRepository): AuthRepository
 
     @Binds
     @Singleton

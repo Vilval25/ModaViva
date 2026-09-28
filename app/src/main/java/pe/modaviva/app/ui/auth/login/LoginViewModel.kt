@@ -9,9 +9,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pe.modaviva.app.domain.model.AuthFormField
+import pe.modaviva.app.domain.exception.AuthException
 import pe.modaviva.app.domain.repository.AuthRepository
 import pe.modaviva.app.domain.repository.SessionRepository
 import pe.modaviva.app.domain.usecase.ValidateLoginFormUseCase
+import pe.modaviva.app.ui.auth.toUserMessage
 import javax.inject.Inject
 
 @HiltViewModel
@@ -62,11 +64,15 @@ class LoginViewModel @Inject constructor(
                     }
                     onSuccess(LoginResult.Success(profile))
                 }
-                .onFailure {
+                .onFailure { error ->
+                    val message = (error as? AuthException)
+                        ?.error
+                        ?.toUserMessage()
+                        ?: "No se pudo iniciar sesión"
                     _uiState.update {
                         it.copy(
                             isSubmitting = false,
-                            globalError = "Correo o contraseña incorrectos",
+                            globalError = message,
                         )
                     }
                 }

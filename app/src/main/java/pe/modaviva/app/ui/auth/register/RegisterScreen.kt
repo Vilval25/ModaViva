@@ -211,7 +211,7 @@ fun RegisterScreen(
             }
         }
 
-        if (state.isCheckingEmail || state.isCheckingDocumento) {
+        if (state.isCheckingDocumento) {
             Text(
                 text = stringResource(R.string.register_checking),
                 style = MaterialTheme.typography.bodySmall,

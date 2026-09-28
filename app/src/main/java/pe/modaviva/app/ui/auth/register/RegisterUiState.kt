@@ -15,16 +15,12 @@ data class RegisterUiState(
     val errors: Map<AuthFormField, String> = emptyMap(),
     val showPassword: Boolean = false,
     val isSubmitting: Boolean = false,
-    val isCheckingEmail: Boolean = false,
     val isCheckingDocumento: Boolean = false,
-    val emailTaken: Boolean = false,
     val documentoTaken: Boolean = false,
     val globalError: String? = null,
 ) {
     fun errorFor(field: AuthFormField): String? =
         when {
-            field == AuthFormField.EMAIL && emailTaken ->
-                "Este correo ya está registrado"
             field == AuthFormField.DOCUMENTO && documentoTaken ->
                 "Este documento ya tiene una cuenta"
             field in touched -> errors[field]
@@ -32,11 +28,11 @@ data class RegisterUiState(
         }
 
     val hasBlockingUniqueness: Boolean
-        get() = emailTaken || documentoTaken
+        get() = documentoTaken
 
     val canSubmit: Boolean
-        get() = errors.isEmpty() && !isSubmitting && !isCheckingEmail &&
-            !isCheckingDocumento && !hasBlockingUniqueness
+        get() = errors.isEmpty() && !isSubmitting && !isCheckingDocumento &&
+            !hasBlockingUniqueness
 }
 
 sealed interface RegisterResult {

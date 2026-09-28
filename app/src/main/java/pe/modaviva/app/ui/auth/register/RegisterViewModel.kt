@@ -11,8 +11,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pe.modaviva.app.domain.model.AuthFormField
+import pe.modaviva.app.domain.exception.AuthException
 import pe.modaviva.app.domain.model.RegisterRequest
 import pe.modaviva.app.domain.repository.AuthRepository
+import pe.modaviva.app.ui.auth.toUserMessage
 
 import pe.modaviva.app.domain.usecase.ValidateRegisterFormUseCase
 import javax.inject.Inject
@@ -26,7 +28,6 @@ class RegisterViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
-    private var emailCheckJob: Job? = null
     private var documentoCheckJob: Job? = null
 
     fun onNombresChange(value: String) = updateValue { it.copy(nombres = value) }
@@ -44,7 +45,6 @@ class RegisterViewModel @Inject constructor(
     fun onFieldTouched(field: AuthFormField) {
         _uiState.update { it.copy(touched = it.touched + field) }
         when (field) {
-            AuthFormField.EMAIL -> checkEmailUniqueness()
             AuthFormField.DOCUMENTO -> checkDocumentoUniqueness()
             else -> Unit
         }
@@ -69,11 +69,14 @@ class RegisterViewModel @Inject constructor(
                     onSuccess(RegisterResult.Success(profile))
                 }
                 .onFailure { error ->
+                    val message = (error as? AuthException)
+                        ?.error
+                        ?.toUserMessage()
+                        ?: "No se pudo completar el registro"
                     _uiState.update {
                         it.copy(
                             isSubmitting = false,
-                            globalError = error.message
-                                ?: "No se pudo completar el registro",
+                            globalError = message,
                         )
                     }
                 }
@@ -86,27 +89,6 @@ class RegisterViewModel @Inject constructor(
         _uiState.update { state ->
             val updated = transform(state)
             updated.copy(errors = validate(updated))
-        }
-    }
-
-    private fun checkEmailUniqueness() {
-        val email = _uiState.value.email.trim()
-        emailCheckJob?.cancel()
-        if (validateRegisterForm.isEmailValid(email).not()) {
-            _uiState.update { it.copy(isCheckingEmail = false, emailTaken = false) }
-            return
-        }
-        _uiState.update { it.copy(isCheckingEmail = true) }
-        emailCheckJob = viewModelScope.launch {
-            delay(DEBOUNCE_MS)
-            val taken = authRepository.isEmailTaken(email)
-            _uiState.update { state ->
-                if (state.email.trim().equals(email, ignoreCase = true)) {
-                    state.copy(isCheckingEmail = false, emailTaken = taken)
-                } else {
-                    state.copy(isCheckingEmail = false)
-                }
-            }
         }
     }
 

@@ -47,8 +47,6 @@ class ValidateRegisterFormUseCase @Inject constructor() {
     fun isDocumentoValid(documento: String): Boolean =
         documentoError(documento) == null
 
-    fun isEmailValid(email: String): Boolean = EmailRule.isValid(email)
-
     private fun nombreError(nombre: String, emptyMessage: String): String? {
         val value = nombre.trim()
         if (value.isEmpty()) return emptyMessage
