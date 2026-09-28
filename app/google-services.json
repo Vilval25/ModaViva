@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "241088547256",
+    "project_id": "modaviva-dsm",
+    "storage_bucket": "modaviva-dsm.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:241088547256:android:0d4ec3dcf3e6b84147274d",
+        "android_client_info": {
+          "package_name": "pe.modaviva.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "241088547256-feld1vipjma1170gn7ttnn6ebe6ch0k3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtNbaRmFGK2vWVo-v_cYYDSWxNAlcJxwA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "241088547256-feld1vipjma1170gn7ttnn6ebe6ch0k3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
