@@ -1,16 +1,7 @@
 package pe.modaviva.app.ui.auth.register
 
+import pe.modaviva.app.domain.model.AuthFormField
 import pe.modaviva.app.domain.model.UserProfile
-
-enum class RegisterField {
-    NOMBRES,
-    APELLIDOS,
-    DOCUMENTO,
-    TELEFONO,
-    EMAIL,
-    PASSWORD,
-    CONFIRM_PASSWORD,
-}
 
 data class RegisterUiState(
     val nombres: String = "",
@@ -20,8 +11,8 @@ data class RegisterUiState(
     val email: String = "",
     val password: String = "",
     val confirmPassword: String = "",
-    val touched: Set<RegisterField> = emptySet(),
-    val errors: Map<RegisterField, String> = emptyMap(),
+    val touched: Set<AuthFormField> = emptySet(),
+    val errors: Map<AuthFormField, String> = emptyMap(),
     val showPassword: Boolean = false,
     val isSubmitting: Boolean = false,
     val isCheckingEmail: Boolean = false,
@@ -30,11 +21,11 @@ data class RegisterUiState(
     val documentoTaken: Boolean = false,
     val globalError: String? = null,
 ) {
-    fun errorFor(field: RegisterField): String? =
+    fun errorFor(field: AuthFormField): String? =
         when {
-            field == RegisterField.EMAIL && emailTaken ->
+            field == AuthFormField.EMAIL && emailTaken ->
                 "Este correo ya está registrado"
-            field == RegisterField.DOCUMENTO && documentoTaken ->
+            field == AuthFormField.DOCUMENTO && documentoTaken ->
                 "Este documento ya tiene una cuenta"
             field in touched -> errors[field]
             else -> null

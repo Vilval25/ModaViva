@@ -10,25 +10,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pe.modaviva.app.domain.model.AuthFormField
 import pe.modaviva.app.domain.model.RegisterRequest
 import pe.modaviva.app.domain.repository.AuthRepository
-import pe.modaviva.app.domain.usecase.ValidateConfirmPasswordUseCase
-import pe.modaviva.app.domain.usecase.ValidateDocumentoUseCase
-import pe.modaviva.app.domain.usecase.ValidateEmailUseCase
-import pe.modaviva.app.domain.usecase.ValidateNombreUseCase
-import pe.modaviva.app.domain.usecase.ValidatePasswordUseCase
-import pe.modaviva.app.domain.usecase.ValidatePhoneUseCase
+
+import pe.modaviva.app.domain.usecase.ValidateRegisterFormUseCase
 import javax.inject.Inject
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val validateNombre: ValidateNombreUseCase,
-    private val validateEmail: ValidateEmailUseCase,
-    private val validateDocumento: ValidateDocumentoUseCase,
-    private val validatePhone: ValidatePhoneUseCase,
-    private val validatePassword: ValidatePasswordUseCase,
-    private val validateConfirmPassword: ValidateConfirmPasswordUseCase,
+    private val validateRegisterForm: ValidateRegisterFormUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
@@ -49,11 +41,11 @@ class RegisterViewModel @Inject constructor(
     fun onTogglePasswordVisibility() =
         _uiState.update { it.copy(showPassword = !it.showPassword) }
 
-    fun onFieldTouched(field: RegisterField) {
+    fun onFieldTouched(field: AuthFormField) {
         _uiState.update { it.copy(touched = it.touched + field) }
         when (field) {
-            RegisterField.EMAIL -> checkEmailUniqueness()
-            RegisterField.DOCUMENTO -> checkDocumentoUniqueness()
+            AuthFormField.EMAIL -> checkEmailUniqueness()
+            AuthFormField.DOCUMENTO -> checkDocumentoUniqueness()
             else -> Unit
         }
     }
@@ -64,22 +56,14 @@ class RegisterViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 errors = errors,
-                touched = RegisterField.entries.toSet(),
+                touched = AuthFormField.entries.toSet(),
             )
         }
         if (errors.isNotEmpty() || _uiState.value.hasBlockingUniqueness) return
 
         _uiState.update { it.copy(isSubmitting = true, globalError = null) }
         viewModelScope.launch {
-            val request = RegisterRequest(
-                nombres = current.nombres.trim(),
-                apellidos = current.apellidos.trim(),
-                documento = current.documento.trim(),
-                telefono = current.telefono.trim(),
-                email = current.email.trim(),
-                password = current.password,
-            )
-            authRepository.register(request)
+            authRepository.register(current.toRegisterRequest())
                 .onSuccess { profile ->
                     _uiState.update { it.copy(isSubmitting = false) }
                     onSuccess(RegisterResult.Success(profile))
@@ -108,7 +92,7 @@ class RegisterViewModel @Inject constructor(
     private fun checkEmailUniqueness() {
         val email = _uiState.value.email.trim()
         emailCheckJob?.cancel()
-        if (validateEmail.isValid(email).not()) {
+        if (validateRegisterForm.isEmailValid(email).not()) {
             _uiState.update { it.copy(isCheckingEmail = false, emailTaken = false) }
             return
         }
@@ -129,7 +113,7 @@ class RegisterViewModel @Inject constructor(
     private fun checkDocumentoUniqueness() {
         val documento = _uiState.value.documento.trim()
         documentoCheckJob?.cancel()
-        if (validateDocumento.isValid(documento).not()) {
+        if (validateRegisterForm.isDocumentoValid(documento).not()) {
             _uiState.update { it.copy(isCheckingDocumento = false, documentoTaken = false) }
             return
         }
@@ -147,25 +131,17 @@ class RegisterViewModel @Inject constructor(
         }
     }
 
-    private fun validate(state: RegisterUiState): Map<RegisterField, String> = buildMap {
-        if (state.nombres.isBlank()) {
-            put(RegisterField.NOMBRES, "Ingresa tus nombres")
-        } else {
-            validateNombre(state.nombres)?.let { put(RegisterField.NOMBRES, it) }
-        }
-        if (state.apellidos.isBlank()) {
-            put(RegisterField.APELLIDOS, "Ingresa tus apellidos")
-        } else {
-            validateNombre(state.apellidos)?.let { put(RegisterField.APELLIDOS, it) }
-        }
-        validateDocumento(state.documento)?.let { put(RegisterField.DOCUMENTO, it) }
-        validatePhone(state.telefono)?.let { put(RegisterField.TELEFONO, it) }
-        validateEmail(state.email)?.let { put(RegisterField.EMAIL, it) }
-        validatePassword(state.password)?.let { put(RegisterField.PASSWORD, it) }
-        validateConfirmPassword(state.confirmPassword, state.password)?.let {
-            put(RegisterField.CONFIRM_PASSWORD, it)
-        }
-    }
+    private fun validate(state: RegisterUiState): Map<AuthFormField, String> =
+        validateRegisterForm(state.toRegisterRequest(), state.confirmPassword)
+
+    private fun RegisterUiState.toRegisterRequest() = RegisterRequest(
+        nombres = nombres.trim(),
+        apellidos = apellidos.trim(),
+        documento = documento.trim(),
+        telefono = telefono.trim(),
+        email = email.trim(),
+        password = password,
+    )
 
     private companion object {
         const val DEBOUNCE_MS = 400L

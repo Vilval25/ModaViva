@@ -1,4 +1,4 @@
-package pe.modaviva.app.ui.auth.register
+package pe.modaviva.app.ui.auth.login
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,19 +18,17 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -42,20 +40,20 @@ import pe.modaviva.app.domain.model.AuthFormField
 import pe.modaviva.app.ui.components.MvTextField
 
 @Composable
-fun RegisterScreen(
-    onRegistered: (RegisterResult.Success) -> Unit,
-    onLoginClick: () -> Unit = {},
+fun LoginScreen(
+    onRegisterClick: () -> Unit,
+    onLoggedIn: (LoginResult.Success) -> Unit = {},
     modifier: Modifier = Modifier,
-    viewModel: RegisterViewModel = hiltViewModel(),
+    viewModel: LoginViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(state.globalError) {
-        val message = state.globalError
+    LaunchedEffect(state.globalError, state.globalMessage) {
+        val message = state.globalError ?: state.globalMessage
         if (message != null) {
             snackbarHostState.showSnackbar(message)
-            viewModel.onDismissGlobalError()
+            viewModel.onDismissMessage()
         }
     }
 
@@ -68,67 +66,14 @@ fun RegisterScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            text = stringResource(R.string.register_title),
+            text = stringResource(R.string.login_title),
             style = MaterialTheme.typography.headlineMedium,
         )
         Text(
-            text = stringResource(R.string.register_subtitle),
+            text = stringResource(R.string.login_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 8.dp),
-        )
-
-        MvTextField(
-            value = state.nombres,
-            modifier = Modifier.fillMaxWidth(),
-            onValueChange = viewModel::onNombresChange,
-            label = stringResource(R.string.field_nombres),
-            errorMessage = state.errorFor(AuthFormField.NOMBRES),
-            onFocusLost = { viewModel.onFieldTouched(AuthFormField.NOMBRES) },
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Words,
-                imeAction = ImeAction.Next,
-            ),
-        )
-
-        MvTextField(
-            value = state.apellidos,
-            modifier = Modifier.fillMaxWidth(),
-            onValueChange = viewModel::onApellidosChange,
-            label = stringResource(R.string.field_apellidos),
-            errorMessage = state.errorFor(AuthFormField.APELLIDOS),
-            onFocusLost = { viewModel.onFieldTouched(AuthFormField.APELLIDOS) },
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Words,
-                imeAction = ImeAction.Next,
-            ),
-        )
-
-        MvTextField(
-            value = state.documento,
-            modifier = Modifier.fillMaxWidth(),
-            onValueChange = viewModel::onDocumentoChange,
-            label = stringResource(R.string.field_documento),
-            errorMessage = state.errorFor(AuthFormField.DOCUMENTO),
-            onFocusLost = { viewModel.onFieldTouched(AuthFormField.DOCUMENTO) },
-            supportingText = stringResource(R.string.support_documento),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Next,
-            ),
-        )
-
-        MvTextField(
-            value = state.telefono,
-            modifier = Modifier.fillMaxWidth(),
-            onValueChange = viewModel::onTelefonoChange,
-            label = stringResource(R.string.field_telefono),
-            errorMessage = state.errorFor(AuthFormField.TELEFONO),
-            onFocusLost = { viewModel.onFieldTouched(AuthFormField.TELEFONO) },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Phone,
-                imeAction = ImeAction.Next,
-            ),
         )
 
         MvTextField(
@@ -151,7 +96,6 @@ fun RegisterScreen(
             label = stringResource(R.string.field_password),
             errorMessage = state.errorFor(AuthFormField.PASSWORD),
             onFocusLost = { viewModel.onFieldTouched(AuthFormField.PASSWORD) },
-            supportingText = stringResource(R.string.support_password),
             visualTransformation = if (state.showPassword) {
                 VisualTransformation.None
             } else {
@@ -159,7 +103,7 @@ fun RegisterScreen(
             },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Next,
+                imeAction = ImeAction.Done,
             ),
             trailingIcon = {
                 IconButton(onClick = viewModel::onTogglePasswordVisibility) {
@@ -175,26 +119,8 @@ fun RegisterScreen(
             },
         )
 
-        MvTextField(
-            value = state.confirmPassword,
-            modifier = Modifier.fillMaxWidth(),
-            onValueChange = viewModel::onConfirmPasswordChange,
-            label = stringResource(R.string.field_confirm_password),
-            errorMessage = state.errorFor(AuthFormField.CONFIRM_PASSWORD),
-            onFocusLost = { viewModel.onFieldTouched(AuthFormField.CONFIRM_PASSWORD) },
-            visualTransformation = if (state.showPassword) {
-                VisualTransformation.None
-            } else {
-                PasswordVisualTransformation()
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done,
-            ),
-        )
-
         Button(
-            onClick = { viewModel.onSubmit(onRegistered) },
+            onClick = { viewModel.onSubmit(onLoggedIn) },
             enabled = state.canSubmit,
             modifier = Modifier
                 .fillMaxWidth()
@@ -207,24 +133,15 @@ fun RegisterScreen(
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             } else {
-                Text(text = stringResource(R.string.register_cta))
+                Text(text = stringResource(R.string.login_cta))
             }
         }
 
-        if (state.isCheckingEmail || state.isCheckingDocumento) {
-            Text(
-                text = stringResource(R.string.register_checking),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-            )
-        }
-
-        TextButton(
-            onClick = onLoginClick,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
+        OutlinedButton(
+            onClick = onRegisterClick,
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            Text(text = stringResource(R.string.register_login_cta))
+            Text(text = stringResource(R.string.login_register_cta))
         }
 
         SnackbarHost(hostState = snackbarHostState)

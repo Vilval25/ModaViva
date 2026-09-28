@@ -38,20 +38,43 @@ class FakeAuthRepository @Inject constructor() : AuthRepository {
         ),
     )
 
+    private val credentials = mutableMapOf(
+        "lucia.quispe@modaviva.pe" to DEMO_PASSWORD,
+        "carlos.flores@modaviva.pe" to DEMO_PASSWORD,
+        "ana.huaman@modaviva.pe" to DEMO_PASSWORD,
+        "edsonpr.dev@gmail.com" to DEMO_PASSWORD,
+    )
+
     override suspend fun isEmailTaken(email: String): Boolean =
         webCustomers.any { it.email.equals(email.trim(), ignoreCase = true) }
 
     override suspend fun isDocumentoTaken(documento: String): Boolean =
         webCustomers.any { it.documento == documento.trim() }
 
+    override suspend fun login(email: String, password: String): Result<UserProfile> {
+        delay(NETWORK_DELAY_MS)
+        val clave = credentials[email.trim().lowercase()]
+        val profile = webCustomers.firstOrNull {
+            it.email.equals(email.trim(), ignoreCase = true)
+        }
+        if (clave == null || profile == null || clave != password) {
+            return Result.failure(InvalidCredentialsException())
+        }
+        return Result.success(profile)
+    }
+
     override suspend fun register(request: RegisterRequest): Result<UserProfile> {
         delay(NETWORK_DELAY_MS)
         val profile = request.toProfile()
         webCustomers += profile
+        credentials[profile.email.lowercase()] = request.password
         return Result.success(profile)
     }
 
     private companion object {
         const val NETWORK_DELAY_MS = 600L
+        const val DEMO_PASSWORD = "ModaViva123"
     }
 }
+
+private class InvalidCredentialsException : Exception("Credenciales incorrectas")

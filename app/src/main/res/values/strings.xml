@@ -6,6 +6,18 @@
     <string name="register_cta">Registrarme</string>
     <string name="register_checking">Verificando disponibilidad…</string>
 
+    <string name="login_title">Iniciar sesión</string>
+    <string name="login_subtitle">Ingresa tu correo y contraseña para entrar a tu cuenta.</string>
+    <string name="login_cta">Iniciar sesión</string>
+    <string name="login_register_cta">Registrarse</string>
+    <string name="register_login_cta">¿Ya tienes cuenta? Inicia sesión</string>
+
+    <string name="session_title">Sesión iniciada</string>
+    <string name="session_greeting">Hola, %1$s %2$s</string>
+    <string name="session_document">Documento: %1$s</string>
+    <string name="session_signout">Cerrar sesión</string>
+    <string name="session_empty">No hay ninguna sesión activa</string>
+
     <string name="field_nombres">Nombres</string>
     <string name="field_apellidos">Apellidos</string>
     <string name="field_documento">Documento (DNI)</string>

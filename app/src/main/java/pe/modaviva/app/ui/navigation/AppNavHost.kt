@@ -16,7 +16,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import pe.modaviva.app.ui.auth.login.LoginScreen
 import pe.modaviva.app.ui.auth.register.RegisterScreen
+import pe.modaviva.app.ui.session.SessionScreen
 import pe.modaviva.app.ui.theme.ModaVivaTheme
 
 @Composable
@@ -29,25 +31,34 @@ fun AppNavHost() {
             val navController = rememberNavController()
             NavHost(
                 navController = navController,
-                startDestination = Routes.REGISTER,
+                startDestination = Routes.LOGIN,
             ) {
+                composable(Routes.LOGIN) {
+                    LoginScreen(
+                        onRegisterClick = { navController.navigate(Routes.REGISTER) },
+                        onLoggedIn = { navController.navigate(Routes.SESSION) },
+                    )
+                }
+                composable(Routes.SESSION) {
+                    SessionScreen(
+                        onSignOut = {
+                            navController.popBackStack(Routes.LOGIN, inclusive = false)
+                        },
+                    )
+                }
                 composable(Routes.REGISTER) {
                     RegisterScreen(
                         onRegistered = { navController.navigate(Routes.EMAIL_VERIFY) },
-                    )
-                }
-                composable(Routes.LOGIN) {
-                    PlaceholderScreen(
-                        title = "Iniciar sesión",
-                        description = "Pantalla de HU-02 (Vila).",
-                        onBack = { navController.popBackStack() },
+                        onLoginClick = { navController.popBackStack() },
                     )
                 }
                 composable(Routes.EMAIL_VERIFY) {
                     PlaceholderScreen(
                         title = "Verifica tu correo",
                         description = "HU-01: se implementa al integrar Firebase Auth.",
-                        onBack = { navController.navigate(Routes.REGISTER) },
+                        onBack = {
+                            navController.popBackStack(Routes.LOGIN, inclusive = false)
+                        },
                     )
                 }
                 composable(Routes.ORDER_HISTORY) {
