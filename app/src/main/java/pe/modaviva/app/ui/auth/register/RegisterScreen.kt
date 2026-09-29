@@ -1,9 +1,11 @@
 package pe.modaviva.app.ui.auth.register
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -41,14 +43,21 @@ fun RegisterScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .imePadding()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+    BoxWithConstraints(
+        modifier = modifier.fillMaxSize(),
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = maxHeight)
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(
+                12.dp,
+                Alignment.CenterVertically,
+            ),
+        ) {
         Text(
             text = stringResource(R.string.register_title),
             style = MaterialTheme.typography.headlineMedium,
@@ -187,5 +196,6 @@ fun RegisterScreen(
             message = state.globalError,
             onMessageShown = viewModel::onDismissGlobalError,
         )
+        }
     }
 }
