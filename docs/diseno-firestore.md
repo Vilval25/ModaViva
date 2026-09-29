@@ -85,7 +85,11 @@ db.collection("pedidos")
 ```
 
 > `orderBy` sobre un campo distinto al de filtro exige un índice compuesto.
-> Crear en la consola: **Firestore → Índices → Agregar índice compuesto**.
+> Crear en la consola: **Firestore → Índices → Agregar índice compuesto**:
+> `pedidos` → `clienteWebId` (asc), `fecha` (desc).
+
+> El `clienteWebId` viene de la vinculación (`clientes/{authUid}.clienteWebId`, criterio 2).
+> Hasta que esté implementada, la consulta no se ejecuta y el historial se muestra vacío.
 
 ### 3.2 Búsqueda del cliente para vincular (HU-01, criterio 2)
 
@@ -131,9 +135,54 @@ La maneja Firebase Auth (`sendEmailVerification`) con un listener de `onEmailVer
 
 El sistema web histórico de ModaViva es ficticio, así que se simula con documentos sembrados en `clientes_web` y `pedidos`.
 
-- **Volumen:** ~300 documentos en `clientes_web` (suficiente para representar los ~45,000 clientes del caso de estudio sin pagar ni slowing).
+- **Volumen:** ~300 documentos en `clientes_web` (suficiente para representar los ~45,000 clientes del caso de estudio sin pagar ni slowing). Para la demo bastan los 4 clientes de abajo.
 - **No se siembran usuarios de Firebase Auth.** Crear 300 cuentas reales de Auth es inviable por costo y por los límites de email. Las cuentas de prueba se crean a mano (2 o 3) para las pruebas de HU-02 (login).
 - Los documentos semilla deben llevar un campo marcador, p. ej. `origen: "web"`, para distinguirlos de los creados desde la app.
+
+### 4.1 Guía para sembrar la demo
+
+Pasos en la consola de Firebase (Firestore → Datastore → "Iniciar colección"):
+
+**1) Colección `clientes_web`** — un documento por cliente semilla con estos campos:
+
+| Campo | Valor (ej. cliente 1) |
+| :--- | :--- |
+| `nombres` | María Fernanda |
+| `apellidos` | Torres Vargas |
+| `documento` | 40124685 |
+| `telefono` | 987542316 |
+| `email` | maria.torresv@modaviva.pe |
+| `origen` | "web" |
+| `vinculado` | false |
+| `authUid` | (vacío / null) |
+| `direcciones` | [] |
+
+Los 4 clientes semilla (también José Rojas 45527194 / 965331284, Camila Sánchez 43372156 / 976482195, Diego Mamani 46091837 / 993487265). Anotar el **id autogenerado** de cada documento: es el `clienteWebId` que se usará en los pedidos y en la vinculación.
+
+**2) Colección `pedidos`** — 2 a 4 documentos ligados al cliente de la demo:
+
+```
+pedidos/{autogenerado}
+ ├─ clienteWebId: "<id del doc clientes_web de María>"
+ ├─ clienteNombre: "María Fernanda Torres Vargas"   ← desnormalizado, se lee junto
+ ├─ numero: "MV-000123"
+ ├─ fecha: <timestamp>
+ ├─ estado: "Entregado"                              ← un pedido en cada estado de ejemplo
+ ├─ items: [
+ │    { sku: "BL-1002", nombre: "Blusa Manga Larga", talla: "M", color: "Blanco", cantidad: 1, precioUnitario: 89.90 }
+ │  ]
+ ├─ subtotal: 89.90
+ ├─ envio: 9.90
+ ├─ total: 99.80
+ └─ metodoPago: "Yape"
+```
+
+**3) Índice compuesto** — crearlo cuando la app lo pida (o de una vez):
+`pedidos`: `clienteWebId` **ASC**, `fecha` **DESC**.
+
+**4) Reglas** — en cuanto se deje el modo prueba, usar el borrador de la sección 5: `pedidos` y `clientes_web` quedan en **solo lectura** para la app (los pedidos los crea el backend web).
+
+> ⚠️ **Dependencia pendiente:** mientras la vinculación (HU-01 criterio 2) no esté implementada, la app no escribe `clientes/{uid}.clienteWebId` ni consulta `pedidos`. El historial queda **intencionalmente vacío** y la demo lo explica; sembrar Firestore por sí solo no hará que aparezcan pedidos.
 
 ---
 
@@ -180,6 +229,6 @@ service cloud.firestore {
 
 - [ ] Confirmar región de Firestore (recomendado: `southamerica-east1` por cercanía a Perú).
 - [ ] Definir si el catálogo (HU-03) va en su propia colección `prendas` o embebido.
-- [ ] Definir la estrategia de índice compuesto para `pedidos` (orden por fecha).
+- [x] Índice compuesto para `pedidos` (orden por fecha): `clienteWebId` asc + `fecha` desc (ver 3.1).
 - [ ] Definir cómo se sincroniza catálogo → Room (HU-03, modo offline).
 - [ ] Reglas para el Probador Virtual y las fotos del cliente (HU-11): consentimiento explícito y retención de datos personales.
