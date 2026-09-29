@@ -1,6 +1,5 @@
 package pe.modaviva.app.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -11,33 +10,48 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+private val LightColorScheme = lightColorScheme(
+    primary = SagePrimary,
+    onPrimary = SageOnPrimary,
+    primaryContainer = SagePrimaryContainer,
+    onPrimaryContainer = SageOnPrimaryContainer,
+    secondary = SageSecondary,
+    onSecondary = SageOnSecondary,
+    secondaryContainer = SageSecondaryContainer,
+    onSecondaryContainer = SageOnSecondaryContainer,
+    background = SageBackground,
+    onBackground = SageOnBackground,
+    surface = SageSurface,
+    onSurface = SageOnSurface,
+    surfaceVariant = SageSurfaceVariant,
+    onSurfaceVariant = SageOnSurfaceVariant,
+    outline = SageOutline,
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+private val DarkColorScheme = darkColorScheme(
+    primary = ForestPrimary,
+    onPrimary = ForestOnPrimary,
+    primaryContainer = ForestPrimaryContainer,
+    onPrimaryContainer = ForestOnPrimaryContainer,
+    secondary = ForestSecondary,
+    onSecondary = ForestOnSecondary,
+    secondaryContainer = ForestSecondaryContainer,
+    onSecondaryContainer = ForestOnSecondaryContainer,
+    background = ForestBackground,
+    onBackground = ForestOnBackground,
+    surface = ForestSurface,
+    onSurface = ForestOnSurface,
+    surfaceVariant = ForestSurfaceVariant,
+    onSurfaceVariant = ForestOnSurfaceVariant,
+    outline = ForestOutline,
 )
 
 @Composable
 fun ModaVivaTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Dynamic color solo para Android 12+; se desactiva para que se vea la
+    // paleta propia de ModaViva en lugar de los colores del wallpaper.
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
