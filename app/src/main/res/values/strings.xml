@@ -12,12 +12,24 @@
     <string name="login_register_cta">Registrarse</string>
     <string name="register_login_cta">¿Ya tienes cuenta? Inicia sesión</string>
 
-    <string name="session_title">Sesión iniciada</string>
     <string name="session_greeting">Hola, %1$s %2$s</string>
-    <string name="session_document">Documento: %1$s</string>
     <string name="session_signout">Cerrar sesión</string>
     <string name="session_empty">No hay ninguna sesión activa</string>
     <string name="session_email_pending">Tu correo aún no está verificado. Revisa tu bandeja de entrada y la carpeta de spam.</string>
+    <string name="session_section_options">Tus opciones</string>
+    <string name="session_orders">Mis pedidos</string>
+    <string name="session_orders_desc">Consulta tu historial de compras</string>
+    <string name="session_section_soon">Próximamente</string>
+    <string name="session_soon_badge">Próximamente</string>
+    <string name="session_soon_catalog">Catálogo de prendas</string>
+    <string name="session_soon_catalog_desc">Explora las novedades de la tienda</string>
+    <string name="session_soon_fitting">Probador virtual</string>
+    <string name="session_soon_fitting_desc">Prueba prendas con tu foto</string>
+
+    <string name="orders_title">Historial de pedidos</string>
+    <string name="orders_empty_title">Aún no tienes pedidos</string>
+    <string name="orders_empty_body">Cuando hagas tu primera compra, la verás aquí.</string>
+    <string name="orders_back">Volver</string>
 
     <string name="email_verify_title">Verifica tu correo</string>
     <string name="email_verify_body">Te enviamos un enlace de verificación a %1$s.\n\nRevisa tu bandeja de entrada y también la carpeta de spam. El enlace es válido por 24 horas.</string>
