@@ -42,7 +42,7 @@ estos archivos al cerrar cada hito; entre hitos no se edita.
 | [HU-01 — Registro de la cuenta](HU-01-registro-de-la-cuenta.md) | E1 | Perez | SEM 5 | 0/10 |
 | [HU-02 — Inicio de sesión y recuperación de contraseña](HU-02-inicio-de-sesion-y-recuperacion-de-contrasena.md) | E1 | Perez | SEM 5 – SEM 6 | 0/12 |
 | [HU-03 — Perfil del cliente](HU-03-perfil-del-cliente.md) | E1 | Perez | SEM 6 | 0/7 |
-| [HU-04 — Consulta del catálogo publicado](HU-04-consulta-del-catalogo-publicado.md) | E2 | Vila | SEM 6 | 0/8 |
+| [HU-04 — Consulta del catálogo publicado](HU-04-consulta-del-catalogo-publicado.md) | E2 | Vila | SEM 6 | 8/8 |
 | [HU-05 — Visualización de disponibilidad de las prendas](HU-05-visualizacion-de-disponibilidad-de-las-prendas.md) | E2 | Rojas | SEM 6 | 0/5 |
 | [HU-06 — Exploración y búsqueda del catálogo](HU-06-exploracion-y-busqueda-del-catalogo.md) | E3 | Rojas | SEM 6 – SEM 7 | 0/7 |
 | [HU-07 — Detalle de la prenda](HU-07-detalle-de-la-prenda.md) | E3 | Rojas | SEM 7 | 0/5 |
