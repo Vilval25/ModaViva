@@ -155,6 +155,28 @@ volver a cargar, así los datos y Firebase no se separan.
   **Solo las despliega la persona a cargo de la facturación**, después de
   revisar el PR: `firebase deploy --only functions`.
 
+- Prueba de humo del backend (HT-02 CA-05): en builds de debug la app llama a
+  la función `ping` al iniciar; el resultado aparece en Logcat con la etiqueta
+  `ModaVivaBackend`. También hay una prueba instrumentada:
+  ```bash
+  ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=pe.modaviva.app.PingFunctionTest
+  ```
+
+### Sin secretos en el APK
+
+Las claves de servicios externos (IA, LLM, pasarela de pago) viven solo en Cloud
+Functions. Antes de cada entrega, comprobar que el APK no lleva ninguna
+(HT-02 CA-06 y Definition of Done):
+
+```bash
+./gradlew :app:assembleRelease
+python scripts/verificar_apk.py app/build/outputs/apk/release/app-release-unsigned.apk
+```
+
+La clave API de Firebase sí aparece y es esperado: Firebase la necesita en la
+app, solo identifica el proyecto y no da acceso por sí misma. Lo que protege los
+datos son las reglas de seguridad.
+
 ### Control de gastos
 
 El proyecto está en plan Blaze con un **presupuesto de US$1 al mes** (alertas al
