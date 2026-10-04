@@ -26,13 +26,13 @@ Crear el proyecto Firebase y cargar, con un script reproducible, lo que la tiend
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado un proyecto Firebase vacío, cuando se ejecuta el script de carga, entonces se crean las colecciones clientes, prendas, stock, tiendas (5), cupones y tarifas de envío con datos consistentes entre sí.
-- [ ] **CA-02** Dado el archivo de clientes existentes, cuando se ejecuta el script, entonces cada cliente queda creado en Firebase Authentication con su correo y con su perfil en Firestore, enlazados por el mismo identificador.
-- [ ] **CA-03** Dado que el script ya se ejecutó, cuando se ejecuta de nuevo, entonces no se duplican clientes ni registros.
-- [ ] **CA-04** Dado un usuario sin sesión o un cliente distinto al dueño, cuando intenta leer o escribir datos de otro cliente, entonces las Security Rules rechazan la operación (verificado en el emulador).
-- [ ] **CA-05** Dado que la app llama a una Cloud Function de prueba, cuando se ejecuta, entonces responde correctamente (prueba de humo del backend).
-- [ ] **CA-06** Dado el APK generado, cuando se inspecciona, entonces no contiene ninguna clave de servicios externos (IA, LLM, pasarela de pago); estas viven solo en el servidor.
-- [ ] **CA-07** La forma de cargar y administrar los clientes y datos de la tienda está documentada en el repositorio.
+- [x] **CA-01** Dado un proyecto Firebase vacío, cuando se ejecuta el script de carga, entonces se crean las colecciones clientes, prendas, stock, tiendas (5), cupones y tarifas de envío con datos consistentes entre sí.
+- [x] **CA-02** Dado el archivo de clientes existentes, cuando se ejecuta el script, entonces cada cliente queda creado en Firebase Authentication con su correo y con su perfil en Firestore, enlazados por el mismo identificador.
+- [x] **CA-03** Dado que el script ya se ejecutó, cuando se ejecuta de nuevo, entonces no se duplican clientes ni registros.
+- [x] **CA-04** Dado un usuario sin sesión o un cliente distinto al dueño, cuando intenta leer o escribir datos de otro cliente, entonces las Security Rules rechazan la operación (verificado en el emulador).
+- [x] **CA-05** Dado que la app llama a una Cloud Function de prueba, cuando se ejecuta, entonces responde correctamente (prueba de humo del backend).
+- [x] **CA-06** Dado el APK generado, cuando se inspecciona, entonces no contiene ninguna clave de servicios externos (IA, LLM, pasarela de pago); estas viven solo en el servidor.
+- [x] **CA-07** La forma de cargar y administrar los clientes y datos de la tienda está documentada en el repositorio.
 
 ## Tecnologías
 
