@@ -26,10 +26,9 @@
     <string name="session_soon_fitting">Probador virtual</string>
     <string name="session_soon_fitting_desc">Prueba prendas con tu foto</string>
 
-    <string name="orders_title">Historial de pedidos</string>
+    <string name="orders_title">Mis pedidos</string>
     <string name="orders_empty_title">Aún no tienes pedidos</string>
     <string name="orders_empty_body">Cuando hagas tu primera compra, la verás aquí.</string>
-    <string name="orders_back">Volver</string>
 
     <string name="email_verify_title">Verifica tu correo</string>
     <string name="email_verify_body">Te enviamos un enlace de verificación a %1$s.\n\nRevisa tu bandeja de entrada y también la carpeta de spam. El enlace es válido por 24 horas.</string>
@@ -47,4 +46,46 @@
     <string name="support_password">Mínimo 8 caracteres, con mayúscula, minúscula y un número</string>
 
     <string name="cd_toggle_password">Mostrar u ocultar contraseña</string>
+    <!-- Navegación principal (HT-01) -->
+    <string name="tab_home">Inicio</string>
+    <string name="tab_categories">Categorías</string>
+    <string name="tab_profile">Perfil</string>
+    <string name="tab_fitting">Probador</string>
+    <string name="tab_orders">Mis pedidos</string>
+
+    <string name="home_search_hint">Buscar prendas</string>
+    <string name="home_catalog_soon_title">El catálogo llega pronto</string>
+    <string name="home_catalog_soon_body">Aquí verás las prendas publicadas por la tienda.</string>
+
+    <string name="search_title">Buscar</string>
+    <string name="favorites_title">Favoritos</string>
+    <string name="notifications_title">Notificaciones</string>
+    <string name="cart_title">Carrito</string>
+    <string name="fitting_title">Probador virtual</string>
+    <string name="coming_soon_title">Próximamente</string>
+    <string name="coming_soon_body">Estamos trabajando en esta sección.</string>
+
+    <string name="profile_title">Perfil</string>
+    <string name="profile_guest_title">Inicia sesión o crea tu cuenta</string>
+    <string name="profile_guest_body">Con tu cuenta podrás usar el probador virtual, guardar favoritos y comprar.</string>
+    <string name="profile_guest_login">Iniciar sesión</string>
+    <string name="profile_guest_register">Crear cuenta</string>
+
+    <!-- Componentes comunes (HT-01) -->
+    <string name="state_loading">Cargando…</string>
+    <string name="state_error_title">Algo salió mal</string>
+    <string name="state_error_body">No pudimos cargar la información. Inténtalo de nuevo.</string>
+    <string name="state_offline_title">Sin conexión</string>
+    <string name="state_offline_body">Revisa tu conexión a internet e inténtalo de nuevo.</string>
+    <string name="state_retry">Reintentar</string>
+    <string name="garment_sold_out">Agotado</string>
+    <string name="dialog_cancel">Cancelar</string>
+
+    <string name="cd_back">Volver</string>
+    <string name="cd_favorites">Favoritos</string>
+    <string name="cd_notifications">Notificaciones</string>
+    <string name="cd_cart">Carrito</string>
+    <string name="cd_favorite_add">Agregar a favoritos</string>
+    <string name="cd_favorite_remove">Quitar de favoritos</string>
+    <string name="cd_remove_filter">Quitar filtro %1$s</string>
 </resources>
