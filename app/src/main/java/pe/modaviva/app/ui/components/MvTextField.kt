@@ -1,6 +1,5 @@
 package pe.modaviva.app.ui.components
 
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -13,7 +12,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun MvTextField(
@@ -42,7 +40,7 @@ fun MvTextField(
             hadFocus = state.isFocused
         },
         label = { Text(text = label) },
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         isError = errorMessage != null,
         enabled = enabled,
         singleLine = singleLine,
