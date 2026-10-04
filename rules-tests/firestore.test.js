@@ -41,8 +41,8 @@ beforeEach(async () => {
     await setDoc(doc(db, "clientes", ANA), { nombres: "Ana", email: "ana@test.pe" });
     await setDoc(doc(db, "clientes", BETO), { nombres: "Beto", email: "beto@test.pe" });
     await setDoc(doc(db, "clientes", BETO, "favoritos", "BL-1002"), { agregadoEn: new Date() });
-    await setDoc(doc(db, "clientes", BETO, "carrito", "BL-1002_M_blanco"), {
-      prendaId: "BL-1002", talla: "M", color: "blanco", cantidad: 1, agregadoEn: new Date(),
+    await setDoc(doc(db, "clientes", BETO, "carrito", "BL-1002_M"), {
+      prendaId: "BL-1002", talla: "M", cantidad: 1, agregadoEn: new Date(),
     });
     await setDoc(doc(db, "prendas", "BL-1002"), { nombre: "Blusa", precio: 89.9 });
     await setDoc(doc(db, "cupones", "BIENVENIDA"), { tipo: "porcentaje", valor: 10 });
@@ -103,28 +103,29 @@ describe("favoritos", () => {
 
 describe("carrito", () => {
   const item = (cantidad) => ({
-    prendaId: "BL-1002", talla: "M", color: "blanco", cantidad, agregadoEn: serverTimestamp(),
+    prendaId: "BL-1002", talla: "M", cantidad, agregadoEn: serverTimestamp(),
   });
 
   test("un cliente agrega un ítem válido a su carrito", async () => {
-    await assertSucceeds(setDoc(doc(as(ANA), "clientes", ANA, "carrito", "BL-1002_M_blanco"), item(2)));
+    await assertSucceeds(setDoc(doc(as(ANA), "clientes", ANA, "carrito", "BL-1002_M"), item(2)));
   });
 
   test("se rechazan cantidades fuera de 1–99 o no enteras", async () => {
-    const ref = doc(as(ANA), "clientes", ANA, "carrito", "BL-1002_M_blanco");
+    const ref = doc(as(ANA), "clientes", ANA, "carrito", "BL-1002_M");
     await assertFails(setDoc(ref, item(0)));
     await assertFails(setDoc(ref, item(100)));
     await assertFails(setDoc(ref, item(1.5)));
   });
 
-  test("el carrito no acepta campos extra como el precio", async () => {
-    const ref = doc(as(ANA), "clientes", ANA, "carrito", "BL-1002_M_blanco");
+  test("el carrito no acepta campos extra como el precio o el color", async () => {
+    const ref = doc(as(ANA), "clientes", ANA, "carrito", "BL-1002_M");
     await assertFails(setDoc(ref, { ...item(1), precio: 1 }));
+    await assertFails(setDoc(ref, { ...item(1), color: "blanco" }));
   });
 
   test("un cliente no ve ni toca el carrito de otro", async () => {
-    await assertFails(getDoc(doc(as(ANA), "clientes", BETO, "carrito", "BL-1002_M_blanco")));
-    await assertFails(setDoc(doc(as(ANA), "clientes", BETO, "carrito", "X_M_rojo"), item(1)));
+    await assertFails(getDoc(doc(as(ANA), "clientes", BETO, "carrito", "BL-1002_M")));
+    await assertFails(setDoc(doc(as(ANA), "clientes", BETO, "carrito", "X_M"), item(1)));
   });
 });
 

@@ -1,0 +1,12 @@
+{
+  "name": "modaviva-seed",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "cargar:emulador": "node cargar.mjs --emulador",
+    "cargar:produccion": "node cargar.mjs --produccion"
+  },
+  "dependencies": {
+    "firebase-admin": "^14.5.0"
+  }
+}

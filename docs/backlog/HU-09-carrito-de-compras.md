@@ -14,7 +14,7 @@
 
 ## Descripción funcional
 
-El cliente agrega prendas indicando talla, color y cantidad; puede editar cantidades o eliminar ítems y ve el subtotal al instante. El carrito funciona sin cuenta: se guarda en el dispositivo y, al iniciar sesión, sus ítems se suman al carrito de la cuenta, que se recupera en cualquier dispositivo. Para pagar se requiere sesión.
+El cliente agrega prendas indicando talla y cantidad; puede editar cantidades o eliminar ítems y ve el subtotal al instante. El carrito funciona sin cuenta: se guarda en el dispositivo y, al iniciar sesión, sus ítems se suman al carrito de la cuenta, que se recupera en cualquier dispositivo. Para pagar se requiere sesión.
 
 ## Pantallas
 
@@ -23,7 +23,7 @@ El cliente agrega prendas indicando talla, color y cantidad; puede editar cantid
 
 ## Componentes UI
 
-- Ítem de carrito (foto, talla, color, precio)
+- Ítem de carrito (foto, talla, color de la prenda, precio)
 - Selector de cantidad (+/–)
 - Eliminar con opción 'Deshacer'
 - Resumen de subtotal
@@ -32,8 +32,8 @@ El cliente agrega prendas indicando talla, color y cantidad; puede editar cantid
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que elegí talla, color y cantidad, cuando toco 'Agregar al carrito', entonces el ítem aparece en el carrito y la insignia se actualiza.
-- [ ] **CA-02** Dado que la misma prenda con la misma talla y color ya está en el carrito, cuando la agrego otra vez, entonces se suma la cantidad en lugar de crear otra línea.
+- [ ] **CA-01** Dado que elegí talla y cantidad, cuando toco 'Agregar al carrito', entonces el ítem aparece en el carrito y la insignia se actualiza.
+- [ ] **CA-02** Dado que la misma prenda con la misma talla ya está en el carrito, cuando la agrego otra vez, entonces se suma la cantidad en lugar de crear otra línea.
 - [ ] **CA-03** Dado que cambio la cantidad o elimino un ítem, cuando confirmo, entonces el subtotal se recalcula al instante y puedo deshacer la eliminación durante unos segundos.
 - [ ] **CA-04** Dado que intento una cantidad mayor al stock disponible, cuando toco '+', entonces el selector se detiene en el máximo y veo 'Solo quedan N unidades'.
 - [ ] **CA-05** Dado que cierro la app o pierdo la conexión, cuando vuelvo, entonces el carrito se mantiene; y al iniciar sesión en otro dispositivo veo el mismo carrito.

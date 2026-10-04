@@ -14,10 +14,10 @@ prenda para no leer todo el stock al pintar el catálogo).
 | :--- | :--- | :--- | :--- | :--- |
 | `clientes/{uid}` | UID de Firebase Auth | el propio cliente | el propio cliente | HU-01, HU-02, HU-03 |
 | `clientes/{uid}/favoritos/{prendaId}` | código de la prenda | el propio cliente | el propio cliente | HU-08 |
-| `clientes/{uid}/carrito/{varianteId}` | `{prendaId}_{talla}_{color}` | el propio cliente | el propio cliente | HU-09 |
+| `clientes/{uid}/carrito/{varianteId}` | `{prendaId}_{talla}` | el propio cliente | el propio cliente | HU-09 |
 | `categorias/{slug}` | slug de la categoría | back-office | todos (también invitados) | HU-06 |
 | `prendas/{prendaId}` | código de la prenda | back-office | todos | HU-04, HU-06, HU-07 |
-| `stock/{varianteId}` | `{prendaId}_{talla}_{color}` | back-office | todos | HU-05, HU-07, HU-09 |
+| `stock/{varianteId}` | `{prendaId}_{talla}` | back-office | todos | HU-05, HU-07, HU-09 |
 | `tiendas/{tiendaId}` | `T01`…`T05` | back-office | todos | HU-05, HU-20 |
 | `tarifasEnvio/{distrito}` | slug del distrito | back-office | todos | HU-19, HU-20 |
 | `cupones/{codigo}` | código del cupón | back-office | **solo el servidor** | HU-19 |
@@ -79,12 +79,11 @@ la prenda actual (HU-08 CA-03).
 | :--- | :--- | :--- |
 | `prendaId` | string | |
 | `talla` | string | |
-| `color` | string | Slug del color. |
 | `cantidad` | number | |
 | `agregadoEn` | timestamp | |
 
-El ID es la variante, así que agregar otra vez la misma prenda, talla y color
-suma la cantidad en el mismo documento en lugar de crear otra línea
+El ID es la variante (prenda + talla), así que agregar otra vez la misma prenda
+y talla suma la cantidad en el mismo documento en lugar de crear otra línea
 (HU-09 CA-02). El precio no se guarda: se usa siempre el precio actual
 (HU-09 CA-06).
 
@@ -95,7 +94,7 @@ suma la cantidad en el mismo documento en lugar de crear otra línea
 | Campo | Tipo | Notas |
 | :--- | :--- | :--- |
 | `nombre` | string | "Blusas" |
-| `imagenUrl` | string | Imagen de la lista de categorías. |
+| `imagenUrl` | string | Imagen de la lista de categorías: la primera foto de una de sus prendas. |
 | `orden` | number | Orden en la pestaña Categorías. |
 | `subcategorias` | array | `[{ slug, nombre }]` |
 
@@ -107,16 +106,19 @@ El ID es el código de la prenda (`BL-1002`).
 | :--- | :--- | :--- |
 | `codigo` | string | Igual al ID; se muestra en la ficha (HU-07 CA-01). |
 | `nombre` | string | |
-| `descripcion` | string | |
+| `descripcion` | string | Texto del dataset de prendas, en su idioma original. |
+| `detalles` | array\<string\> | Material, cuidado, origen ("Material: 100% cotton"). Para la ficha (HU-07). |
+| `ajuste` | array\<string\> | Calce y talla que usa la modelo ("Height of model is 175cm and wears a size 26"). Útil para HU-15. |
 | `marca` | string | |
+| `genero` | `"mujer"` \| `"hombre"` \| null | Para filtrar (HU-06) y recomendar (HU-26). |
 | `categoria` | string | Slug de `categorias`. |
 | `subcategoria` | string | Slug de la subcategoría. |
 | `precio` | number | Precio regular en soles. |
 | `precioPromo` | number \| null | Precio de promoción; `null` si no hay (HU-06 CA-07). |
 | `promoHasta` | timestamp \| null | Fin de la promoción. |
-| `tallas` | array\<string\> | `["S", "M", "L"]`, en orden de talla. |
-| `colores` | array\<map\> | `[{ slug: "blanco", nombre: "Blanco", hex: "#FFFFFF" }]` |
-| `medidas` | map | Tabla de medidas en cm por talla: `{ "S": { "pecho": 88, "largo": 62 } }` (HU-07 CA-03). |
+| `tallas` | array\<string\> | En orden de talla y en el sistema que se usa en Perú: `XS`–`XL` para prendas superiores y abrigos, número de cintura (`"26"`) para jeans. |
+| `color` | map | `{ slug: "blanco", nombre: "Blanco", hex: "#FFFFFF" }`. Cada prenda es única y tiene **un solo color**: no se elige en la ficha, solo se muestra y sirve para buscar y filtrar (HU-06). |
+| `medidas` | map | Tabla de medidas en cm por talla: `{ "S": { "pecho": 88, "largo": 62 } }` (HU-07 CA-03). Claves posibles: `largo`, `pecho`, `cintura`, `cadera`, `muslo`, `entrepierna`, `tiro`, `hombro`, `manga`. |
 | `fotos` | array\<string\> | URLs de descarga de Storage, la primera es la portada. |
 | `publicada` | boolean | La controla el back-office (HU-04 CA-03, CA-05). |
 | `fotosAprobadas` | boolean | Ídem. |
@@ -127,11 +129,11 @@ El ID es el código de la prenda (`BL-1002`).
 
 **El catálogo de Inicio** consulta
 `publicada == true && fotosAprobadas == true`, ordenado por `creadaEn` desc. La
-app además descarta las fichas incompletas (sin código, precio, tallas, colores
+app además descarta las fichas incompletas (sin código, precio, tallas, color
 o medidas), como pide HU-04 CA-04.
 
 **La búsqueda** usa `palabrasClave array-contains <texto>`. El script genera la
-lista a partir del nombre, la marca, la categoría y la subcategoría: cada
+lista a partir del nombre, la marca, la categoría, la subcategoría y el color: cada
 palabra en minúsculas y sin tildes, más sus prefijos de 2 o más letras
 (`"blusa"` → `bl`, `blu`, `blus`, `blusa`). Así "blu" o "BLÚ" encuentran
 "Blusa". Firestore no tiene búsqueda de texto libre; para algo más completo
@@ -143,19 +145,18 @@ agregar una Cloud Function que lo recalcule cuando cambie `stock`.
 
 ## `stock/{varianteId}` (HU-05, HU-07, HU-09)
 
-Un documento por combinación prenda–talla–color, con el stock de cada tienda.
+Un documento por combinación prenda–talla, con el stock de cada tienda.
 
 | Campo | Tipo | Notas |
 | :--- | :--- | :--- |
 | `prendaId` | string | Para escuchar el stock de una prenda en tiempo real. |
 | `talla` | string | |
-| `color` | string | Slug del color. |
 | `porTienda` | map | `{ "T01": 3, "T02": 0, "T03": 5, "T04": 1, "T05": 0 }` |
 | `total` | number | Suma de `porTienda`; `0` = combinación agotada (HU-05 CA-01). |
 | `actualizadoEn` | timestamp | |
 
 La ficha escucha `stock where prendaId == X` (HU-05 CA-03, CA-05) y muestra
-las tiendas con stock de la combinación elegida (HU-05 CA-04).
+las tiendas con stock de la talla elegida (HU-05 CA-04).
 
 ## `tiendas/{tiendaId}` (HU-05, HU-20)
 
