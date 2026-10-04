@@ -88,6 +88,7 @@ private fun NavGraphBuilder.topLevelGraph(
             onSearchClick = { navController.navigate(Routes.SEARCH) },
             onFavoritesClick = { navController.navigate(Routes.FAVORITES) },
             onCartClick = { navController.navigate(Routes.CART) },
+            onPrendaClick = { codigo -> navController.navigate(Routes.prenda(codigo)) },
         )
     }
     composable(TopLevelDestination.CATEGORIES.route) {
@@ -136,6 +137,14 @@ private fun NavGraphBuilder.overlayGraph(
         ComingSoonScreen(
             title = stringResource(R.string.notifications_title),
             icon = Icons.Outlined.Notifications,
+            onBack = { navController.popBackStack() },
+        )
+    }
+    // Ficha de la prenda: la construye HU-07.
+    composable(Routes.PRENDA) {
+        ComingSoonScreen(
+            title = stringResource(R.string.prenda_detail_title),
+            icon = Icons.Outlined.Checkroom,
             onBack = { navController.popBackStack() },
         )
     }
