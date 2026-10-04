@@ -37,6 +37,8 @@ El tratamiento de la fotografía del cliente se rige por la **Ley N° 29733** de
 ## Documentación
 
 - **[Backlog](docs/backlog/README.md)** — Fuente de verdad durante el desarrollo: una historia por archivo con sus criterios de aceptación. El Excel del backlog se mantiene fuera del repositorio y se actualiza al cerrar cada hito.
+- **[Carga de datos y back-office](docs/carga-de-datos.md)** — Dónde están los datos del negocio (fuera del repo), cómo cargarlos en Firebase y cómo administrarlos.
+- **[Modelo de datos](docs/modelo-datos.md)** — Colecciones de Firestore.
 - **[Caso de estudio](docs/CASO_DE_ESTUDIO_MODAVIVA.md)** — Contexto empresarial, definición del problema, stakeholders, procesos actuales y restricciones legales.
 - **[Backlog anterior](docs/BACKLOG_MODAVIVA.md)** — _Histórico, ya no se usa._ 8 épicas y 22 historias de usuario con encargado asignado, cronograma, stack por historia y criterios de aceptación.
 

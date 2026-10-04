@@ -1,0 +1,3 @@
+node_modules/
+# Los datos del negocio nunca van al repositorio (ver docs/carga-de-datos.md)
+data/

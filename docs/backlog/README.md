@@ -89,5 +89,11 @@ respecto a la versión anterior".
   pedidos), porque Material 3 recomienda de 3 a 5 destinos. Carrito se abre desde un
   ícono en la barra superior de Inicio, que queda así, de izquierda a derecha:
   Notificaciones, buscador, Favoritos y Carrito.
+- **Prenda única de un solo color (HU-04, HU-05, HU-07, HU-09; modelo de datos):**
+  cada producto del catálogo es una prenda única con un solo color. El color se
+  muestra y sirve para buscar y filtrar (HU-06), pero no se elige: el cliente
+  solo elige la talla, y el stock y el carrito van por prenda y talla. Al
+  revisar el Sprint 2, ajustar HU-12 ("elige talla y color") y HU-13 (historial
+  con color) en el mismo sentido.
 
 Ver también: [Supuestos, DoR, DoD y requisitos del curso](SUPUESTOS.md).

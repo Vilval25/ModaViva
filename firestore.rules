@@ -38,10 +38,9 @@ service cloud.firestore {
         allow read, delete: if isOwner(uid);
         allow create, update: if isOwner(uid)
           && request.resource.data.keys()
-               .hasOnly(['prendaId', 'talla', 'color', 'cantidad', 'agregadoEn'])
+               .hasOnly(['prendaId', 'talla', 'cantidad', 'agregadoEn'])
           && request.resource.data.prendaId is string
           && request.resource.data.talla is string
-          && request.resource.data.color is string
           && request.resource.data.cantidad is int
           && request.resource.data.cantidad >= 1
           && request.resource.data.cantidad <= 99;

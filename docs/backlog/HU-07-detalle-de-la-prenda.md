@@ -14,7 +14,7 @@
 
 ## Descripción funcional
 
-Al tocar una prenda se abre su ficha: galería de fotos, nombre, código, precio, descripción, selector de talla y color, tabla de medidas, plazo de entrega, tiendas con stock, favorito y botón para agregar al carrito. El botón 'Probarme' se habilita en HU-12.
+Al tocar una prenda se abre su ficha: galería de fotos, nombre, código, precio, descripción, color de la prenda, selector de talla, tabla de medidas, plazo de entrega, tiendas con stock, favorito y botón para agregar al carrito. El botón 'Probarme' se habilita en HU-12.
 
 ## Pantallas
 
@@ -25,7 +25,8 @@ Al tocar una prenda se abre su ficha: galería de fotos, nombre, código, precio
 ## Componentes UI
 
 - Carrusel (pager) de fotos con zoom
-- Chips de talla y color
+- Chips de talla
+- Muestra del color de la prenda (no seleccionable)
 - Bottom sheet de tabla de medidas
 - Ícono de favorito
 - Botón 'Agregar al carrito'
@@ -33,11 +34,11 @@ Al tocar una prenda se abre su ficha: galería de fotos, nombre, código, precio
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que abro una prenda, cuando carga la ficha, entonces veo fotos, nombre, código, precio, descripción, tallas y colores.
+- [ ] **CA-01** Dado que abro una prenda, cuando carga la ficha, entonces veo fotos, nombre, código, precio, descripción, color y tallas.
 - [ ] **CA-02** Dado que toco una foto, cuando se abre la galería a pantalla completa, entonces puedo deslizar entre fotos y hacer zoom.
 - [ ] **CA-03** Dado que toco 'Tabla de medidas', cuando se abre, entonces veo las medidas en cm por talla sin salir de la ficha.
-- [ ] **CA-04** Dado que no he elegido talla y color, cuando veo el botón de compra, entonces está deshabilitado con el texto 'Elige talla y color'.
-- [ ] **CA-05** Dado que elijo una combinación disponible, cuando la selecciono, entonces veo el plazo estimado de entrega y las tiendas con stock (ver HU-05).
+- [ ] **CA-04** Dado que no he elegido talla, cuando veo el botón de compra, entonces está deshabilitado con el texto 'Elige tu talla'.
+- [ ] **CA-05** Dado que elijo una talla disponible, cuando la selecciono, entonces veo el plazo estimado de entrega y las tiendas con stock (ver HU-05).
 
 ## Tecnologías
 
