@@ -1,0 +1,99 @@
+rules_version = '2';
+
+// Reglas de Firestore (HT-02 CA-04). El modelo está en docs/modelo-datos.md.
+//
+// - Cada cliente solo puede leer y escribir sus propios datos.
+// - El catálogo es de solo lectura para la app, también para invitados.
+// - Lo que solo usa el servidor (cupones) no se puede leer desde la app.
+// - Todo lo que no está listado aquí se rechaza.
+//
+// Las Cloud Functions y el script de carga usan el Admin SDK, que no pasa por
+// estas reglas.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // --- Datos de cada cliente -------------------------------------------
+
+    match /clientes/{uid} {
+      allow read, create, update: if isOwner(uid);
+      // El perfil no se borra desde la app.
+      allow delete: if false;
+
+      match /favoritos/{prendaId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(['agregadoEn'])
+          && request.resource.data.agregadoEn is timestamp;
+      }
+
+      match /carrito/{varianteId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && request.resource.data.keys()
+               .hasOnly(['prendaId', 'talla', 'color', 'cantidad', 'agregadoEn'])
+          && request.resource.data.prendaId is string
+          && request.resource.data.talla is string
+          && request.resource.data.color is string
+          && request.resource.data.cantidad is int
+          && request.resource.data.cantidad >= 1
+          && request.resource.data.cantidad <= 99;
+      }
+    }
+
+    // --- Catálogo: lectura pública, escritura solo desde el back-office ---
+
+    match /categorias/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /prendas/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /stock/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /tiendas/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /tarifasEnvio/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // --- Solo servidor ----------------------------------------------------
+
+    // Los lee la Cloud Function que calcula el pedido (HU-19). Si la app
+    // pudiera leerlos, cualquiera podría listar los cupones vigentes.
+    match /cupones/{codigo} {
+      allow read, write: if false;
+    }
+
+    // --- TEMPORAL: eliminar cuando HU-01 se rehaga sin DNI ----------------
+    //
+    // El registro actual (backlog anterior) reserva el DNI en esta colección
+    // para garantizar que sea único. Se permite solo lo que ese código hace:
+    // consultar si un DNI existe y reservarlo para la propia cuenta.
+    match /documentos/{documento} {
+      allow get: if true;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['authUid'])
+        && request.resource.data.authUid == request.auth.uid;
+      allow list, update, delete: if false;
+    }
+  }
+}
