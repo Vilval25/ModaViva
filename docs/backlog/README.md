@@ -37,7 +37,7 @@ estos archivos al cerrar cada hito; entre hitos no se edita.
 
 | Historia | Épica | Encargado | Semanas | Criterios |
 | :--- | :--- | :--- | :--- | :---: |
-| [HT-01 — Diseño base con Material Design 3](HT-01-diseno-base-con-material-design-3.md) | E0 | Vila | SEM 5 | 0/9 |
+| [HT-01 — Diseño base con Material Design 3](HT-01-diseno-base-con-material-design-3.md) | E0 | Vila | SEM 5 | 6/9 |
 | [HT-02 — Infraestructura Firebase y carga de datos existentes](HT-02-infraestructura-firebase-y-carga-de-datos-existentes.md) | E0 | Vila | SEM 5 – SEM 6 | 0/7 |
 | [HU-01 — Registro de la cuenta](HU-01-registro-de-la-cuenta.md) | E1 | Perez | SEM 5 | 0/10 |
 | [HU-02 — Inicio de sesión y recuperación de contraseña](HU-02-inicio-de-sesion-y-recuperacion-de-contrasena.md) | E1 | Perez | SEM 5 – SEM 6 | 0/12 |

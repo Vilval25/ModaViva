@@ -34,13 +34,13 @@ Definir el tema de la app siguiendo los lineamientos de Material Design 3: esque
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado el tema de la app, cuando se revisa, entonces usa el esquema de color, la tipografía y las formas de Material Design 3 generados con Material Theme Builder.
-- [ ] **CA-02** Dado que el sistema cambia entre modo claro y oscuro, cuando se abre la app, entonces aplica la paleta correspondiente sin textos ilegibles.
-- [ ] **CA-03** Dado que abro la app, cuando termina de cargar, entonces se muestra Inicio con el catálogo, haya o no sesión iniciada.
-- [ ] **CA-04** Dado la barra inferior, cuando la veo en cualquier pantalla principal, entonces muestra en este orden Inicio, Categorías, Perfil, Probador y Mis pedidos, con la pestaña actual resaltada.
-- [ ] **CA-05** Dado que estoy en Inicio, cuando veo la barra superior, entonces muestra, de izquierda a derecha, el ícono de Notificaciones, el buscador y los íconos de Favoritos y Carrito.
+- [x] **CA-01** Dado el tema de la app, cuando se revisa, entonces usa el esquema de color, la tipografía y las formas de Material Design 3 generados con Material Theme Builder.
+- [x] **CA-02** Dado que el sistema cambia entre modo claro y oscuro, cuando se abre la app, entonces aplica la paleta correspondiente sin textos ilegibles.
+- [x] **CA-03** Dado que abro la app, cuando termina de cargar, entonces se muestra Inicio con el catálogo, haya o no sesión iniciada.
+- [x] **CA-04** Dado la barra inferior, cuando la veo en cualquier pantalla principal, entonces muestra en este orden Inicio, Categorías, Perfil, Probador y Mis pedidos, con la pestaña actual resaltada.
+- [x] **CA-05** Dado que estoy en Inicio, cuando veo la barra superior, entonces muestra, de izquierda a derecha, el ícono de Notificaciones, el buscador y los íconos de Favoritos y Carrito.
 - [ ] **CA-06** Dado la navegación principal, cuando se recorre la app, entonces todas las pantallas listadas en este backlog son alcanzables en máximo 3 toques desde Inicio.
-- [ ] **CA-07** Dado un componente base (botón, tarjeta de prenda, campo de texto, diálogo), cuando se usa en una pantalla, entonces se toma del módulo común y no se redefine.
+- [x] **CA-07** Dado un componente base (botón, tarjeta de prenda, campo de texto, diálogo), cuando se usa en una pantalla, entonces se toma del módulo común y no se redefine.
 - [ ] **CA-08** Dado cualquier pantalla que consulta datos, cuando se implementa, entonces usa los componentes comunes de carga, vacío, error y sin conexión.
 - [ ] **CA-09** Los textos cumplen contraste mínimo WCAG AA y todos los elementos táctiles miden al menos 48 dp.
 
