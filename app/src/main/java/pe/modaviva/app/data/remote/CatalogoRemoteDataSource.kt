@@ -2,6 +2,7 @@ package pe.modaviva.app.data.remote
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.Source
@@ -28,12 +29,17 @@ class CatalogoRemoteDataSource @Inject constructor(
         .orderBy("creadaEn", Query.Direction.DESCENDING)
 
     /**
-     * Emite el catálogo cada vez que cambia en el servidor. Ignora lo que
+     * Emite el catálogo cada vez que el servidor lo confirma. Ignora lo que
      * Firestore sirve desde su propia caché (sin conexión): la copia local la
      * maneja Room, y así la fecha de "última actualización" es real.
+     *
+     * MetadataChanges.INCLUDE es necesario: si al reconectar el catálogo no
+     * cambió, Firestore solo avisa que los datos pasaron de "caché" a
+     * "servidor", sin cambios en los documentos, y sin INCLUDE ese aviso no
+     * llega.
      */
     fun escuchar(): Flow<List<Prenda>> = callbackFlow {
-        val registro = consulta().addSnapshotListener { snapshot, error ->
+        val registro = consulta().addSnapshotListener(MetadataChanges.INCLUDE) { snapshot, error ->
             when {
                 error != null -> close(error)
                 snapshot != null && !snapshot.metadata.isFromCache -> trySend(prendasValidas(snapshot))
