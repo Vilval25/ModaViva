@@ -36,6 +36,7 @@ import pe.modaviva.app.ui.orders.OrderHistoryScreen
 import pe.modaviva.app.ui.placeholder.ComingSoonScreen
 import pe.modaviva.app.ui.profile.ProfileTab
 import pe.modaviva.app.ui.theme.ModaVivaTheme
+import pe.modaviva.app.ui.stock.StockTestScreen
 
 /**
  * Navegación de la app. Se entra directo a Inicio, sin pedir sesión
@@ -66,7 +67,7 @@ fun AppNavHost() {
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = TopLevelDestination.HOME.route,
+                startDestination = "stock-test",
                 modifier = Modifier
                     .padding(innerPadding)
                     .consumeWindowInsets(innerPadding),
@@ -155,6 +156,10 @@ private fun NavGraphBuilder.overlayGraph(
             onBack = { navController.popBackStack() },
         )
     }
+    composable("stock-test") {
+        StockTestScreen()
+    }
+
 }
 
 /**
