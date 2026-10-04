@@ -8,3 +8,14 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Firebase
+firebase-debug.log
+firestore-debug.log
+storage-debug.log
+pubsub-debug.log
+ui-debug.log
+.firebase/
+# Claves de cuentas de servicio: nunca al repositorio (HT-02 CA-06)
+*service-account*.json
+*-firebase-adminsdk-*.json

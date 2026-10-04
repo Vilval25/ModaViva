@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// Reglas de Cloud Storage (HT-02 CA-04).
+//
+// Las fotos del catálogo y de las categorías son públicas y solo las sube el
+// back-office (script de carga o consola). Todo lo demás se rechaza; las fotos
+// de los clientes para el probador (HU-11) tendrán sus propias reglas.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    match /prendas/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /categorias/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

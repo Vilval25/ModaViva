@@ -1,0 +1,14 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "prendas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "publicada", "order": "ASCENDING" },
+        { "fieldPath": "fotosAprobadas", "order": "ASCENDING" },
+        { "fieldPath": "creadaEn", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
