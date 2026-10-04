@@ -8,15 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -29,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pe.modaviva.app.R
+import pe.modaviva.app.ui.components.MvPrimaryButton
+import pe.modaviva.app.ui.components.MvTextButton
 import pe.modaviva.app.domain.model.AuthFormField
 import pe.modaviva.app.ui.components.MvFormErrors
 import pe.modaviva.app.ui.components.MvPasswordField
@@ -158,23 +156,15 @@ fun RegisterScreen(
             imeAction = ImeAction.Done,
         )
 
-        Button(
+        MvPrimaryButton(
+            text = stringResource(R.string.register_cta),
             onClick = { viewModel.onSubmit(onRegistered) },
             enabled = state.canSubmit,
+            loading = state.isSubmitting,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 8.dp),
-        ) {
-            if (state.isSubmitting) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                )
-            } else {
-                Text(text = stringResource(R.string.register_cta))
-            }
-        }
+        )
 
         if (state.isCheckingDocumento) {
             Text(
@@ -185,12 +175,11 @@ fun RegisterScreen(
             )
         }
 
-        TextButton(
+        MvTextButton(
+            text = stringResource(R.string.register_login_cta),
             onClick = onLoginClick,
             modifier = Modifier.align(Alignment.CenterHorizontally),
-        ) {
-            Text(text = stringResource(R.string.register_login_cta))
-        }
+        )
 
         MvFormErrors(
             message = state.globalError,

@@ -18,7 +18,6 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Face3
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Storefront
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -35,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pe.modaviva.app.R
+import pe.modaviva.app.ui.components.MvSecondaryButton
 
 @Composable
 fun SessionScreen(
@@ -122,7 +122,8 @@ fun SessionScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Button(
+                MvSecondaryButton(
+                    text = stringResource(R.string.session_signout),
                     onClick = {
                         viewModel.signOut()
                         onSignOut()
@@ -130,9 +131,7 @@ fun SessionScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 16.dp),
-                ) {
-                    Text(text = stringResource(R.string.session_signout))
-                }
+                )
             }
         }
     }
