@@ -2,6 +2,7 @@ package pe.modaviva.app.di
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.functions.FirebaseFunctions
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,4 +24,9 @@ object FirebaseModule {
     @Provides
     @Singleton
     fun provideFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
+
+    /** Misma región en la que se despliegan las funciones (functions/src/index.ts). */
+    @Provides
+    @Singleton
+    fun provideFunctions(): FirebaseFunctions = FirebaseFunctions.getInstance("us-central1")
 }
