@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import pe.modaviva.app.R
+import pe.modaviva.app.ui.components.MvPrimaryButton
 
 @Composable
 fun EmailVerifyScreen(
@@ -61,9 +61,10 @@ fun EmailVerifyScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-        Button(onClick = onBack) {
-            Text(text = stringResource(R.string.email_verify_back))
-        }
+        MvPrimaryButton(
+            text = stringResource(R.string.email_verify_back),
+            onClick = onBack,
+        )
         }
     }
 }
