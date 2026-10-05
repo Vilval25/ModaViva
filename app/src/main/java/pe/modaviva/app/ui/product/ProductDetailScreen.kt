@@ -35,6 +35,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import pe.modaviva.app.ui.stock.StockAvailability
+import androidx.compose.material3.Button
 
 @Composable
 fun ProductDetailScreen(
@@ -164,6 +165,16 @@ fun ProductDetailScreen(
             StockAvailability(
                 stockByStore = it.porTienda,
             )
+        }
+
+        Button(
+            onClick = {
+                // Pendiente: agregar al carrito
+            },
+            enabled = tallaSeleccionada != null && colorSeleccionado,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Agregar al carrito")
         }
     }
 }
