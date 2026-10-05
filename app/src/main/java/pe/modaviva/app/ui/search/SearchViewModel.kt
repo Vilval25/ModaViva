@@ -37,6 +37,9 @@ class SearchViewModel @Inject constructor(
     val generoSeleccionado: StateFlow<String?> =
         _generoSeleccionado
 
+    private val _marcaSeleccionada = MutableStateFlow<String?>(null)
+    val marcaSeleccionada: StateFlow<String?> = _marcaSeleccionada
+
     val categorias: StateFlow<List<String>> = catalogo.prendas
         .combine(_categoriaSeleccionada) { prendas, _ ->
             prendas
@@ -85,13 +88,43 @@ class SearchViewModel @Inject constructor(
             emptyList(),
         )
 
+    val marcas: StateFlow<List<String>> = catalogo.prendas
+        .map { prendas ->
+            prendas
+                .map { it.marca }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .sorted()
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            emptyList(),
+        )
+
     val resultados: StateFlow<List<Prenda>> = combine(
         catalogo.prendas,
         _textoBusqueda,
         _categoriaSeleccionada,
         _subcategoriaSeleccionada,
-        _generoSeleccionado,
-    ) { prendas, texto, categoria, subcategoria, genero ->
+    ) { prendas, texto, categoria, subcategoria ->
+
+        Triple(
+            prendas,
+            texto,
+            Pair(categoria, subcategoria),
+        )
+    }.combine(
+        combine(
+            _generoSeleccionado,
+            _marcaSeleccionada,
+        ) { genero, marca ->
+            Pair(genero, marca)
+        }
+    ) { datos, filtros ->
+        val (prendas, texto, categoriaSubcategoria) = datos
+        val (categoria, subcategoria) = categoriaSubcategoria
+        val (genero, marca) = filtros
 
         val consulta = texto.trim()
 
@@ -104,7 +137,10 @@ class SearchViewModel @Inject constructor(
 
             val coincideCategoria =
                 categoria == null ||
-                        prenda.categoria.equals(categoria, ignoreCase = true)
+                        prenda.categoria.equals(
+                            categoria,
+                            ignoreCase = true,
+                        )
 
             val coincideSubcategoria =
                 subcategoria == null ||
@@ -120,10 +156,18 @@ class SearchViewModel @Inject constructor(
                             ignoreCase = true,
                         )
 
+            val coincideMarca =
+                marca == null ||
+                        prenda.marca.equals(
+                            marca,
+                            ignoreCase = true,
+                        )
+
             coincideTexto &&
                     coincideCategoria &&
                     coincideSubcategoria &&
-                    coincideGenero
+                    coincideGenero &&
+                    coincideMarca
         }
     }.stateIn(
         viewModelScope,
@@ -147,5 +191,9 @@ class SearchViewModel @Inject constructor(
 
     fun seleccionarGenero(genero: String?) {
         _generoSeleccionado.value = genero
+    }
+
+    fun seleccionarMarca(marca: String?) {
+        _marcaSeleccionada.value = marca
     }
 }
