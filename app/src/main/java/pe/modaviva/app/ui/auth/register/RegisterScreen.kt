@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.Checkbox
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,14 +25,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,6 +52,7 @@ import pe.modaviva.app.ui.components.MvFormErrors
 import pe.modaviva.app.ui.components.MvGoogleButton
 import pe.modaviva.app.ui.components.MvPasswordField
 import pe.modaviva.app.ui.components.MvPrimaryButton
+import pe.modaviva.app.ui.components.MvTermsDialog
 import pe.modaviva.app.ui.components.MvTextButton
 import pe.modaviva.app.ui.components.MvTextField
 
@@ -57,6 +67,7 @@ fun RegisterScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var showTermsDialog by remember { mutableStateOf(false) }
 
     BoxWithConstraints(
         modifier = modifier.fillMaxSize(),
@@ -210,11 +221,23 @@ fun RegisterScreen(
                     checked = state.aceptaTerminos,
                     onCheckedChange = viewModel::onTermsChange,
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = stringResource(R.string.register_terms_checkbox),
+                    text = buildAnnotatedString {
+                        append("Acepto los ")
+                        withStyle(
+                            SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.SemiBold,
+                                textDecoration = TextDecoration.Underline,
+                            )
+                        ) {
+                            append("Términos del Servicio y la Política de Privacidad")
+                        }
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.clickable { showTermsDialog = true },
                 )
             }
 
@@ -239,6 +262,10 @@ fun RegisterScreen(
                 onMessageShown = viewModel::onDismissGlobalError,
             )
         }
+    }
+
+    if (showTermsDialog) {
+        MvTermsDialog(onDismiss = { showTermsDialog = false })
     }
 
     state.pendingConsentProfile?.let { profile ->

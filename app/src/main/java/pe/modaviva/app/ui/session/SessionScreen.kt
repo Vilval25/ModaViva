@@ -64,6 +64,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pe.modaviva.app.R
 import pe.modaviva.app.domain.model.UserProfile
 import pe.modaviva.app.ui.components.MvConfirmDialog
+import pe.modaviva.app.ui.components.MvTermsDialog
 
 @Composable
 fun SessionScreen(
@@ -323,7 +324,7 @@ fun SessionScreen(
 
     // Diálogo de Términos y Privacidad
     if (showTermsDialog) {
-        TermsAndPrivacyDialog(onDismiss = { showTermsDialog = false })
+        MvTermsDialog(onDismiss = { showTermsDialog = false })
     }
 
     // Diálogo Acerca de ModaViva
@@ -662,63 +663,6 @@ private fun ResetPasswordDialog(
                 TextButton(onClick = onDismiss, enabled = !isSending) {
                     Text(text = stringResource(R.string.dialog_cancel))
                 }
-            }
-        },
-    )
-}
-
-@Composable
-private fun TermsAndPrivacyDialog(onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = stringResource(R.string.profile_item_terms),
-                fontWeight = FontWeight.Bold,
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Text(
-                    text = "Términos del Servicio ModaViva",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    text = "Al usar ModaViva, accedes a nuestro catálogo de moda y sistema de compra en línea con entregas en Lima Metropolitana y recojo en tiendas físicas.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = "Protección de Datos Personales (Ley N° 29733)",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    text = "Tus datos personales y fotografías empleadas en el probador virtual están rigurosamente protegidos por la Ley de Protección de Datos Personales de la República del Perú. No son compartidos ni comercializados.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = "Probador Virtual con Inteligencia Artificial",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    text = "Las imágenes cargadas se emplean exclusivamente para generar la simulación de prueba de prendas. Puedes eliminar tus fotos registradas en cualquier momento.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.profile_dialog_close))
             }
         },
     )
