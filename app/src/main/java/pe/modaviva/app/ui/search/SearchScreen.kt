@@ -234,6 +234,98 @@ fun SearchScreen(
                 Text("Filtros")
             }
 
+            if (
+                categoriaSeleccionada != null ||
+                subcategoriaSeleccionada != null ||
+                generoSeleccionado != null ||
+                marcaSeleccionada != null ||
+                tallaSeleccionada != null ||
+                colorSeleccionado != null
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+
+                    if (categoriaSeleccionada != null) {
+                        FilterChip(
+                            selected = true,
+                            onClick = {
+                                viewModel.seleccionarCategoria(null)
+                            },
+                            label = {
+                                Text("Categoría: $categoriaSeleccionada")
+                            },
+                        )
+                    }
+
+                    if (subcategoriaSeleccionada != null) {
+                        FilterChip(
+                            selected = true,
+                            onClick = {
+                                viewModel.seleccionarSubcategoria(null)
+                            },
+                            label = {
+                                Text("Subcategoría: $subcategoriaSeleccionada")
+                            },
+                        )
+                    }
+
+                    if (generoSeleccionado != null) {
+                        FilterChip(
+                            selected = true,
+                            onClick = {
+                                viewModel.seleccionarGenero(null)
+                            },
+                            label = {
+                                Text("Género: $generoSeleccionado")
+                            },
+                        )
+                    }
+
+                    if (marcaSeleccionada != null) {
+                        FilterChip(
+                            selected = true,
+                            onClick = {
+                                viewModel.seleccionarMarca(null)
+                            },
+                            label = {
+                                Text("Marca: $marcaSeleccionada")
+                            },
+                        )
+                    }
+
+                    if (tallaSeleccionada != null) {
+                        FilterChip(
+                            selected = true,
+                            onClick = {
+                                viewModel.seleccionarTalla(null)
+                            },
+                            label = {
+                                Text("Talla: $tallaSeleccionada")
+                            },
+                        )
+                    }
+
+                    if (colorSeleccionado != null) {
+                        FilterChip(
+                            selected = true,
+                            onClick = {
+                                viewModel.seleccionarColor(null)
+                            },
+                            label = {
+                                Text("Color: $colorSeleccionado")
+                            },
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
             if (resultados.isEmpty()) {
                 Text(
                     text = if (textoBusqueda.isBlank()) {
