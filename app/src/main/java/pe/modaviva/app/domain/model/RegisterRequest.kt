@@ -3,16 +3,16 @@ package pe.modaviva.app.domain.model
 data class RegisterRequest(
     val nombres: String,
     val apellidos: String,
-    val documento: String,
-    val telefono: String,
     val email: String,
     val password: String,
+    val aceptaTerminos: Boolean = false,
 ) {
-    fun toProfile() = UserProfile(
+    fun toProfile(uid: String = "") = UserProfile(
+        uid = uid,
         nombres = nombres,
         apellidos = apellidos,
-        documento = documento,
-        telefono = telefono,
         email = email,
+        telefono = null,
+        emailVerificado = false,
     )
 }

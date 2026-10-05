@@ -8,9 +8,10 @@ package pe.modaviva.app.domain.model
 enum class AuthFormField {
     NOMBRES,
     APELLIDOS,
-    DOCUMENTO,
-    TELEFONO,
     EMAIL,
     PASSWORD,
     CONFIRM_PASSWORD,
+    TERMS,
+    DOCUMENTO,
+    TELEFONO,
 }

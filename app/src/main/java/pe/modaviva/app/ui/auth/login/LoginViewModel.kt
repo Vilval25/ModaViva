@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import pe.modaviva.app.domain.model.AuthFormField
 import pe.modaviva.app.domain.exception.AuthException
+import pe.modaviva.app.domain.model.AuthFormField
 import pe.modaviva.app.domain.repository.AuthRepository
 import pe.modaviva.app.domain.repository.SessionRepository
 import pe.modaviva.app.domain.usecase.ValidateLoginFormUseCase
@@ -73,6 +73,39 @@ class LoginViewModel @Inject constructor(
                         )
                     }
                 }
+        }
+    }
+
+    fun onGoogleSignIn(idToken: String, onSuccess: (LoginResult.Success) -> Unit) {
+        _uiState.update { it.copy(isGoogleSubmitting = true, globalError = null) }
+        viewModelScope.launch {
+            authRepository.signInWithGoogle(idToken)
+                .onSuccess { profile ->
+                    sessionRepository.signIn(profile)
+                    _uiState.update { it.copy(isGoogleSubmitting = false) }
+                    onSuccess(LoginResult.Success(profile))
+                }
+                .onFailure { error ->
+                    val message = (error as? AuthException)
+                        ?.error
+                        ?.toUserMessage()
+                        ?: "No se pudo iniciar sesión con Google"
+                    _uiState.update {
+                        it.copy(
+                            isGoogleSubmitting = false,
+                            globalError = message,
+                        )
+                    }
+                }
+        }
+    }
+
+    fun onGoogleSignInError(message: String?) {
+        _uiState.update {
+            it.copy(
+                isGoogleSubmitting = false,
+                globalError = message ?: "Error al conectar con Google",
+            )
         }
     }
 

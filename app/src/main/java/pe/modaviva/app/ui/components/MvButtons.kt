@@ -93,6 +93,38 @@ fun MvDestructiveButton(
     }
 }
 
+/** Botón oficial / estilizado para "Continuar con Google". */
+@Composable
+fun MvGoogleButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    loading: Boolean = false,
+    text: String = "Continuar con Google",
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled && !loading,
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        ),
+    ) {
+        if (loading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                strokeWidth = 2.dp,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        } else {
+            Text(
+                text = "G  $text",
+                style = MaterialTheme.typography.labelLarge,
+            )
+        }
+    }
+}
+
 @Composable
 private fun ButtonContent(text: String, loading: Boolean) {
     if (loading) {

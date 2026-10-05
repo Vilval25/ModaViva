@@ -10,13 +10,14 @@ data class LoginUiState(
     val errors: Map<AuthFormField, String> = emptyMap(),
     val showPassword: Boolean = false,
     val isSubmitting: Boolean = false,
+    val isGoogleSubmitting: Boolean = false,
     val globalError: String? = null,
 ) {
     fun errorFor(field: AuthFormField): String? =
         if (field in touched) errors[field] else null
 
     val canSubmit: Boolean
-        get() = errors.isEmpty() && !isSubmitting
+        get() = errors.isEmpty() && !isSubmitting && !isGoogleSubmitting
 }
 
 sealed interface LoginResult {

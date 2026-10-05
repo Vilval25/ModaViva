@@ -3,14 +3,20 @@
 
     <string name="register_title">Crea tu cuenta</string>
     <string name="register_subtitle">Registrate para comprar en ModaViva desde tu celular.</string>
-    <string name="register_cta">Registrarme</string>
+    <string name="register_cta">Crear cuenta</string>
     <string name="register_checking">Verificando disponibilidad…</string>
 
     <string name="login_title">Iniciar sesión</string>
     <string name="login_subtitle">Ingresa tu correo y contraseña para entrar a tu cuenta.</string>
     <string name="login_cta">Iniciar sesión</string>
-    <string name="login_register_cta">Registrarse</string>
-    <string name="register_login_cta">¿Ya tienes cuenta? Inicia sesión</string>
+    <string name="login_register_cta">¿No tienes cuenta? Crear cuenta</string>
+    <string name="register_login_cta">¿Ya tienes cuenta? Iniciar sesión</string>
+    <string name="nav_back">Volver</string>
+
+    <string name="auth_continue_google">Continuar con Google</string>
+    <string name="auth_or_divider">o con tu correo</string>
+    <string name="register_terms_checkbox">Acepto los Términos y Condiciones y la Política de Privacidad</string>
+    <string name="register_terms_error">Debes aceptar los Términos y Condiciones</string>
 
     <string name="session_greeting">Hola, %1$s %2$s</string>
     <string name="session_signout">Cerrar sesión</string>

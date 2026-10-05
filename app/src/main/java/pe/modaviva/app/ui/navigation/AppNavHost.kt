@@ -193,6 +193,9 @@ private fun NavGraphBuilder.authGraph(
                     popUpTo(Routes.LOGIN) { inclusive = true }
                 }
             },
+            onBackClick = {
+                navController.popBackStack()
+            },
             onLoggedIn = { backToProfile() },
             modifier = Modifier.safeDrawingPadding(),
         )
@@ -200,18 +203,25 @@ private fun NavGraphBuilder.authGraph(
     composable(Routes.REGISTER) {
         RegisterScreen(
             onRegistered = { success ->
-                val route = Routes.EMAIL_VERIFY.replace(
-                    "{email}",
-                    Uri.encode(success.profile.email),
-                )
-                navController.navigate(route) {
-                    popUpTo(Routes.REGISTER) { inclusive = true }
+                if (success.profile.emailVerificado) {
+                    backToProfile()
+                } else {
+                    val route = Routes.EMAIL_VERIFY.replace(
+                        "{email}",
+                        Uri.encode(success.profile.email),
+                    )
+                    navController.navigate(route) {
+                        popUpTo(Routes.REGISTER) { inclusive = true }
+                    }
                 }
             },
             onLoginClick = {
                 navController.navigate(Routes.LOGIN) {
                     popUpTo(Routes.REGISTER) { inclusive = true }
                 }
+            },
+            onBackClick = {
+                navController.popBackStack()
             },
             modifier = Modifier.safeDrawingPadding(),
         )

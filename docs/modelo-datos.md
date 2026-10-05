@@ -25,6 +25,123 @@ prenda para no leer todo el stock al pintar el catálogo).
 "Back-office" es la consola de Firebase o el script de carga (`seed/`); la app
 nunca escribe en esas colecciones.
 
+## Diagrama de Colecciones y Relaciones
+
+> 🖼️ **Archivos de imagen para visualizar:**
+> * Imagen de alta resolución: [**`design/modelo-datos-firestore.png`**](../design/modelo-datos-firestore.png)
+> * Gráfico vectorial escalable: [**`design/modelo-datos-firestore.svg`**](../design/modelo-datos-firestore.svg)
+
+```mermaid
+classDiagram
+    direction LR
+
+    class Clientes {
+        <<clientes/{uid}>>
+        string nombres
+        string apellidos
+        string email
+        string telefono
+        string origen
+        map consentimiento
+        timestamp creadoEn
+        timestamp actualizadoEn
+    }
+
+    class Favoritos {
+        <<clientes/{uid}/favoritos/{prendaId}>>
+        timestamp agregadoEn
+    }
+
+    class Carrito {
+        <<clientes/{uid}/carrito/{varianteId}>>
+        string prendaId
+        string talla
+        number cantidad
+        timestamp agregadoEn
+    }
+
+    class Categorias {
+        <<categorias/{slug}>>
+        string nombre
+        string imagenUrl
+        number orden
+        array subcategorias
+    }
+
+    class Prendas {
+        <<prendas/{prendaId}>>
+        string codigo
+        string nombre
+        string descripcion
+        array detalles
+        array ajuste
+        string marca
+        string genero
+        string categoria
+        string subcategoria
+        number precio
+        number precioPromo
+        timestamp promoHasta
+        array tallas
+        map color
+        map medidas
+        array fotos
+        boolean publicada
+        boolean fotosAprobadas
+        number stockTotal
+        array palabrasClave
+        timestamp creadaEn
+        timestamp actualizadaEn
+    }
+
+    class Stock {
+        <<stock/{varianteId}>>
+        string prendaId
+        string talla
+        map porTienda
+        number total
+        timestamp actualizadoEn
+    }
+
+    class Tiendas {
+        <<tiendas/{tiendaId}>>
+        string nombre
+        string direccion
+        string distrito
+        geopoint ubicacion
+        string horario
+        string telefono
+    }
+
+    class TarifasEnvio {
+        <<tarifasEnvio/{distrito}>>
+        string distrito
+        boolean cobertura
+        number costo
+        number plazoDias
+    }
+
+    class Cupones {
+        <<cupones/{codigo} (Solo Cloud Functions)>>
+        string tipo
+        number valor
+        number montoMinimo
+        timestamp vigenteDesde
+        timestamp vigenteHasta
+        boolean combinable
+        boolean activo
+    }
+
+    Clientes *-- Favoritos : subcoleccion
+    Clientes *-- Carrito : subcoleccion
+    Favoritos ..> Prendas : referencia prendaId
+    Carrito ..> Prendas : referencia prendaId
+    Carrito ..> Stock : referencia varianteId
+    Prendas ..> Categorias : slug categoria
+    Stock ..> Prendas : referencia prendaId
+    Stock ..> Tiendas : porTienda (T01...T05)
+```
+
 **Convenciones**
 
 - Nombres de campos en español y `camelCase`, como el código existente.

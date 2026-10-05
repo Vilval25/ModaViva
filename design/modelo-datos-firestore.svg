@@ -1,0 +1,287 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1160" width="1600" height="1160" style="background:#0D1410; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <style>
+      .title { font-size: 26px; font-weight: 700; fill: #FFFFFF; }
+      .subtitle { font-size: 14px; fill: #A5B8A8; }
+      .badge-ht { font-size: 12px; font-weight: 600; fill: #72C785; }
+      .card-bg { fill: #16201A; stroke: #26382C; stroke-width: 1.5; rx: 10px; }
+      .card-header-text { font-size: 16px; font-weight: 700; fill: #FFFFFF; }
+      .card-id-badge { font-size: 11px; font-weight: 600; fill: #E8F5E9; }
+      .field-name { font-size: 13px; font-weight: 600; fill: #E1E8E2; }
+      .field-type { font-size: 12px; font-weight: 500; fill: #8CA391; }
+      .field-note { font-size: 11px; fill: #5E7A65; }
+      .subcol-bg { fill: #1E2D24; stroke: #314A3B; stroke-width: 1.2; rx: 8px; }
+      .arrow { stroke: #528062; stroke-width: 1.8; fill: none; stroke-dasharray: 4,4; }
+      .arrow-solid { stroke: #6EB284; stroke-width: 2; fill: none; }
+      .ref-tag { font-size: 11px; font-weight: 600; fill: #8CE8A6; }
+    </style>
+    
+    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#6EB284" />
+    </marker>
+    <marker id="arrowhead-dash" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#528062" />
+    </marker>
+
+    <!-- Gradients -->
+    <linearGradient id="hdr-clientes" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2D6A4F" />
+      <stop offset="100%" stop-color="#1B4332" />
+    </linearGradient>
+    <linearGradient id="hdr-prendas" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1D4E89" />
+      <stop offset="100%" stop-color="#002D62" />
+    </linearGradient>
+    <linearGradient id="hdr-categorias" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2B5B84" />
+      <stop offset="100%" stop-color="#163854" />
+    </linearGradient>
+    <linearGradient id="hdr-stock" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6B3074" />
+      <stop offset="100%" stop-color="#45184B" />
+    </linearGradient>
+    <linearGradient id="hdr-tiendas" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#804E1E" />
+      <stop offset="100%" stop-color="#54300D" />
+    </linearGradient>
+    <linearGradient id="hdr-tarifas" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2B7A78" />
+      <stop offset="100%" stop-color="#17252A" />
+    </linearGradient>
+    <linearGradient id="hdr-cupones" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#9E2A2B" />
+      <stop offset="100%" stop-color="#540B0E" />
+    </linearGradient>
+  </defs>
+
+  <!-- ==================== HEADER ==================== -->
+  <g transform="translate(60, 45)">
+    <text x="0" y="24" class="title">ModaViva — Modelo de Datos Cloud Firestore</text>
+    <text x="0" y="48" class="subtitle">Estructura oficial del Backlog v2 (HT-02) · Documentos, subcolecciones, campos y referencias</text>
+    <rect x="1350" y="2" width="130" height="32" rx="16" fill="#1B3322" stroke="#376846" stroke-width="1.2" />
+    <text x="1415" y="22" text-anchor="middle" class="badge-ht">BACKLOG v2</text>
+  </g>
+
+  <!-- ==================== COLUMNA 1: CLIENTES & SUBCOLECCIONES (x=60) ==================== -->
+  <!-- Colección clientes/{uid} -->
+  <g transform="translate(60, 110)">
+    <rect width="450" height="350" class="card-bg" />
+    <path d="M 0,10 Q 0,0 10,0 L 440,0 Q 450,0 450,10 L 450,44 L 0,44 Z" fill="url(#hdr-clientes)" />
+    <text x="18" y="28" class="card-header-text">📂 clientes</text>
+    <rect x="290" y="10" width="145" height="24" rx="12" fill="#0D2416" />
+    <text x="362" y="26" text-anchor="middle" class="card-id-badge">ID: {authUid}</text>
+
+    <!-- Campos -->
+    <g transform="translate(18, 68)">
+      <text x="0" y="0" class="field-name">nombres</text><text x="140" y="0" class="field-type">string</text>
+      <text x="0" y="26" class="field-name">apellidos</text><text x="140" y="26" class="field-type">string</text>
+      <text x="0" y="52" class="field-name">email</text><text x="140" y="52" class="field-type">string</text><text x="210" y="52" class="field-note">(Copia de Auth, solo lectura)</text>
+      <text x="0" y="78" class="field-name">telefono</text><text x="140" y="78" class="field-type">string | null</text>
+      <text x="0" y="104" class="field-name">origen</text><text x="140" y="104" class="field-type">"tienda" | "app"</text>
+      <text x="0" y="130" class="field-name">consentimiento</text><text x="140" y="130" class="field-type">map | null</text><text x="235" y="130" class="field-note">{ version, aceptadoEn }</text>
+      <text x="0" y="156" class="field-name">creadoEn</text><text x="140" y="156" class="field-type">timestamp</text>
+      <text x="0" y="182" class="field-name">actualizadoEn</text><text x="140" y="182" class="field-type">timestamp</text>
+      
+      <line x1="0" y1="202" x2="414" y2="202" stroke="#253A2D" stroke-width="1" />
+      <text x="0" y="222" font-size="12" fill="#71947A">🔒 Reglas: Solo el propio cliente (auth.uid == uid) lee y edita.</text>
+      <text x="0" y="242" font-size="11" fill="#4B6653">Nota: emailVerificado se consulta directamente en Firebase Auth.</text>
+      <text x="0" y="260" font-size="11" fill="#4B6653">Futuro: alturaCm (HU-14) y subcolección direcciones (HU-20).</text>
+    </g>
+  </g>
+
+  <!-- Subcolección favoritos/{prendaId} -->
+  <g transform="translate(90, 485)">
+    <rect width="420" height="150" class="subcol-bg" />
+    <path d="M 0,8 Q 0,0 8,0 L 412,0 Q 420,0 420,8 L 420,36 L 0,36 Z" fill="#243C2E" />
+    <text x="16" y="23" font-size="14" font-weight="700" fill="#B7E4C7">↳ 📂 favoritos</text>
+    <rect x="250" y="7" width="155" height="22" rx="11" fill="#122017" />
+    <text x="327" y="22" text-anchor="middle" font-size="11" fill="#95D5B2">ID: {prendaId}</text>
+
+    <g transform="translate(16, 62)">
+      <text x="0" y="0" class="field-name">agregadoEn</text><text x="130" y="0" class="field-type">timestamp</text><text x="215" y="0" class="field-note">(Para ordenar recientes)</text>
+      
+      <text x="0" y="32" font-size="12" fill="#8CA391">Solo guarda la referencia al ID de la prenda.</text>
+      <text x="0" y="52" font-size="11" fill="#5E7A65">El precio, fotos y stock se leen de /prendas/{prendaId}</text>
+    </g>
+  </g>
+
+  <!-- Subcolección carrito/{varianteId} -->
+  <g transform="translate(90, 660)">
+    <rect width="420" height="210" class="subcol-bg" />
+    <path d="M 0,8 Q 0,0 8,0 L 412,0 Q 420,0 420,8 L 420,36 L 0,36 Z" fill="#243C2E" />
+    <text x="16" y="23" font-size="14" font-weight="700" fill="#B7E4C7">↳ 📂 carrito</text>
+    <rect x="220" y="7" width="185" height="22" rx="11" fill="#122017" />
+    <text x="312" y="22" text-anchor="middle" font-size="11" fill="#95D5B2">ID: {prendaId}_{talla}</text>
+
+    <g transform="translate(16, 62)">
+      <text x="0" y="0" class="field-name">prendaId</text><text x="110" y="0" class="field-type">string</text><text x="190" y="0" class="field-note">Ref a prendas</text>
+      <text x="0" y="26" class="field-name">talla</text><text x="110" y="26" class="field-type">string</text><text x="190" y="26" class="field-note">"S", "M", "28", etc.</text>
+      <text x="0" y="52" class="field-name">cantidad</text><text x="110" y="52" class="field-type">number</text>
+      <text x="0" y="78" class="field-name">agregadoEn</text><text x="110" y="78" class="field-type">timestamp</text>
+      
+      <line x1="0" y1="96" x2="388" y2="96" stroke="#253A2D" stroke-width="1" />
+      <text x="0" y="116" font-size="12" fill="#8CA391">El ID compuesto evita duplicar líneas de la misma talla.</text>
+      <text x="0" y="132" font-size="11" fill="#5E7A65">No guarda el precio: siempre se cobra el precio vigente.</text>
+    </g>
+  </g>
+
+  <!-- ==================== COLUMNA 2: CATÁLOGO Y PRENDAS (x=550) ==================== -->
+  <!-- Colección categorias/{slug} -->
+  <g transform="translate(550, 110)">
+    <rect width="490" height="190" class="card-bg" />
+    <path d="M 0,10 Q 0,0 10,0 L 480,0 Q 490,0 490,10 L 490,44 L 0,44 Z" fill="url(#hdr-categorias)" />
+    <text x="18" y="28" class="card-header-text">📂 categorias</text>
+    <rect x="330" y="10" width="145" height="24" rx="12" fill="#0D1E2D" />
+    <text x="402" y="26" text-anchor="middle" class="card-id-badge">ID: {slug}</text>
+
+    <g transform="translate(18, 68)">
+      <text x="0" y="0" class="field-name">nombre</text><text x="130" y="0" class="field-type">string</text><text x="210" y="0" class="field-note">"Blusas", "Pantalones"</text>
+      <text x="0" y="26" class="field-name">imagenUrl</text><text x="130" y="26" class="field-type">string</text><text x="210" y="26" class="field-note">Portada de categoría</text>
+      <text x="0" y="52" class="field-name">orden</text><text x="130" y="52" class="field-type">number</text><text x="210" y="52" class="field-note">Posición en pestaña</text>
+      <text x="0" y="78" class="field-name">subcategorias</text><text x="130" y="78" class="field-type">array&lt;map&gt;</text><text x="230" y="78" class="field-note">[{ slug, nombre }]</text>
+      <text x="0" y="106" font-size="11" fill="#4E718D">Escritura: Back-office | Lectura: Pública (invitados y clientes)</text>
+    </g>
+  </g>
+
+  <!-- Colección prendas/{prendaId} -->
+  <g transform="translate(550, 325)">
+    <rect width="490" height="545" class="card-bg" />
+    <path d="M 0,10 Q 0,0 10,0 L 480,0 Q 490,0 490,10 L 490,44 L 0,44 Z" fill="url(#hdr-prendas)" />
+    <text x="18" y="28" class="card-header-text">📂 prendas</text>
+    <rect x="330" y="10" width="145" height="24" rx="12" fill="#0B1A2C" />
+    <text x="402" y="26" text-anchor="middle" class="card-id-badge">ID: {prendaId} (BL-1002)</text>
+
+    <g transform="translate(18, 68)">
+      <text x="0" y="0" class="field-name">codigo</text><text x="130" y="0" class="field-type">string</text><text x="240" y="0" class="field-note">Igual al ID ("BL-1002")</text>
+      <text x="0" y="24" class="field-name">nombre</text><text x="130" y="24" class="field-type">string</text>
+      <text x="0" y="48" class="field-name">descripcion</text><text x="130" y="48" class="field-type">string</text>
+      <text x="0" y="72" class="field-name">detalles</text><text x="130" y="72" class="field-type">array&lt;string&gt;</text><text x="240" y="72" class="field-note">Material, cuidado, etc.</text>
+      <text x="0" y="96" class="field-name">ajuste</text><text x="130" y="96" class="field-type">array&lt;string&gt;</text><text x="240" y="96" class="field-note">Datos modelo / fit</text>
+      <text x="0" y="120" class="field-name">marca</text><text x="130" y="120" class="field-type">string</text>
+      <text x="0" y="144" class="field-name">genero</text><text x="130" y="144" class="field-type">"mujer" | "hombre" | null</text>
+      <text x="0" y="168" class="field-name">categoria</text><text x="130" y="168" class="field-type">string</text><text x="240" y="168" class="field-note">Slug ref a categorias</text>
+      <text x="0" y="192" class="field-name">subcategoria</text><text x="130" y="192" class="field-type">string</text><text x="240" y="192" class="field-note">Slug subcategoría</text>
+      <text x="0" y="216" class="field-name">precio</text><text x="130" y="216" class="field-type">number</text><text x="240" y="216" class="field-note">En soles (ej: 89.90)</text>
+      <text x="0" y="240" class="field-name">precioPromo</text><text x="130" y="240" class="field-type">number | null</text>
+      <text x="0" y="264" class="field-name">promoHasta</text><text x="130" y="264" class="field-type">timestamp | null</text>
+      <text x="0" y="288" class="field-name">tallas</text><text x="130" y="288" class="field-type">array&lt;string&gt;</text><text x="240" y="288" class="field-note">["XS","S","M","L","XL"]</text>
+      <text x="0" y="312" class="field-name">color</text><text x="130" y="312" class="field-type">map</text><text x="240" y="312" class="field-note">{ slug, nombre, hex }</text>
+      <text x="0" y="336" class="field-name">medidas</text><text x="130" y="336" class="field-type">map</text><text x="240" y="336" class="field-note">{ "M": { pecho, largo } }</text>
+      <text x="0" y="360" class="field-name">fotos</text><text x="130" y="360" class="field-type">array&lt;string&gt;</text><text x="240" y="360" class="field-note">URLs Storage</text>
+      <text x="0" y="384" class="field-name">publicada</text><text x="130" y="384" class="field-type">boolean</text>
+      <text x="0" y="408" class="field-name">fotosAprobadas</text><text x="130" y="408" class="field-type">boolean</text>
+      <text x="0" y="432" class="field-name">stockTotal</text><text x="130" y="432" class="field-type">number</text><text x="240" y="432" class="field-note">⭐ Desnormalizado</text>
+      <text x="0" y="456" class="field-name">palabrasClave</text><text x="130" y="456" class="field-type">array&lt;string&gt;</text><text x="240" y="456" class="field-note">Prefijos p/ búsqueda</text>
+
+      <line x1="0" y1="468" x2="454" y2="468" stroke="#253A2D" stroke-width="1" />
+      <text x="0" y="484" font-size="11" fill="#4E718D">Índice compuesto: publicada ASC + fotosAprobadas ASC + creadaEn DESC</text>
+    </g>
+  </g>
+
+  <!-- ==================== COLUMNA 3: STOCK, TIENDAS, LOGÍSTICA & CUPONES (x=1080) ==================== -->
+  <!-- Colección stock/{varianteId} -->
+  <g transform="translate(1080, 110)">
+    <rect width="460" height="215" class="card-bg" />
+    <path d="M 0,10 Q 0,0 10,0 L 450,0 Q 460,0 460,10 L 460,44 L 0,44 Z" fill="url(#hdr-stock)" />
+    <text x="18" y="28" class="card-header-text">📂 stock</text>
+    <rect x="260" y="10" width="185" height="24" rx="12" fill="#210825" />
+    <text x="352" y="26" text-anchor="middle" class="card-id-badge">ID: {prendaId}_{talla}</text>
+
+    <g transform="translate(18, 68)">
+      <text x="0" y="0" class="field-name">prendaId</text><text x="130" y="0" class="field-type">string</text><text x="220" y="0" class="field-note">Ref a prendas</text>
+      <text x="0" y="26" class="field-name">talla</text><text x="130" y="26" class="field-type">string</text>
+      <text x="0" y="52" class="field-name">porTienda</text><text x="130" y="52" class="field-type">map</text><text x="220" y="52" class="field-note">{ "T01": 3, "T02": 0, ... }</text>
+      <text x="0" y="78" class="field-name">total</text><text x="130" y="78" class="field-type">number</text><text x="220" y="78" class="field-note">Suma de todas tiendas</text>
+      <text x="0" y="104" class="field-name">actualizadoEn</text><text x="130" y="104" class="field-type">timestamp</text>
+      
+      <text x="0" y="132" font-size="11" fill="#885A92">Permite consultar en tiempo real stock disponible por sucursal física.</text>
+    </g>
+  </g>
+
+  <!-- Colección tiendas/{tiendaId} -->
+  <g transform="translate(1080, 350)">
+    <rect width="460" height="210" class="card-bg" />
+    <path d="M 0,10 Q 0,0 10,0 L 450,0 Q 460,0 460,10 L 460,44 L 0,44 Z" fill="url(#hdr-tiendas)" />
+    <text x="18" y="28" class="card-header-text">📂 tiendas</text>
+    <rect x="290" y="10" width="155" height="24" rx="12" fill="#241405" />
+    <text x="367" y="26" text-anchor="middle" class="card-id-badge">ID: {tiendaId} (T01...T05)</text>
+
+    <g transform="translate(18, 68)">
+      <text x="0" y="0" class="field-name">nombre</text><text x="110" y="0" class="field-type">string</text><text x="200" y="0" class="field-note">"Tienda Jockey Plaza"</text>
+      <text x="0" y="26" class="field-name">direccion</text><text x="110" y="26" class="field-type">string</text>
+      <text x="0" y="52" class="field-name">distrito</text><text x="110" y="52" class="field-type">string</text><text x="200" y="52" class="field-note">Slug ("surco")</text>
+      <text x="0" y="78" class="field-name">ubicacion</text><text x="110" y="78" class="field-type">geopoint</text><text x="200" y="78" class="field-note">Para cálculo de cercanía</text>
+      <text x="0" y="104" class="field-name">horario</text><text x="110" y="104" class="field-type">string</text>
+      <text x="0" y="128" class="field-name">telefono</text><text x="110" y="128" class="field-type">string</text>
+    </g>
+  </g>
+
+  <!-- Colección tarifasEnvio/{distrito} -->
+  <g transform="translate(1080, 585)">
+    <rect width="460" height="175" class="card-bg" />
+    <path d="M 0,10 Q 0,0 10,0 L 450,0 Q 460,0 460,10 L 460,44 L 0,44 Z" fill="url(#hdr-tarifas)" />
+    <text x="18" y="28" class="card-header-text">📂 tarifasEnvio</text>
+    <rect x="280" y="10" width="165" height="24" rx="12" fill="#0C1D1C" />
+    <text x="362" y="26" text-anchor="middle" class="card-id-badge">ID: {distrito} (slug)</text>
+
+    <g transform="translate(18, 68)">
+      <text x="0" y="0" class="field-name">distrito</text><text x="110" y="0" class="field-type">string</text><text x="200" y="0" class="field-note">Nombre ("Miraflores")</text>
+      <text x="0" y="26" class="field-name">cobertura</text><text x="110" y="26" class="field-type">boolean</text><text x="200" y="26" class="field-note">false = sin despacho</text>
+      <text x="0" y="52" class="field-name">costo</text><text x="110" y="52" class="field-type">number</text><text x="200" y="52" class="field-note">En soles</text>
+      <text x="0" y="78" class="field-name">plazoDias</text><text x="110" y="78" class="field-type">number</text><text x="200" y="78" class="field-note">Días hábiles estimados</text>
+    </g>
+  </g>
+
+  <!-- Colección cupones/{codigo} (Servidor) -->
+  <g transform="translate(1080, 785)">
+    <rect width="460" height="255" class="card-bg" style="stroke: #5E1F21;" />
+    <path d="M 0,10 Q 0,0 10,0 L 450,0 Q 460,0 460,10 L 460,44 L 0,44 Z" fill="url(#hdr-cupones)" />
+    <text x="18" y="28" class="card-header-text">🔒 cupones</text>
+    <rect x="280" y="10" width="165" height="24" rx="12" fill="#2B0507" />
+    <text x="362" y="26" text-anchor="middle" class="card-id-badge">ID: {codigo}</text>
+
+    <g transform="translate(18, 68)">
+      <text x="0" y="0" class="field-name">tipo</text><text x="130" y="0" class="field-type">"porcentaje" | "monto"</text>
+      <text x="0" y="26" class="field-name">valor</text><text x="130" y="26" class="field-type">number</text><text x="220" y="26" class="field-note">15 = 15% o S/15</text>
+      <text x="0" y="52" class="field-name">montoMinimo</text><text x="130" y="52" class="field-type">number</text>
+      <text x="0" y="78" class="field-name">vigenteDesde</text><text x="130" y="78" class="field-type">timestamp</text>
+      <text x="0" y="104" class="field-name">vigenteHasta</text><text x="130" y="104" class="field-type">timestamp</text>
+      <text x="0" y="130" class="field-name">combinable</text><text x="130" y="130" class="field-type">boolean</text>
+      <text x="0" y="156" class="field-name">activo</text><text x="130" y="156" class="field-type">boolean</text>
+      
+      <line x1="0" y1="168" x2="424" y2="168" stroke="#48181A" stroke-width="1" />
+      <text x="0" y="184" font-size="11" font-weight="700" fill="#FF8A80">⚠️ Solo lectura de Cloud Functions (backend)</text>
+      <text x="0" y="198" font-size="10" fill="#A85759">La app móvil no tiene permiso de lectura directa por seguridad.</text>
+    </g>
+  </g>
+
+  <!-- ==================== LÍNEAS DE REFERENCIA ==================== -->
+  <!-- Favoritos -> Prendas -->
+  <path d="M 510,540 L 530,540 L 530,500 L 548,500" class="arrow-solid" marker-end="url(#arrowhead)" />
+  <text x="518" y="490" class="ref-tag">prendaId</text>
+
+  <!-- Carrito -> Prendas -->
+  <path d="M 510,720 L 535,720 L 535,560 L 548,560" class="arrow-solid" marker-end="url(#arrowhead)" />
+
+  <!-- Carrito -> Stock -->
+  <path d="M 510,780 L 530,780 L 530,890 L 1060,890 L 1060,220 L 1078,220" class="arrow" marker-end="url(#arrowhead-dash)" />
+  <text x="800" y="905" class="ref-tag">{prendaId}_{talla}</text>
+
+  <!-- Prendas -> Categorias -->
+  <path d="M 780,325 L 780,302" class="arrow-solid" marker-end="url(#arrowhead)" />
+  <text x="790" y="318" class="ref-tag">categoria (slug)</text>
+
+  <!-- Stock -> Prendas -->
+  <path d="M 1080,180 L 1060,180 L 1060,450 L 1042,450" class="arrow-solid" marker-end="url(#arrowhead)" />
+  <text x="1055" y="310" class="ref-tag">prendaId</text>
+
+  <!-- Stock -> Tiendas -->
+  <path d="M 1300,325 L 1300,348" class="arrow-solid" marker-end="url(#arrowhead)" />
+  <text x="1310" y="340" class="ref-tag">porTienda (T01...T05)</text>
+
+  <!-- ==================== FOOTER ==================== -->
+  <g transform="translate(60, 1115)">
+    <text x="0" y="0" font-size="12" fill="#5F7866">Diseño NoSQL: Desnormalización intencional (stockTotal) para optimizar costos de lectura y respuesta en tiempo real.</text>
+    <text x="1480" y="0" text-anchor="end" font-size="12" fill="#5F7866">ModaViva © 2026</text>
+  </g>
+</svg>
