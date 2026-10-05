@@ -26,6 +26,11 @@ class SearchViewModel @Inject constructor(
     val categoriaSeleccionada: StateFlow<String?> =
         _categoriaSeleccionada
 
+    private val _subcategoriaSeleccionada = MutableStateFlow<String?>(null)
+
+    val subcategoriaSeleccionada: StateFlow<String?> =
+        _subcategoriaSeleccionada
+
     val categorias: StateFlow<List<String>> = catalogo.prendas
         .combine(_categoriaSeleccionada) { prendas, _ ->
             prendas
@@ -40,11 +45,32 @@ class SearchViewModel @Inject constructor(
             emptyList(),
         )
 
+    val subcategorias: StateFlow<List<String>> = combine(
+        catalogo.prendas,
+        _categoriaSeleccionada,
+    ) { prendas, categoria ->
+
+        prendas
+            .filter { prenda ->
+                categoria == null ||
+                        prenda.categoria.equals(categoria, ignoreCase = true)
+            }
+            .map { it.subcategoria }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .sorted()
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        emptyList(),
+    )
+
     val resultados: StateFlow<List<Prenda>> = combine(
         catalogo.prendas,
         _textoBusqueda,
         _categoriaSeleccionada,
-    ) { prendas, texto, categoria ->
+        _subcategoriaSeleccionada,
+    ) { prendas, texto, categoria, subcategoria ->
 
         val consulta = texto.trim()
 
@@ -59,7 +85,16 @@ class SearchViewModel @Inject constructor(
                 categoria == null ||
                         prenda.categoria.equals(categoria, ignoreCase = true)
 
-            coincideTexto && coincideCategoria
+            val coincideSubcategoria =
+                subcategoria == null ||
+                        prenda.subcategoria.equals(
+                            subcategoria,
+                            ignoreCase = true,
+                        )
+
+            coincideTexto &&
+                    coincideCategoria &&
+                    coincideSubcategoria
         }
     }.stateIn(
         viewModelScope,
@@ -73,5 +108,11 @@ class SearchViewModel @Inject constructor(
 
     fun seleccionarCategoria(categoria: String?) {
         _categoriaSeleccionada.value = categoria
+
+        _subcategoriaSeleccionada.value = null
+    }
+
+    fun seleccionarSubcategoria(subcategoria: String?) {
+        _subcategoriaSeleccionada.value = subcategoria
     }
 }

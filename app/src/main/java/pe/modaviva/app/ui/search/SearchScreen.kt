@@ -51,6 +51,8 @@ fun SearchScreen(
     val resultados by viewModel.resultados.collectAsStateWithLifecycle()
     val categorias by viewModel.categorias.collectAsStateWithLifecycle()
     val categoriaSeleccionada by viewModel.categoriaSeleccionada.collectAsStateWithLifecycle()
+    val subcategorias by viewModel.subcategorias.collectAsStateWithLifecycle()
+    val subcategoriaSeleccionada by viewModel.subcategoriaSeleccionada.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -116,6 +118,37 @@ fun SearchScreen(
                             Text(categoria)
                         },
                     )
+                }
+            }
+            if (subcategorias.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilterChip(
+                        selected = subcategoriaSeleccionada == null,
+                        onClick = {
+                            viewModel.seleccionarSubcategoria(null)
+                        },
+                        label = {
+                            Text("Todas las subcategorías")
+                        },
+                    )
+
+                    subcategorias.forEach { subcategoria ->
+                        FilterChip(
+                            selected = subcategoriaSeleccionada == subcategoria,
+                            onClick = {
+                                viewModel.seleccionarSubcategoria(subcategoria)
+                            },
+                            label = {
+                                Text(subcategoria)
+                            },
+                        )
+                    }
                 }
             }
             if (resultados.isEmpty()) {
