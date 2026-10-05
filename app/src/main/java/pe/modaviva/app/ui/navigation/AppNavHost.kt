@@ -37,6 +37,7 @@ import pe.modaviva.app.ui.placeholder.ComingSoonScreen
 import pe.modaviva.app.ui.profile.ProfileTab
 import pe.modaviva.app.ui.theme.ModaVivaTheme
 import pe.modaviva.app.ui.stock.StockTestScreen
+import pe.modaviva.app.ui.search.SearchScreen
 
 /**
  * Navegación de la app. Se entra directo a Inicio, sin pedir sesión
@@ -67,7 +68,7 @@ fun AppNavHost() {
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = "stock-test",
+                startDestination = TopLevelDestination.HOME.route,
                 modifier = Modifier
                     .padding(innerPadding)
                     .consumeWindowInsets(innerPadding),
@@ -121,10 +122,11 @@ private fun NavGraphBuilder.overlayGraph(
     navController: NavHostController,
 ) {
     composable(Routes.SEARCH) {
-        ComingSoonScreen(
-            title = stringResource(R.string.search_title),
-            icon = Icons.Outlined.Search,
+        SearchScreen(
             onBack = { navController.popBackStack() },
+            onPrendaClick = { codigo ->
+                navController.navigate(Routes.prenda(codigo))
+            },
         )
     }
     composable(Routes.FAVORITES) {
