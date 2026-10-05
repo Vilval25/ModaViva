@@ -19,16 +19,50 @@ import androidx.compose.ui.platform.LocalContext
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import java.time.Instant
+import androidx.compose.material3.FilterChip
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import pe.modaviva.app.ui.stock.StockViewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import pe.modaviva.app.ui.stock.StockAvailability
 
 @Composable
 fun ProductDetailScreen(
     codigo: String,
     onBack: () -> Unit,
     viewModel: ProductDetailViewModel = hiltViewModel(),
+    stockViewModel: StockViewModel = hiltViewModel(),
 ) {
     val prenda by viewModel
         .obtenerPrenda(codigo)
         .collectAsStateWithLifecycle(initialValue = null)
+
+    var tallaSeleccionada by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(tallaSeleccionada) {
+
+        tallaSeleccionada?.let { talla ->
+            stockViewModel.observeStock(
+                prendaId = codigo,
+                talla = talla,
+            )
+        }
+    }
+
+    val stock by stockViewModel.stock.collectAsState()
+
+
+    var colorSeleccionado by remember { mutableStateOf(false) }
 
     if (prenda == null) {
         Column(
@@ -45,9 +79,18 @@ fun ProductDetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        IconButton(
+            onClick = onBack,
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Volver",
+            )
+        }
         val ahora = Instant.now()
         val fotoPrincipal = prenda!!.fotos.firstOrNull()
 
@@ -60,20 +103,67 @@ fun ProductDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(280.dp),
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.Fit,
             )
         }
 
-        Text(text = prenda!!.nombre)
+        Text(
+            text = prenda!!.nombre,
+            style = MaterialTheme.typography.headlineSmall,
+        )
         Text(text = "Código: ${prenda!!.codigo}")
         Text(text = "Marca: ${prenda!!.marca}")
         Text(text = "Categoría: ${prenda!!.categoria}")
         Text(text = "Subcategoría: ${prenda!!.subcategoria}")
         if (prenda!!.enPromocion(ahora)) {
-            Text(text = "Precio: S/ ${prenda!!.precioVigente(ahora)}")
-            Text(text = "Precio original: S/ ${prenda!!.precio}")
+            Text(
+                text = "S/ ${prenda!!.precioVigente(ahora)}",
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            Text(
+                text = "Precio original: S/ ${prenda!!.precio}",
+                style = MaterialTheme.typography.bodyMedium,
+            )
         } else {
-            Text(text = "Precio: S/ ${prenda!!.precio}")
+            Text(
+                text = "S/ ${prenda!!.precio}",
+                style = MaterialTheme.typography.headlineSmall,
+            )
+        }
+        Text(text = "Tallas disponibles")
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            prenda!!.tallas.forEach { talla ->
+                FilterChip(
+                    selected = tallaSeleccionada == talla,
+                    onClick = {
+                        tallaSeleccionada = talla
+                    },
+                    label = {
+                        Text(text = talla)
+                    },
+                )
+            }
+        }
+
+        Text(text = "Color")
+
+        FilterChip(
+            selected = colorSeleccionado,
+            onClick = {
+                colorSeleccionado = !colorSeleccionado
+            },
+            label = {
+                Text(text = prenda!!.color.nombre)
+            },
+        )
+
+        stock?.let {
+            StockAvailability(
+                stockByStore = it.porTienda,
+            )
         }
     }
 }
