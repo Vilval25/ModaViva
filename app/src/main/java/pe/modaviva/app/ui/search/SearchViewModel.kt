@@ -237,4 +237,15 @@ class SearchViewModel @Inject constructor(
         _precioMinSeleccionado.value = minimo
         _precioMaxSeleccionado.value = maximo
     }
+
+    fun limpiarFiltros() {
+        _categoriaSeleccionada.value = null
+        _subcategoriaSeleccionada.value = null
+        _generoSeleccionado.value = null
+        _marcaSeleccionada.value = null
+        _tallaSeleccionada.value = null
+        _colorSeleccionado.value = null
+        _precioMinSeleccionado.value = null
+        _precioMaxSeleccionado.value = null
+    }
 }

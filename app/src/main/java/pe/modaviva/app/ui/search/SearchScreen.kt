@@ -242,6 +242,20 @@ fun SearchScreen(
                 tallaSeleccionada != null ||
                 colorSeleccionado != null
             ) {
+
+                Button(
+                    onClick = {
+                        viewModel.limpiarFiltros()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                ) {
+                    Text("Limpiar filtros")
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
