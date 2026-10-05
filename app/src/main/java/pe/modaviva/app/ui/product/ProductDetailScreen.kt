@@ -36,7 +36,16 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import pe.modaviva.app.ui.stock.StockAvailability
 import androidx.compose.material3.Button
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailScreen(
     codigo: String,
@@ -64,6 +73,7 @@ fun ProductDetailScreen(
 
 
     var colorSeleccionado by remember { mutableStateOf(false) }
+    var mostrarMedidas by remember { mutableStateOf(false) }
 
     if (prenda == null) {
         Column(
@@ -155,6 +165,14 @@ fun ProductDetailScreen(
             }
         }
 
+        TextButton(
+            onClick = {
+                mostrarMedidas = true
+            },
+        ) {
+            Text("Ver tabla de medidas")
+        }
+
         Text(text = "Color")
 
         FilterChip(
@@ -181,6 +199,123 @@ fun ProductDetailScreen(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("Agregar al carrito")
+        }
+    }
+
+    if (mostrarMedidas) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                mostrarMedidas = false
+            },
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    text = "Tabla de medidas",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+
+                Text(
+                    text = "Medidas en centímetros",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    ),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .horizontalScroll(rememberScrollState())
+                            .padding(horizontal = 16.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(vertical = 12.dp),
+                        ) {
+                            Text(
+                                text = "Talla",
+                                modifier = Modifier.width(70.dp),
+                                style = MaterialTheme.typography.titleSmall,
+                            )
+                            Text(
+                                text = "Pecho",
+                                modifier = Modifier.width(80.dp),
+                                style = MaterialTheme.typography.titleSmall,
+                            )
+                            Text(
+                                text = "Cintura",
+                                modifier = Modifier.width(80.dp),
+                                style = MaterialTheme.typography.titleSmall,
+                            )
+                            Text(
+                                text = "Cadera",
+                                modifier = Modifier.width(80.dp),
+                                style = MaterialTheme.typography.titleSmall,
+                            )
+                            Text(
+                                text = "Hombro",
+                                modifier = Modifier.width(80.dp),
+                                style = MaterialTheme.typography.titleSmall,
+                            )
+                            Text(
+                                text = "Largo",
+                                modifier = Modifier.width(80.dp),
+                                style = MaterialTheme.typography.titleSmall,
+                            )
+                            Text(
+                                text = "Manga",
+                                modifier = Modifier.width(80.dp),
+                                style = MaterialTheme.typography.titleSmall,
+                            )
+                        }
+
+                        HorizontalDivider()
+
+                        prenda!!.medidas.forEach { (talla, medidas) ->
+                            Row(
+                                modifier = Modifier.padding(vertical = 10.dp),
+                            ) {
+                                Text(
+                                    text = talla,
+                                    modifier = Modifier.width(70.dp),
+                                )
+                                Text(
+                                    text = "${medidas.pecho}",
+                                    modifier = Modifier.width(80.dp),
+                                )
+                                Text(
+                                    text = "${medidas.cintura}",
+                                    modifier = Modifier.width(80.dp),
+                                )
+                                Text(
+                                    text = "${medidas.cadera}",
+                                    modifier = Modifier.width(80.dp),
+                                )
+                                Text(
+                                    text = "${medidas.hombro}",
+                                    modifier = Modifier.width(80.dp),
+                                )
+                                Text(
+                                    text = "${medidas.largo}",
+                                    modifier = Modifier.width(80.dp),
+                                )
+                                Text(
+                                    text = "${medidas.manga}",
+                                    modifier = Modifier.width(80.dp),
+                                )
+                            }
+
+                            HorizontalDivider()
+                        }
+                    }
+                }
+            }
         }
     }
 }
