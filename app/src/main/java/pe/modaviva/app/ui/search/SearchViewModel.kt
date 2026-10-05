@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import pe.modaviva.app.domain.model.Prenda
 import pe.modaviva.app.domain.repository.CatalogoRepository
+import java.text.Normalizer
 
 private data class FiltrosA(
     val texto: String,
@@ -27,6 +28,13 @@ private data class FiltrosB(
     val precioMin: Double?,
     val precioMax: Double?,
 )
+
+private fun normalizarTexto(texto: String): String {
+    return Normalizer
+        .normalize(texto, Normalizer.Form.NFD)
+        .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+        .lowercase()
+}
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
@@ -163,13 +171,22 @@ class SearchViewModel @Inject constructor(
         _ordenSeleccionado,
     ) { prendas, a, b, orden  ->
 
-        val consulta = a.texto.trim()
+        val consulta = normalizarTexto(a.texto.trim())
 
         val filtradas = prendas.filter { prenda ->
 
-            val coincideTexto = consulta.isBlank() ||
-                    prenda.nombre.contains(consulta, ignoreCase = true) ||
-                    prenda.marca.contains(consulta, ignoreCase = true)
+            val nombre = normalizarTexto(prenda.nombre)
+            val marca = normalizarTexto(prenda.marca)
+            val categoria = normalizarTexto(prenda.categoria)
+
+            val coincideTexto =
+                consulta.isBlank() ||
+                        (consulta.length >= 2 &&
+                                (
+                                        nombre.contains(consulta) ||
+                                                marca.contains(consulta) ||
+                                                categoria.contains(consulta)
+                                        ))
 
             val coincideCategoria = a.categoria == null ||
                     prenda.categoria.equals(a.categoria, ignoreCase = true)
