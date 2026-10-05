@@ -38,6 +38,7 @@ import pe.modaviva.app.ui.profile.ProfileTab
 import pe.modaviva.app.ui.theme.ModaVivaTheme
 import pe.modaviva.app.ui.stock.StockTestScreen
 import pe.modaviva.app.ui.search.SearchScreen
+import pe.modaviva.app.ui.product.ProductDetailScreen
 
 /**
  * Navegación de la app. Se entra directo a Inicio, sin pedir sesión
@@ -144,10 +145,19 @@ private fun NavGraphBuilder.overlayGraph(
         )
     }
     // Ficha de la prenda: la construye HU-07.
-    composable(Routes.PRENDA) {
-        ComingSoonScreen(
-            title = stringResource(R.string.prenda_detail_title),
-            icon = Icons.Outlined.Checkroom,
+    composable(
+        route = Routes.PRENDA,
+        arguments = listOf(
+            navArgument("codigo") {
+                type = NavType.StringType
+            },
+        ),
+    ) { backStackEntry ->
+
+        val codigo = backStackEntry.arguments?.getString("codigo").orEmpty()
+
+        ProductDetailScreen(
+            codigo = codigo,
             onBack = { navController.popBackStack() },
         )
     }
