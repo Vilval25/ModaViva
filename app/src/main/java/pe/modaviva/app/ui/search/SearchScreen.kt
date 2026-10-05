@@ -47,6 +47,8 @@ import pe.modaviva.app.ui.components.MvGarmentCard
 import pe.modaviva.app.ui.format.formatearSoles
 import java.time.Clock
 import java.time.Instant
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.RangeSlider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,8 +67,27 @@ fun SearchScreen(
     val generoSeleccionado by viewModel.generoSeleccionado.collectAsStateWithLifecycle()
     val marcas by viewModel.marcas.collectAsStateWithLifecycle()
     val marcaSeleccionada by viewModel.marcaSeleccionada.collectAsStateWithLifecycle()
+    val tallas by viewModel.tallas.collectAsStateWithLifecycle()
+
+    val tallaSeleccionada by viewModel.tallaSeleccionada.collectAsStateWithLifecycle()
+
+    val colores by viewModel.colores.collectAsStateWithLifecycle()
+    val colorSeleccionado by viewModel.colorSeleccionado.collectAsStateWithLifecycle()
+
+    val precioMinimo by viewModel.precioMinimo.collectAsStateWithLifecycle()
+    val precioMaximo by viewModel.precioMaximo.collectAsStateWithLifecycle()
 
     var mostrarFiltros by remember { mutableStateOf(false) }
+
+    var rangoPrecio by remember {
+        mutableStateOf(0f..0f)
+    }
+
+    LaunchedEffect(precioMinimo, precioMaximo) {
+        if (precioMaximo > precioMinimo) {
+            rangoPrecio = precioMinimo.toFloat()..precioMaximo.toFloat()
+        }
+    }
 
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
@@ -295,24 +316,94 @@ fun SearchScreen(
                 }
 
                 Text(
-                    text = "Marca",
+                    text = "Rango de precio",
                     style = MaterialTheme.typography.titleMedium,
                 )
 
                 Text(
-                    text = "Rango de precio",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = "S/ ${"%.2f".format(rangoPrecio.start)} - S/ ${"%.2f".format(rangoPrecio.endInclusive)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+
+                RangeSlider(
+                    value = rangoPrecio,
+                    onValueChange = { nuevoRango ->
+                        rangoPrecio = nuevoRango
+
+                        viewModel.seleccionarRangoPrecio(
+                            nuevoRango.start.toDouble(),
+                            nuevoRango.endInclusive.toDouble(),
+                        )
+                    },
+                    valueRange = precioMinimo.toFloat()..precioMaximo.toFloat(),
                 )
 
                 Text(
                     text = "Talla",
                     style = MaterialTheme.typography.titleMedium,
                 )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilterChip(
+                        selected = tallaSeleccionada == null,
+                        onClick = {
+                            viewModel.seleccionarTalla(null)
+                        },
+                        label = {
+                            Text("Todas")
+                        },
+                    )
 
+                    tallas.forEach { talla ->
+                        FilterChip(
+                            selected = tallaSeleccionada == talla,
+                            onClick = {
+                                viewModel.seleccionarTalla(talla)
+                            },
+                            label = {
+                                Text(talla)
+                            },
+                        )
+                    }
+                }
                 Text(
                     text = "Color",
                     style = MaterialTheme.typography.titleMedium,
                 )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilterChip(
+                        selected = colorSeleccionado == null,
+                        onClick = {
+                            viewModel.seleccionarColor(null)
+                        },
+                        label = {
+                            Text("Todos")
+                        },
+                    )
+
+                    colores.forEach { color ->
+                        FilterChip(
+                            selected = colorSeleccionado == color,
+                            onClick = {
+                                viewModel.seleccionarColor(color)
+                            },
+                            label = {
+                                Text(color)
+                            },
+                        )
+                    }
+                }
+
 
                 Spacer(
                     modifier = Modifier.height(8.dp),

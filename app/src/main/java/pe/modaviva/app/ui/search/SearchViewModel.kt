@@ -8,10 +8,25 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import pe.modaviva.app.domain.model.Prenda
 import pe.modaviva.app.domain.repository.CatalogoRepository
-import kotlinx.coroutines.flow.map
+
+private data class FiltrosA(
+    val texto: String,
+    val categoria: String?,
+    val subcategoria: String?,
+    val genero: String?,
+    val marca: String?,
+)
+
+private data class FiltrosB(
+    val talla: String?,
+    val color: String?,
+    val precioMin: Double?,
+    val precioMax: Double?,
+)
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
@@ -19,46 +34,54 @@ class SearchViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _textoBusqueda = MutableStateFlow("")
-
     val textoBusqueda: StateFlow<String> = _textoBusqueda
 
     private val _categoriaSeleccionada = MutableStateFlow<String?>(null)
-
-    val categoriaSeleccionada: StateFlow<String?> =
-        _categoriaSeleccionada
+    val categoriaSeleccionada: StateFlow<String?> = _categoriaSeleccionada
 
     private val _subcategoriaSeleccionada = MutableStateFlow<String?>(null)
-
-    val subcategoriaSeleccionada: StateFlow<String?> =
-        _subcategoriaSeleccionada
+    val subcategoriaSeleccionada: StateFlow<String?> = _subcategoriaSeleccionada
 
     private val _generoSeleccionado = MutableStateFlow<String?>(null)
-
-    val generoSeleccionado: StateFlow<String?> =
-        _generoSeleccionado
+    val generoSeleccionado: StateFlow<String?> = _generoSeleccionado
 
     private val _marcaSeleccionada = MutableStateFlow<String?>(null)
     val marcaSeleccionada: StateFlow<String?> = _marcaSeleccionada
 
+    private val _tallaSeleccionada = MutableStateFlow<String?>(null)
+    val tallaSeleccionada: StateFlow<String?> = _tallaSeleccionada
+
+    private val _colorSeleccionado = MutableStateFlow<String?>(null)
+    val colorSeleccionado: StateFlow<String?> = _colorSeleccionado
+
+    private val _precioMinSeleccionado = MutableStateFlow<Double?>(null)
+    val precioMinSeleccionado: StateFlow<Double?> = _precioMinSeleccionado
+
+    private val _precioMaxSeleccionado = MutableStateFlow<Double?>(null)
+    val precioMaxSeleccionado: StateFlow<Double?> = _precioMaxSeleccionado
+
+    val precioMinimo: StateFlow<Double> = catalogo.prendas
+        .map { prendas -> prendas.minOfOrNull { it.precio } ?: 0.0 }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0.0)
+
+    val precioMaximo: StateFlow<Double> = catalogo.prendas
+        .map { prendas -> prendas.maxOfOrNull { it.precio } ?: 0.0 }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0.0)
+
     val categorias: StateFlow<List<String>> = catalogo.prendas
-        .combine(_categoriaSeleccionada) { prendas, _ ->
+        .map { prendas ->
             prendas
                 .map { it.categoria }
                 .filter { it.isNotBlank() }
                 .distinct()
                 .sorted()
         }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            emptyList(),
-        )
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val subcategorias: StateFlow<List<String>> = combine(
         catalogo.prendas,
         _categoriaSeleccionada,
     ) { prendas, categoria ->
-
         prendas
             .filter { prenda ->
                 categoria == null ||
@@ -68,11 +91,7 @@ class SearchViewModel @Inject constructor(
             .filter { it.isNotBlank() }
             .distinct()
             .sorted()
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5_000),
-        emptyList(),
-    )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val generos: StateFlow<List<String>> = catalogo.prendas
         .map { prendas ->
@@ -82,11 +101,7 @@ class SearchViewModel @Inject constructor(
                 .distinct()
                 .sorted()
         }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            emptyList(),
-        )
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val marcas: StateFlow<List<String>> = catalogo.prendas
         .map { prendas ->
@@ -96,78 +111,92 @@ class SearchViewModel @Inject constructor(
                 .distinct()
                 .sorted()
         }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            emptyList(),
-        )
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val resultados: StateFlow<List<Prenda>> = combine(
-        catalogo.prendas,
+    val tallas: StateFlow<List<String>> = catalogo.prendas
+        .map { prendas ->
+            prendas
+                .flatMap { it.tallas }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .sorted()
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val colores: StateFlow<List<String>> = catalogo.prendas
+        .map { prendas ->
+            prendas
+                .map { it.color.nombre }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .sorted()
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    // Deben declararse ANTES de "resultados" (se inicializan en orden)
+    private val filtrosA = combine(
         _textoBusqueda,
         _categoriaSeleccionada,
         _subcategoriaSeleccionada,
-    ) { prendas, texto, categoria, subcategoria ->
+        _generoSeleccionado,
+        _marcaSeleccionada,
+    ) { texto, categoria, subcategoria, genero, marca ->
+        FiltrosA(texto, categoria, subcategoria, genero, marca)
+    }
 
-        Triple(
-            prendas,
-            texto,
-            Pair(categoria, subcategoria),
-        )
-    }.combine(
-        combine(
-            _generoSeleccionado,
-            _marcaSeleccionada,
-        ) { genero, marca ->
-            Pair(genero, marca)
-        }
-    ) { datos, filtros ->
-        val (prendas, texto, categoriaSubcategoria) = datos
-        val (categoria, subcategoria) = categoriaSubcategoria
-        val (genero, marca) = filtros
+    private val filtrosB = combine(
+        _tallaSeleccionada,
+        _colorSeleccionado,
+        _precioMinSeleccionado,
+        _precioMaxSeleccionado,
+    ) { talla, color, precioMin, precioMax ->
+        FiltrosB(talla, color, precioMin, precioMax)
+    }
 
-        val consulta = texto.trim()
+    val resultados: StateFlow<List<Prenda>> = combine(
+        catalogo.prendas,
+        filtrosA,
+        filtrosB,
+    ) { prendas, a, b ->
+
+        val consulta = a.texto.trim()
 
         prendas.filter { prenda ->
 
-            val coincideTexto =
-                consulta.isBlank() ||
-                        prenda.nombre.contains(consulta, ignoreCase = true) ||
-                        prenda.marca.contains(consulta, ignoreCase = true)
+            val coincideTexto = consulta.isBlank() ||
+                    prenda.nombre.contains(consulta, ignoreCase = true) ||
+                    prenda.marca.contains(consulta, ignoreCase = true)
 
-            val coincideCategoria =
-                categoria == null ||
-                        prenda.categoria.equals(
-                            categoria,
-                            ignoreCase = true,
-                        )
+            val coincideCategoria = a.categoria == null ||
+                    prenda.categoria.equals(a.categoria, ignoreCase = true)
 
-            val coincideSubcategoria =
-                subcategoria == null ||
-                        prenda.subcategoria.equals(
-                            subcategoria,
-                            ignoreCase = true,
-                        )
+            val coincideSubcategoria = a.subcategoria == null ||
+                    prenda.subcategoria.equals(a.subcategoria, ignoreCase = true)
 
-            val coincideGenero =
-                genero == null ||
-                        prenda.genero.equals(
-                            genero,
-                            ignoreCase = true,
-                        )
+            val coincideGenero = a.genero == null ||
+                    prenda.genero.equals(a.genero, ignoreCase = true)
 
-            val coincideMarca =
-                marca == null ||
-                        prenda.marca.equals(
-                            marca,
-                            ignoreCase = true,
-                        )
+            val coincideMarca = a.marca == null ||
+                    prenda.marca.equals(a.marca, ignoreCase = true)
+
+            val coincidePrecio =
+                (b.precioMin == null || prenda.precio >= b.precioMin) &&
+                        (b.precioMax == null || prenda.precio <= b.precioMax)
+
+            val coincideTalla = b.talla == null ||
+                    prenda.tallas.any { it.equals(b.talla, ignoreCase = true) }
+
+            val coincideColor = b.color == null ||
+                    prenda.color.nombre.equals(b.color, ignoreCase = true)
 
             coincideTexto &&
                     coincideCategoria &&
                     coincideSubcategoria &&
                     coincideGenero &&
-                    coincideMarca
+                    coincideMarca &&
+                    coincidePrecio &&
+                    coincideTalla &&
+                    coincideColor
         }
     }.stateIn(
         viewModelScope,
@@ -181,7 +210,6 @@ class SearchViewModel @Inject constructor(
 
     fun seleccionarCategoria(categoria: String?) {
         _categoriaSeleccionada.value = categoria
-
         _subcategoriaSeleccionada.value = null
     }
 
@@ -195,5 +223,18 @@ class SearchViewModel @Inject constructor(
 
     fun seleccionarMarca(marca: String?) {
         _marcaSeleccionada.value = marca
+    }
+
+    fun seleccionarTalla(talla: String?) {
+        _tallaSeleccionada.value = talla
+    }
+
+    fun seleccionarColor(color: String?) {
+        _colorSeleccionado.value = color
+    }
+
+    fun seleccionarRangoPrecio(minimo: Double, maximo: Double) {
+        _precioMinSeleccionado.value = minimo
+        _precioMaxSeleccionado.value = maximo
     }
 }
