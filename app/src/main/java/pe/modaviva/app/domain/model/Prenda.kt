@@ -9,7 +9,7 @@ import java.time.Instant
 data class Prenda(
     val codigo: String,
     val nombre: String,
-    val descripcion: String,
+    val descripcion: String = "",
     val marca: String,
     val categoria: String,
     val subcategoria: String,
@@ -19,7 +19,7 @@ data class Prenda(
     val promoHasta: Instant?,
     val color: ColorPrenda,
     val tallas: List<String>,
-    val medidas: Map<String, MedidasPrenda>,
+    val medidas: Map<String, MedidasPrenda> = emptyMap(),
     val fotos: List<String>,
     val stockTotal: Int,
     val creadaEn: Instant,

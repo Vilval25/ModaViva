@@ -30,15 +30,46 @@
     <string name="session_signout">Cerrar sesión</string>
     <string name="session_empty">No hay ninguna sesión activa</string>
     <string name="session_email_pending">Tu correo aún no está verificado. Revisa tu bandeja de entrada y la carpeta de spam.</string>
-    <string name="session_section_options">Tus opciones</string>
-    <string name="session_orders">Mis pedidos</string>
-    <string name="session_orders_desc">Consulta tu historial de compras</string>
-    <string name="session_section_soon">Próximamente</string>
-    <string name="session_soon_badge">Próximamente</string>
-    <string name="session_soon_catalog">Catálogo de prendas</string>
-    <string name="session_soon_catalog_desc">Explora las novedades de la tienda</string>
-    <string name="session_soon_fitting">Probador virtual</string>
-    <string name="session_soon_fitting_desc">Prueba prendas con tu foto</string>
+
+    <!-- Perfil de usuario (HU-03) -->
+    <string name="profile_badge_google">Cuenta Google</string>
+    <string name="profile_badge_email">Correo y contraseña</string>
+    <string name="profile_section_account">Mi cuenta</string>
+    <string name="profile_item_personal_data">Datos personales</string>
+    <string name="profile_item_personal_data_desc">Nombres, apellidos y celular</string>
+    <string name="profile_item_addresses">Mis direcciones</string>
+    <string name="profile_item_addresses_desc">Direcciones de entrega para tus pedidos</string>
+    <string name="profile_item_measurements">Mis medidas corporales</string>
+    <string name="profile_item_measurements_desc">Tallas para el probador virtual</string>
+    <string name="profile_item_payments">Métodos de pago</string>
+    <string name="profile_item_payments_desc">Tarjetas y billeteras digitales</string>
+
+    <string name="profile_section_security">Seguridad y privacidad</string>
+    <string name="profile_item_change_password">Cambiar contraseña</string>
+    <string name="profile_item_change_password_desc">Recibe un enlace de restablecimiento</string>
+    <string name="profile_item_terms">Términos y privacidad</string>
+    <string name="profile_item_terms_desc">Términos del servicio y Ley N° 29733</string>
+
+    <string name="profile_section_info">Información</string>
+    <string name="profile_item_about">Acerca de ModaViva</string>
+    <string name="profile_item_about_desc">Versión de la app y tiendas físicas</string>
+
+    <string name="profile_dialog_personal_title">Datos personales</string>
+    <string name="profile_dialog_close">Cerrar</string>
+    <string name="profile_dialog_reset_title">Cambiar contraseña</string>
+    <string name="profile_dialog_reset_message">¿Deseas enviar un enlace de restablecimiento de contraseña a %1$s?</string>
+    <string name="profile_dialog_reset_confirm">Enviar enlace</string>
+    <string name="profile_dialog_reset_success">¡Correo enviado! Revisa tu bandeja de entrada.</string>
+    <string name="profile_dialog_signout_title">¿Cerrar sesión?</string>
+    <string name="profile_dialog_signout_message">¿Estás seguro de que deseas salir de tu cuenta de ModaViva?</string>
+    <string name="profile_dialog_signout_confirm">Cerrar sesión</string>
+    <string name="profile_dialog_soon_title">Próximamente</string>
+    <string name="profile_about_title">Acerca de ModaViva</string>
+    <string name="profile_about_version">ModaViva v1.0.0</string>
+    <string name="profile_about_company">ModaViva Perú S.A.C.</string>
+    <string name="profile_about_stores_title">Nuestras tiendas en Lima Metropolitana:</string>
+    <string name="profile_about_stores">• Jockey Plaza (Surco)\n• Plaza San Miguel (San Miguel)\n• Larcomar (Miraflores)\n• Real Plaza Salaverry (Jesús María)\n• MegaPlaza (Independencia)</string>
+    <string name="profile_about_contact">Atención al cliente: soporte@modaviva.pe</string>
 
     <string name="orders_title">Mis pedidos</string>
     <string name="orders_empty_title">Aún no tienes pedidos</string>

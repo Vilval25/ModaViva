@@ -9,4 +9,5 @@ data class UserProfile(
     val documento: String = "",
     val emailVerificado: Boolean = false,
     val consentimientoAceptado: Boolean = false,
+    val isGoogleUser: Boolean = false,
 )

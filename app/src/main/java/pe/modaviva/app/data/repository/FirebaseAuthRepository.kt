@@ -121,6 +121,15 @@ class FirebaseAuthRepository @Inject constructor(
         firebaseAuth.signOut()
     }
 
+    override suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
+        return try {
+            firebaseAuth.sendPasswordResetEmail(email.trim()).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e.toAuthException())
+        }
+    }
+
     override suspend fun syncEmailVerification(): Boolean {
         val firebaseUser = firebaseAuth.currentUser ?: return false
         runCatching { firebaseUser.reload().await() }
@@ -189,6 +198,7 @@ class FirebaseAuthRepository @Inject constructor(
         val data = snapshot.data.orEmpty()
         val firebaseUser = firebaseAuth.currentUser
         val isVerified = firebaseUser?.isEmailVerified ?: false
+        val isGoogleUser = firebaseUser?.providerData?.any { it.providerId == "google.com" } ?: false
 
         val consentimiento = data["consentimiento"] as? Map<*, *>
         val tieneConsentimiento = consentimiento != null && !consentimiento["version"]?.toString().isNullOrBlank()
@@ -203,6 +213,7 @@ class FirebaseAuthRepository @Inject constructor(
                 email = data["email"] as? String ?: fallbackEmail,
                 emailVerificado = isVerified,
                 consentimientoAceptado = tieneConsentimiento,
+                isGoogleUser = isGoogleUser,
             )
         )
     }

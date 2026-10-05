@@ -13,6 +13,8 @@ interface AuthRepository {
 
     suspend fun acceptTermsAndConditions(version: String = "1.0"): Result<Unit>
 
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit>
+
     suspend fun syncEmailVerification(): Boolean
 
     suspend fun signOut()
