@@ -35,6 +35,10 @@ import pe.modaviva.app.ui.format.formatearSoles
 import java.time.Clock
 import java.time.Instant
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.FilterChip
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,6 +49,8 @@ fun SearchScreen(
 ) {
     val textoBusqueda by viewModel.textoBusqueda.collectAsStateWithLifecycle()
     val resultados by viewModel.resultados.collectAsStateWithLifecycle()
+    val categorias by viewModel.categorias.collectAsStateWithLifecycle()
+    val categoriaSeleccionada by viewModel.categoriaSeleccionada.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -81,7 +87,37 @@ fun SearchScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
+
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilterChip(
+                    selected = categoriaSeleccionada == null,
+                    onClick = {
+                        viewModel.seleccionarCategoria(null)
+                    },
+                    label = {
+                        Text("Todas")
+                    },
+                )
+
+                categorias.forEach { categoria ->
+                    FilterChip(
+                        selected = categoriaSeleccionada == categoria,
+                        onClick = {
+                            viewModel.seleccionarCategoria(categoria)
+                        },
+                        label = {
+                            Text(categoria)
+                        },
+                    )
+                }
+            }
             if (resultados.isEmpty()) {
                 Text(
                     text = if (textoBusqueda.isBlank()) {

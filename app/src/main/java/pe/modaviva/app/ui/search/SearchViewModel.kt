@@ -21,19 +21,45 @@ class SearchViewModel @Inject constructor(
 
     val textoBusqueda: StateFlow<String> = _textoBusqueda
 
+    private val _categoriaSeleccionada = MutableStateFlow<String?>(null)
+
+    val categoriaSeleccionada: StateFlow<String?> =
+        _categoriaSeleccionada
+
+    val categorias: StateFlow<List<String>> = catalogo.prendas
+        .combine(_categoriaSeleccionada) { prendas, _ ->
+            prendas
+                .map { it.categoria }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .sorted()
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            emptyList(),
+        )
+
     val resultados: StateFlow<List<Prenda>> = combine(
         catalogo.prendas,
         _textoBusqueda,
-    ) { prendas, texto ->
+        _categoriaSeleccionada,
+    ) { prendas, texto, categoria ->
+
         val consulta = texto.trim()
 
-        if (consulta.isBlank()) {
-            prendas
-        } else {
-            prendas.filter { prenda ->
-                prenda.nombre.contains(consulta, ignoreCase = true) ||
+        prendas.filter { prenda ->
+
+            val coincideTexto =
+                consulta.isBlank() ||
+                        prenda.nombre.contains(consulta, ignoreCase = true) ||
                         prenda.marca.contains(consulta, ignoreCase = true)
-            }
+
+            val coincideCategoria =
+                categoria == null ||
+                        prenda.categoria.equals(categoria, ignoreCase = true)
+
+            coincideTexto && coincideCategoria
         }
     }.stateIn(
         viewModelScope,
@@ -43,5 +69,9 @@ class SearchViewModel @Inject constructor(
 
     fun actualizarBusqueda(texto: String) {
         _textoBusqueda.value = texto
+    }
+
+    fun seleccionarCategoria(categoria: String?) {
+        _categoriaSeleccionada.value = categoria
     }
 }
