@@ -5,6 +5,7 @@ import pe.modaviva.app.domain.model.ColorPrenda
 import pe.modaviva.app.domain.model.Prenda
 import java.time.Instant
 import java.util.Date
+import pe.modaviva.app.domain.model.MedidasPrenda
 
 /**
  * Convierte un documento de `prendas` al modelo del dominio.
@@ -40,6 +41,7 @@ object PrendaMapper {
             promoHasta = instante(data["promoHasta"]),
             color = color,
             tallas = tallas,
+            medidas = convertirMedidas(medidas),
             fotos = fotos,
             stockTotal = (data["stockTotal"] as? Number)?.toInt() ?: 0,
             creadaEn = instante(data["creadaEn"]) ?: Instant.EPOCH,
@@ -52,6 +54,27 @@ object PrendaMapper {
         val nombre = (mapa["nombre"] as? String)?.takeIf { it.isNotBlank() } ?: return null
         return ColorPrenda(slug = slug, nombre = nombre, hex = mapa["hex"] as? String ?: "")
     }
+
+    private fun convertirMedidas(
+        mapa: Map<*, *>,
+    ): Map<String, MedidasPrenda> {
+        return mapa.mapNotNull { (tallaKey, valores) ->
+            val talla = tallaKey as? String ?: return@mapNotNull null
+            val datos = valores as? Map<*, *> ?: return@mapNotNull null
+
+            val medidas = MedidasPrenda(
+                pecho = (datos["pecho"] as? Number)?.toDouble() ?: return@mapNotNull null,
+                cintura = (datos["cintura"] as? Number)?.toDouble() ?: return@mapNotNull null,
+                cadera = (datos["cadera"] as? Number)?.toDouble() ?: return@mapNotNull null,
+                hombro = (datos["hombro"] as? Number)?.toDouble() ?: return@mapNotNull null,
+                largo = (datos["largo"] as? Number)?.toDouble() ?: return@mapNotNull null,
+                manga = (datos["manga"] as? Number)?.toDouble() ?: return@mapNotNull null,
+            )
+
+            talla to medidas
+        }.toMap()
+    }
+
 
     private fun instante(valor: Any?): Instant? = when (valor) {
         is Timestamp -> valor.toDate().toInstant()

@@ -19,6 +19,7 @@ data class Prenda(
     val promoHasta: Instant?,
     val color: ColorPrenda,
     val tallas: List<String>,
+    val medidas: Map<String, MedidasPrenda>,
     val fotos: List<String>,
     val stockTotal: Int,
     val creadaEn: Instant,

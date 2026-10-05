@@ -6,6 +6,8 @@ import pe.modaviva.app.domain.model.ColorPrenda
 import pe.modaviva.app.domain.model.Prenda
 import java.time.Instant
 
+private val convertidores = Convertidores()
+
 /** Copia local de una prenda del catálogo (HU-04 CA-07). */
 @Entity(tableName = "prendas")
 data class PrendaEntity(
@@ -23,6 +25,7 @@ data class PrendaEntity(
     val colorNombre: String,
     val colorHex: String,
     val tallas: List<String>,
+    val medidasJson: String,
     val fotos: List<String>,
     val stockTotal: Int,
     val creadaEnMillis: Long,
@@ -42,6 +45,7 @@ fun PrendaEntity.aDominio() = Prenda(
     promoHasta = promoHastaMillis?.let(Instant::ofEpochMilli),
     color = ColorPrenda(slug = colorSlug, nombre = colorNombre, hex = colorHex),
     tallas = tallas,
+    medidas = convertidores.aMedidas(medidasJson),
     fotos = fotos,
     stockTotal = stockTotal,
     creadaEn = Instant.ofEpochMilli(creadaEnMillis),
@@ -63,6 +67,7 @@ fun Prenda.aEntidad() = PrendaEntity(
     colorNombre = color.nombre,
     colorHex = color.hex,
     tallas = tallas,
+    medidasJson = convertidores.desdeMedidas(medidas),
     fotos = fotos,
     stockTotal = stockTotal,
     creadaEnMillis = creadaEn.toEpochMilli(),
