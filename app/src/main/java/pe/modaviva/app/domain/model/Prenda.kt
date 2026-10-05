@@ -9,6 +9,7 @@ import java.time.Instant
 data class Prenda(
     val codigo: String,
     val nombre: String,
+    val descripcion: String,
     val marca: String,
     val categoria: String,
     val subcategoria: String,

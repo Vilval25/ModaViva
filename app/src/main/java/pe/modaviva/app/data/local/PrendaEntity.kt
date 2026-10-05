@@ -11,6 +11,7 @@ import java.time.Instant
 data class PrendaEntity(
     @PrimaryKey val codigo: String,
     val nombre: String,
+    val descripcion: String,
     val marca: String,
     val categoria: String,
     val subcategoria: String,
@@ -31,6 +32,7 @@ data class PrendaEntity(
 fun PrendaEntity.aDominio() = Prenda(
     codigo = codigo,
     nombre = nombre,
+    descripcion = descripcion,
     marca = marca,
     categoria = categoria,
     subcategoria = subcategoria,
@@ -49,6 +51,7 @@ fun PrendaEntity.aDominio() = Prenda(
 fun Prenda.aEntidad() = PrendaEntity(
     codigo = codigo,
     nombre = nombre,
+    descripcion = descripcion,
     marca = marca,
     categoria = categoria,
     subcategoria = subcategoria,

@@ -30,6 +30,7 @@ object PrendaMapper {
         return Prenda(
             codigo = codigo,
             nombre = data["nombre"] as? String ?: return null,
+            descripcion = data["descripcion"] as? String ?: "",
             marca = data["marca"] as? String ?: "",
             categoria = data["categoria"] as? String ?: "",
             subcategoria = data["subcategoria"] as? String ?: "",

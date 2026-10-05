@@ -112,6 +112,12 @@ fun ProductDetailScreen(
             text = prenda!!.nombre,
             style = MaterialTheme.typography.headlineSmall,
         )
+
+        Text(
+            text = prenda!!.descripcion,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+
         Text(text = "Código: ${prenda!!.codigo}")
         Text(text = "Marca: ${prenda!!.marca}")
         Text(text = "Categoría: ${prenda!!.categoria}")

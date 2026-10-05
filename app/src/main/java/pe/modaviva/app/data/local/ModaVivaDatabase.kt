@@ -14,7 +14,7 @@ import androidx.room.TypeConverters
  */
 @Database(
     entities = [PrendaEntity::class, SincronizacionEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 @TypeConverters(Convertidores::class)
