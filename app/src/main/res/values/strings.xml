@@ -56,6 +56,13 @@
 
     <string name="profile_dialog_personal_title">Datos personales</string>
     <string name="profile_dialog_close">Cerrar</string>
+    <string name="profile_label_auth_method">Método de acceso</string>
+    <string name="profile_label_email_status">Estado del correo</string>
+    <string name="profile_value_google">Cuenta Google</string>
+    <string name="profile_value_email_pass">Correo y contraseña</string>
+    <string name="profile_status_verified">Verificado ✓</string>
+    <string name="profile_status_pending">Pendiente de verificación</string>
+    <string name="profile_value_not_registered">No registrado</string>
     <string name="profile_dialog_reset_title">Cambiar contraseña</string>
     <string name="profile_dialog_reset_message">¿Deseas enviar un enlace de restablecimiento de contraseña a %1$s?</string>
     <string name="profile_dialog_reset_confirm">Enviar enlace</string>
@@ -64,6 +71,11 @@
     <string name="profile_dialog_signout_message">¿Estás seguro de que deseas salir de tu cuenta de ModaViva?</string>
     <string name="profile_dialog_signout_confirm">Cerrar sesión</string>
     <string name="profile_dialog_soon_title">Próximamente</string>
+    <string name="profile_addresses_soon_desc">Podrás registrar y gestionar tus direcciones de entrega en Lima Metropolitana para recibir tus compras en casa.</string>
+    <string name="profile_measurements_soon_desc">Podrás registrar tus medidas de busto/pecho, cintura y cadera para obtener recomendaciones automáticas de talla con el probador virtual.</string>
+    <string name="profile_payments_soon_desc">Podrás guardar tus tarjetas de crédito/débito y vincular pagos directos con Yape o Plin de forma 100% segura.</string>
+    <string name="profile_soon_footer">Esta funcionalidad estará disponible en la próxima actualización de ModaViva.</string>
+    <string name="dialog_understood">Entendido</string>
     <string name="profile_about_title">Acerca de ModaViva</string>
     <string name="profile_about_version">ModaViva v1.0.0</string>
     <string name="profile_about_company">ModaViva Perú S.A.C.</string>
