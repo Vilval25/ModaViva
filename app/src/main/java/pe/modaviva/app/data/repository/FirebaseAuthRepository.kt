@@ -29,6 +29,7 @@ import javax.inject.Singleton
  *  - `clientes/{authUid}`: perfil del cliente indexado por el UID de Firebase Auth.
  *  - Soporta autenticación con correo/contraseña y Google Sign-in.
  *  - La verificación de correo vive en Firebase Auth (currentUser.isEmailVerified).
+ *  - Registra el consentimiento legal de Términos y Condiciones (HU-01 CA-10).
  */
 @Singleton
 class FirebaseAuthRepository @Inject constructor(
@@ -66,7 +67,6 @@ class FirebaseAuthRepository @Inject constructor(
         val uid = firebaseUser.uid
         val email = firebaseUser.email.orEmpty()
 
-        // Si el cliente no existe aún en Firestore, creamos su perfil inicial
         val clientDocRef = firestore.collection(CLIENTES).document(uid)
         val clientDoc = try {
             clientDocRef.get().await()
@@ -80,16 +80,14 @@ class FirebaseAuthRepository @Inject constructor(
             val nombres = nameParts.getOrNull(0) ?: displayName
             val apellidos = nameParts.getOrNull(1) ?: ""
 
+            // El consentimiento queda en null hasta que acepte el diálogo de T&C
             val newProfile = mapOf(
                 "nombres" to nombres,
                 "apellidos" to apellidos,
                 "email" to email,
                 "telefono" to null,
                 "origen" to "app",
-                "consentimiento" to mapOf(
-                    "version" to "1.0",
-                    "aceptadoEn" to FieldValue.serverTimestamp(),
-                ),
+                "consentimiento" to null,
                 "creadoEn" to FieldValue.serverTimestamp(),
                 "actualizadoEn" to FieldValue.serverTimestamp(),
             )
@@ -97,6 +95,30 @@ class FirebaseAuthRepository @Inject constructor(
         }
 
         return loadProfile(uid, email)
+    }
+
+    override suspend fun acceptTermsAndConditions(version: String): Result<Unit> {
+        val uid = firebaseAuth.currentUser?.uid
+            ?: return Result.failure(AuthException(AuthError.PROFILE_NOT_FOUND))
+
+        return try {
+            firestore.collection(CLIENTES).document(uid).update(
+                mapOf(
+                    "consentimiento" to mapOf(
+                        "version" to version,
+                        "aceptadoEn" to FieldValue.serverTimestamp(),
+                    ),
+                    "actualizadoEn" to FieldValue.serverTimestamp(),
+                )
+            ).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e.toAuthException())
+        }
+    }
+
+    override suspend fun signOut() {
+        firebaseAuth.signOut()
     }
 
     override suspend fun syncEmailVerification(): Boolean {
@@ -141,16 +163,12 @@ class FirebaseAuthRepository @Inject constructor(
             return Result.failure(e.toAuthException())
         }
 
-        // Envío de correo de verificación (HU-01 CA-05)
         runCatching { firebaseUser.sendEmailVerification().await() }
 
-        val profile = request.toProfile(uid)
+        val profile = request.toProfile(uid).copy(consentimientoAceptado = true)
         return Result.success(profile)
     }
 
-    /**
-     * Elimina la cuenta recién creada cuando no se pudo escribir el perfil.
-     */
     private suspend fun discardFailedRegistration(firebaseUser: FirebaseUser) {
         runCatching { firebaseUser.delete().await() }
         firebaseAuth.signOut()
@@ -172,6 +190,9 @@ class FirebaseAuthRepository @Inject constructor(
         val firebaseUser = firebaseAuth.currentUser
         val isVerified = firebaseUser?.isEmailVerified ?: false
 
+        val consentimiento = data["consentimiento"] as? Map<*, *>
+        val tieneConsentimiento = consentimiento != null && !consentimiento["version"]?.toString().isNullOrBlank()
+
         return Result.success(
             UserProfile(
                 uid = uid,
@@ -181,6 +202,7 @@ class FirebaseAuthRepository @Inject constructor(
                 telefono = data["telefono"] as? String,
                 email = data["email"] as? String ?: fallbackEmail,
                 emailVerificado = isVerified,
+                consentimientoAceptado = tieneConsentimiento,
             )
         )
     }

@@ -100,13 +100,9 @@ fun RegisterScreen(
                 modifier = Modifier.padding(bottom = 4.dp),
             )
 
-            // Botón de Google Sign-In (exige aceptación de T&C - HU-01 CA-10)
+            // Botón de Google Sign-In
             MvGoogleButton(
                 onClick = {
-                    if (!state.aceptaTerminos) {
-                        viewModel.onGoogleSignInError(context.getString(R.string.register_terms_error))
-                        return@MvGoogleButton
-                    }
                     scope.launch {
                         GoogleSignInHelper.getGoogleIdToken(context)
                             .onSuccess { idToken ->
@@ -243,5 +239,14 @@ fun RegisterScreen(
                 onMessageShown = viewModel::onDismissGlobalError,
             )
         }
+    }
+
+    state.pendingConsentProfile?.let { profile ->
+        pe.modaviva.app.ui.components.MvTermsConsentDialog(
+            userProfile = profile,
+            onAccept = { viewModel.onAcceptTerms(onRegistered) },
+            onDismiss = viewModel::onDismissTermsDialog,
+            isLoading = state.isAcceptingTerms,
+        )
     }
 }

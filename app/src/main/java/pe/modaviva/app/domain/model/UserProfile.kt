@@ -8,4 +8,5 @@ data class UserProfile(
     val telefono: String? = null,
     val documento: String = "",
     val emailVerificado: Boolean = false,
+    val consentimientoAceptado: Boolean = false,
 )

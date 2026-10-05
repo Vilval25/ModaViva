@@ -11,6 +11,8 @@ data class LoginUiState(
     val showPassword: Boolean = false,
     val isSubmitting: Boolean = false,
     val isGoogleSubmitting: Boolean = false,
+    val pendingConsentProfile: UserProfile? = null,
+    val isAcceptingTerms: Boolean = false,
     val globalError: String? = null,
 ) {
     fun errorFor(field: AuthFormField): String? =

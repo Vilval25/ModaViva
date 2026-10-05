@@ -52,14 +52,18 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.login(current.email, current.password)
                 .onSuccess { profile ->
-                    sessionRepository.signIn(profile)
                     _uiState.update {
                         it.copy(
                             isSubmitting = false,
                             password = "",
                         )
                     }
-                    onSuccess(LoginResult.Success(profile))
+                    if (profile.consentimientoAceptado) {
+                        sessionRepository.signIn(profile)
+                        onSuccess(LoginResult.Success(profile))
+                    } else {
+                        _uiState.update { it.copy(pendingConsentProfile = profile) }
+                    }
                 }
                 .onFailure { error ->
                     val message = (error as? AuthException)
@@ -81,9 +85,13 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.signInWithGoogle(idToken)
                 .onSuccess { profile ->
-                    sessionRepository.signIn(profile)
                     _uiState.update { it.copy(isGoogleSubmitting = false) }
-                    onSuccess(LoginResult.Success(profile))
+                    if (profile.consentimientoAceptado) {
+                        sessionRepository.signIn(profile)
+                        onSuccess(LoginResult.Success(profile))
+                    } else {
+                        _uiState.update { it.copy(pendingConsentProfile = profile) }
+                    }
                 }
                 .onFailure { error ->
                     val message = (error as? AuthException)
@@ -98,6 +106,36 @@ class LoginViewModel @Inject constructor(
                     }
                 }
         }
+    }
+
+    fun onAcceptTerms(onSuccess: (LoginResult.Success) -> Unit) {
+        val profile = _uiState.value.pendingConsentProfile ?: return
+        _uiState.update { it.copy(isAcceptingTerms = true) }
+        viewModelScope.launch {
+            authRepository.acceptTermsAndConditions("1.0")
+                .onSuccess {
+                    val updated = profile.copy(consentimientoAceptado = true)
+                    sessionRepository.signIn(updated)
+                    _uiState.update { it.copy(isAcceptingTerms = false, pendingConsentProfile = null) }
+                    onSuccess(LoginResult.Success(updated))
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isAcceptingTerms = false,
+                            globalError = "Error al registrar consentimiento: ${error.localizedMessage}",
+                        )
+                    }
+                }
+        }
+    }
+
+    fun onDismissTermsDialog() {
+        viewModelScope.launch {
+            authRepository.signOut()
+            sessionRepository.signOut()
+        }
+        _uiState.update { it.copy(pendingConsentProfile = null) }
     }
 
     fun onGoogleSignInError(message: String?) {

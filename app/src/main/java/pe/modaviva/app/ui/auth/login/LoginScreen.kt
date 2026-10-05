@@ -180,4 +180,13 @@ fun LoginScreen(
             )
         }
     }
+
+    state.pendingConsentProfile?.let { profile ->
+        pe.modaviva.app.ui.components.MvTermsConsentDialog(
+            userProfile = profile,
+            onAccept = { viewModel.onAcceptTerms(onLoggedIn) },
+            onDismiss = viewModel::onDismissTermsDialog,
+            isLoading = state.isAcceptingTerms,
+        )
+    }
 }
