@@ -53,6 +53,8 @@ fun SearchScreen(
     val categoriaSeleccionada by viewModel.categoriaSeleccionada.collectAsStateWithLifecycle()
     val subcategorias by viewModel.subcategorias.collectAsStateWithLifecycle()
     val subcategoriaSeleccionada by viewModel.subcategoriaSeleccionada.collectAsStateWithLifecycle()
+    val generos by viewModel.generos.collectAsStateWithLifecycle()
+    val generoSeleccionado by viewModel.generoSeleccionado.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -151,6 +153,39 @@ fun SearchScreen(
                     }
                 }
             }
+
+            if (generos.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilterChip(
+                        selected = generoSeleccionado == null,
+                        onClick = {
+                            viewModel.seleccionarGenero(null)
+                        },
+                        label = {
+                            Text("Todos los géneros")
+                        },
+                    )
+
+                    generos.forEach { genero ->
+                        FilterChip(
+                            selected = generoSeleccionado == genero,
+                            onClick = {
+                                viewModel.seleccionarGenero(genero)
+                            },
+                            label = {
+                                Text(genero)
+                            },
+                        )
+                    }
+                }
+            }
+
             if (resultados.isEmpty()) {
                 Text(
                     text = if (textoBusqueda.isBlank()) {

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import pe.modaviva.app.domain.model.Prenda
 import pe.modaviva.app.domain.repository.CatalogoRepository
+import kotlinx.coroutines.flow.map
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
@@ -30,6 +31,11 @@ class SearchViewModel @Inject constructor(
 
     val subcategoriaSeleccionada: StateFlow<String?> =
         _subcategoriaSeleccionada
+
+    private val _generoSeleccionado = MutableStateFlow<String?>(null)
+
+    val generoSeleccionado: StateFlow<String?> =
+        _generoSeleccionado
 
     val categorias: StateFlow<List<String>> = catalogo.prendas
         .combine(_categoriaSeleccionada) { prendas, _ ->
@@ -65,12 +71,27 @@ class SearchViewModel @Inject constructor(
         emptyList(),
     )
 
+    val generos: StateFlow<List<String>> = catalogo.prendas
+        .map { prendas ->
+            prendas
+                .mapNotNull { it.genero }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .sorted()
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            emptyList(),
+        )
+
     val resultados: StateFlow<List<Prenda>> = combine(
         catalogo.prendas,
         _textoBusqueda,
         _categoriaSeleccionada,
         _subcategoriaSeleccionada,
-    ) { prendas, texto, categoria, subcategoria ->
+        _generoSeleccionado,
+    ) { prendas, texto, categoria, subcategoria, genero ->
 
         val consulta = texto.trim()
 
@@ -92,9 +113,17 @@ class SearchViewModel @Inject constructor(
                             ignoreCase = true,
                         )
 
+            val coincideGenero =
+                genero == null ||
+                        prenda.genero.equals(
+                            genero,
+                            ignoreCase = true,
+                        )
+
             coincideTexto &&
                     coincideCategoria &&
-                    coincideSubcategoria
+                    coincideSubcategoria &&
+                    coincideGenero
         }
     }.stateIn(
         viewModelScope,
@@ -114,5 +143,9 @@ class SearchViewModel @Inject constructor(
 
     fun seleccionarSubcategoria(subcategoria: String?) {
         _subcategoriaSeleccionada.value = subcategoria
+    }
+
+    fun seleccionarGenero(genero: String?) {
+        _generoSeleccionado.value = genero
     }
 }
