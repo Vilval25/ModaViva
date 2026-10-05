@@ -41,6 +41,15 @@ class SearchViewModel @Inject constructor(
     private val catalogo: CatalogoRepository,
 ) : ViewModel() {
 
+    private val tamanoPagina = 6
+    private val _paginaActual = MutableStateFlow(1)
+
+    private val _hayMasResultados = MutableStateFlow(true)
+    val hayMasResultados: StateFlow<Boolean> = _hayMasResultados
+
+    private val _cargandoMas = MutableStateFlow(false)
+    val cargandoMas: StateFlow<Boolean> = _cargandoMas
+
     private val _textoBusqueda = MutableStateFlow("")
     val textoBusqueda: StateFlow<String> = _textoBusqueda
 
@@ -169,7 +178,8 @@ class SearchViewModel @Inject constructor(
         filtrosA,
         filtrosB,
         _ordenSeleccionado,
-    ) { prendas, a, b, orden  ->
+        _paginaActual,
+    ) { prendas, a, b, orden, pagina ->
 
         val consulta = normalizarTexto(a.texto.trim())
 
@@ -219,20 +229,25 @@ class SearchViewModel @Inject constructor(
                     coincideTalla &&
                     coincideColor
         }
-        when (orden) {
+        val ordenadas = when (orden) {
             "Precio menor a mayor" ->
                 filtradas.sortedBy { it.precio }
 
             "Precio mayor a menor" ->
                 filtradas.sortedByDescending { it.precio }
 
-            "Más recientes" -> {
+            "Más recientes" ->
                 filtradas.sortedByDescending { it.creadaEn }
-            }
 
             else ->
                 filtradas
         }
+
+        val cantidadMostrada = pagina * tamanoPagina
+
+        _hayMasResultados.value = ordenadas.size > cantidadMostrada
+
+        ordenadas.take(cantidadMostrada)
 
     }.stateIn(
         viewModelScope,
@@ -242,36 +257,51 @@ class SearchViewModel @Inject constructor(
 
     fun actualizarBusqueda(texto: String) {
         _textoBusqueda.value = texto
+        _paginaActual.value = 1
+        _hayMasResultados.value = true
     }
 
     fun seleccionarCategoria(categoria: String?) {
         _categoriaSeleccionada.value = categoria
         _subcategoriaSeleccionada.value = null
+        _paginaActual.value = 1
+        _hayMasResultados.value = true
     }
-
     fun seleccionarSubcategoria(subcategoria: String?) {
         _subcategoriaSeleccionada.value = subcategoria
+        _paginaActual.value = 1
+        _hayMasResultados.value = true
     }
 
     fun seleccionarGenero(genero: String?) {
         _generoSeleccionado.value = genero
+        _paginaActual.value = 1
+        _hayMasResultados.value = true
     }
 
     fun seleccionarMarca(marca: String?) {
         _marcaSeleccionada.value = marca
+        _paginaActual.value = 1
+        _hayMasResultados.value = true
     }
 
     fun seleccionarTalla(talla: String?) {
         _tallaSeleccionada.value = talla
+        _paginaActual.value = 1
+        _hayMasResultados.value = true
     }
 
     fun seleccionarColor(color: String?) {
         _colorSeleccionado.value = color
+        _paginaActual.value = 1
+        _hayMasResultados.value = true
     }
 
     fun seleccionarRangoPrecio(minimo: Double, maximo: Double) {
         _precioMinSeleccionado.value = minimo
         _precioMaxSeleccionado.value = maximo
+        _paginaActual.value = 1
+        _hayMasResultados.value = true
     }
 
     fun limpiarFiltros() {
@@ -287,5 +317,21 @@ class SearchViewModel @Inject constructor(
 
     fun seleccionarOrden(orden: String) {
         _ordenSeleccionado.value = orden
+        _paginaActual.value = 1
+        _hayMasResultados.value = true
     }
+
+    fun cargarSiguientePagina() {
+        if (_hayMasResultados.value && !_cargandoMas.value) {
+            _cargandoMas.value = true
+            _paginaActual.value++
+            _cargandoMas.value = false
+        }
+    }
+
+    private fun reiniciarPaginacion() {
+        _paginaActual.value = 1
+        _hayMasResultados.value = true
+    }
+
 }

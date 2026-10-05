@@ -49,6 +49,10 @@ import java.time.Clock
 import java.time.Instant
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.RangeSlider
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.material3.CircularProgressIndicator
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,6 +63,8 @@ fun SearchScreen(
 ) {
     val textoBusqueda by viewModel.textoBusqueda.collectAsStateWithLifecycle()
     val resultados by viewModel.resultados.collectAsStateWithLifecycle()
+    val cargandoMas by viewModel.cargandoMas.collectAsStateWithLifecycle()
+    val hayMasResultados by viewModel.hayMasResultados.collectAsStateWithLifecycle()
     val categorias by viewModel.categorias.collectAsStateWithLifecycle()
     val categoriaSeleccionada by viewModel.categoriaSeleccionada.collectAsStateWithLifecycle()
     val subcategorias by viewModel.subcategorias.collectAsStateWithLifecycle()
@@ -78,6 +84,28 @@ fun SearchScreen(
     val precioMaximo by viewModel.precioMaximo.collectAsStateWithLifecycle()
 
     var mostrarFiltros by remember { mutableStateOf(false) }
+    val gridState = rememberLazyGridState()
+    var usuarioDesplazo by remember { mutableStateOf(false) }
+
+    LaunchedEffect(gridState) {
+        snapshotFlow {
+            gridState.firstVisibleItemIndex to
+                    gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
+        }.collect { (primerIndice, ultimoIndice) ->
+
+            if (primerIndice > 0) {
+                usuarioDesplazo = true
+            }
+
+            if (
+                usuarioDesplazo &&
+                ultimoIndice != null &&
+                ultimoIndice >= gridState.layoutInfo.totalItemsCount - 1
+            ) {
+                viewModel.cargarSiguientePagina()
+            }
+        }
+    }
 
     var rangoPrecio by remember {
         mutableStateOf(0f..0f)
@@ -418,6 +446,7 @@ fun SearchScreen(
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(minSize = 160.dp),
+                    state = gridState,
                     contentPadding = PaddingValues(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -434,6 +463,7 @@ fun SearchScreen(
                             },
                         )
                     }
+
                 }
             }
         }
