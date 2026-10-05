@@ -400,15 +400,21 @@ fun SearchScreen(
             }
 
             if (resultados.isEmpty()) {
-                Text(
-                    text = if (textoBusqueda.isBlank()) {
-                        "No hay prendas disponibles."
-                    } else {
-                        "No se encontraron prendas."
-                    },
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(24.dp),
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = if (textoBusqueda.isNotBlank()) {
+                            "No encontramos prendas para \"$textoBusqueda\""
+                        } else {
+                            "No encontramos prendas con los filtros seleccionados"
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(minSize = 160.dp),
