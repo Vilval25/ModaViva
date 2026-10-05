@@ -19,14 +19,13 @@ import pe.modaviva.app.ui.session.SessionScreen
 import pe.modaviva.app.ui.session.SessionViewModel
 
 /**
- * Pestaña Perfil. Provisional hasta HU-02/HU-03: sin sesión ofrece iniciar
- * sesión o crear cuenta, y con sesión muestra la pantalla de sesión actual.
+ * Pestaña Perfil. Sin sesión activa ofrece iniciar sesión o crear cuenta,
+ * y con sesión autenticada muestra la pantalla de gestión de perfil y cuenta.
  */
 @Composable
 fun ProfileTab(
     onLoginClick: () -> Unit,
     onRegisterClick: () -> Unit,
-    onOrdersClick: () -> Unit,
     modifier: Modifier = Modifier,
     sessionViewModel: SessionViewModel = hiltViewModel(),
 ) {
@@ -54,7 +53,6 @@ fun ProfileTab(
         } else {
             SessionScreen(
                 onSignOut = {},
-                onOrdersClick = onOrdersClick,
                 modifier = Modifier.padding(padding),
                 viewModel = sessionViewModel,
             )

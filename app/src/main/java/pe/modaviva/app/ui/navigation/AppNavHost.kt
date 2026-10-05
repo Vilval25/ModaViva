@@ -104,7 +104,6 @@ private fun NavGraphBuilder.topLevelGraph(
         ProfileTab(
             onLoginClick = { navController.navigate(Routes.LOGIN) },
             onRegisterClick = { navController.navigate(Routes.REGISTER) },
-            onOrdersClick = { navController.navigateToTab(TopLevelDestination.ORDERS) },
         )
     }
     composable(TopLevelDestination.FITTING.route) {

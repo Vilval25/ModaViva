@@ -70,7 +70,6 @@ import pe.modaviva.app.ui.components.MvTermsDialog
 fun SessionScreen(
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier,
-    onOrdersClick: () -> Unit = {},
     viewModel: SessionViewModel = hiltViewModel(),
 ) {
     val user by viewModel.currentUser.collectAsStateWithLifecycle()

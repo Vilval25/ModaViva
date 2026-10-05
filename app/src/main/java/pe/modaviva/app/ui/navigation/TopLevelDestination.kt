@@ -25,15 +25,30 @@ enum class TopLevelDestination(
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector,
 ) {
-    HOME("home", R.string.tab_home, Icons.Filled.Home, Icons.Outlined.Home),
+    HOME(
+        "home",
+        R.string.tab_home,
+        Icons.Filled.Home,
+        Icons.Outlined.Home,
+    ),
     CATEGORIES(
         "categories",
         R.string.tab_categories,
         Icons.Filled.Category,
         Icons.Outlined.Category,
     ),
-    PROFILE("profile", R.string.tab_profile, Icons.Filled.Person, Icons.Outlined.Person),
-    FITTING("fitting", R.string.tab_fitting, Icons.Filled.Checkroom, Icons.Outlined.Checkroom),
+    PROFILE(
+        "profile",
+        R.string.tab_profile,
+        Icons.Filled.Person,
+        Icons.Outlined.Person,
+    ),
+    FITTING(
+        "fitting",
+        R.string.tab_fitting,
+        Icons.Filled.Checkroom,
+        Icons.Outlined.Checkroom,
+    ),
     ORDERS(
         "orders",
         R.string.tab_orders,
