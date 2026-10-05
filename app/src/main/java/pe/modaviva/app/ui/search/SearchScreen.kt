@@ -234,6 +234,65 @@ fun SearchScreen(
                 Text("Filtros")
             }
 
+            var mostrarOrden by remember { mutableStateOf(false) }
+
+            Button(
+                onClick = { mostrarOrden = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+            ) {
+                Text("Ordenar")
+            }
+
+            if (mostrarOrden) {
+                ModalBottomSheet(
+                    onDismissRequest = { mostrarOrden = false },
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            text = "Ordenar por",
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+
+                        Button(
+                            onClick = {
+                                viewModel.seleccionarOrden("Precio menor a mayor")
+                                mostrarOrden = false
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Precio: menor a mayor")
+                        }
+
+                        Button(
+                            onClick = {
+                                viewModel.seleccionarOrden("Precio mayor a menor")
+                                mostrarOrden = false
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Precio: mayor a menor")
+                        }
+
+                        Button(
+                            onClick = {
+                                viewModel.seleccionarOrden("Más recientes")
+                                mostrarOrden = false
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Más recientes")
+                        }
+                    }
+                }
+            }
+
             if (
                 categoriaSeleccionada != null ||
                 subcategoriaSeleccionada != null ||

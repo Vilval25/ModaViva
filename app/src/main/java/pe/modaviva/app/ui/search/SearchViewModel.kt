@@ -60,6 +60,9 @@ class SearchViewModel @Inject constructor(
     private val _precioMaxSeleccionado = MutableStateFlow<Double?>(null)
     val precioMaxSeleccionado: StateFlow<Double?> = _precioMaxSeleccionado
 
+    private val _ordenSeleccionado = MutableStateFlow("Relevancia")
+    val ordenSeleccionado: StateFlow<String> = _ordenSeleccionado
+
     val precioMinimo: StateFlow<Double> = catalogo.prendas
         .map { prendas -> prendas.minOfOrNull { it.precio } ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0.0)
@@ -157,11 +160,12 @@ class SearchViewModel @Inject constructor(
         catalogo.prendas,
         filtrosA,
         filtrosB,
-    ) { prendas, a, b ->
+        _ordenSeleccionado,
+    ) { prendas, a, b, orden  ->
 
         val consulta = a.texto.trim()
 
-        prendas.filter { prenda ->
+        val filtradas = prendas.filter { prenda ->
 
             val coincideTexto = consulta.isBlank() ||
                     prenda.nombre.contains(consulta, ignoreCase = true) ||
@@ -198,6 +202,21 @@ class SearchViewModel @Inject constructor(
                     coincideTalla &&
                     coincideColor
         }
+        when (orden) {
+            "Precio menor a mayor" ->
+                filtradas.sortedBy { it.precio }
+
+            "Precio mayor a menor" ->
+                filtradas.sortedByDescending { it.precio }
+
+            "Más recientes" -> {
+                filtradas.sortedByDescending { it.creadaEn }
+            }
+
+            else ->
+                filtradas
+        }
+
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
@@ -247,5 +266,9 @@ class SearchViewModel @Inject constructor(
         _colorSeleccionado.value = null
         _precioMinSeleccionado.value = null
         _precioMaxSeleccionado.value = null
+    }
+
+    fun seleccionarOrden(orden: String) {
+        _ordenSeleccionado.value = orden
     }
 }
