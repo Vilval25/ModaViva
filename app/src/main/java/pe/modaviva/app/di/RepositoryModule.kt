@@ -10,7 +10,7 @@ import pe.modaviva.app.data.repository.FirebaseAuthRepository
 import pe.modaviva.app.data.repository.FirebaseBackendRepository
 import pe.modaviva.app.data.repository.FirestoreCatalogoRepository
 import pe.modaviva.app.data.repository.FirestoreStockRepository
-import pe.modaviva.app.data.repository.InMemorySessionRepository
+import pe.modaviva.app.data.repository.PersistentSessionRepository
 import pe.modaviva.app.domain.repository.AuthRepository
 import pe.modaviva.app.domain.repository.BackendRepository
 import pe.modaviva.app.domain.repository.CatalogoRepository
@@ -31,7 +31,7 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSessionRepository(
-        impl: InMemorySessionRepository,
+        impl: PersistentSessionRepository,
     ): SessionRepository
 
     @Binds

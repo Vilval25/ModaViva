@@ -136,6 +136,43 @@ class FirebaseAuthRepository @Inject constructor(
         return firebaseUser.isEmailVerified
     }
 
+    override suspend fun updateProfile(
+        nombres: String,
+        apellidos: String,
+        telefono: String?,
+    ): Result<UserProfile> {
+        val firebaseUser = firebaseAuth.currentUser
+            ?: return Result.failure(AuthException(AuthError.PROFILE_NOT_FOUND))
+
+        val uid = firebaseUser.uid
+        val email = firebaseUser.email.orEmpty()
+        val nombresClean = nombres.trim()
+        val apellidosClean = apellidos.trim()
+        val telefonoClean = telefono?.trim()?.takeIf { it.isNotBlank() }
+
+        val updates = mapOf(
+            "nombres" to nombresClean,
+            "apellidos" to apellidosClean,
+            "telefono" to telefonoClean,
+            "actualizadoEn" to FieldValue.serverTimestamp(),
+        )
+
+        return try {
+            firestore.collection(CLIENTES).document(uid).update(updates).await()
+
+            runCatching {
+                val profileChange = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                    .setDisplayName("$nombresClean $apellidosClean".trim())
+                    .build()
+                firebaseUser.updateProfile(profileChange).await()
+            }
+
+            loadProfile(uid, email)
+        } catch (e: Exception) {
+            Result.failure(e.toAuthException())
+        }
+    }
+
     override suspend fun register(request: RegisterRequest): Result<UserProfile> {
         val firebaseUser = try {
             firebaseAuth

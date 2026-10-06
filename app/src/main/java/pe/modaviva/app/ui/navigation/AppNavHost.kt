@@ -15,8 +15,13 @@ import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavGraphBuilder
@@ -31,22 +36,50 @@ import pe.modaviva.app.R
 import pe.modaviva.app.ui.auth.login.LoginScreen
 import pe.modaviva.app.ui.auth.register.RegisterScreen
 import pe.modaviva.app.ui.auth.verify.EmailVerifyScreen
+import pe.modaviva.app.ui.components.MvAuthPromptBottomSheet
 import pe.modaviva.app.ui.home.HomeScreen
 import pe.modaviva.app.ui.orders.OrderHistoryScreen
 import pe.modaviva.app.ui.placeholder.ComingSoonScreen
-import pe.modaviva.app.ui.profile.ProfileTab
-import pe.modaviva.app.ui.theme.ModaVivaTheme
-import pe.modaviva.app.ui.stock.StockTestScreen
-import pe.modaviva.app.ui.search.SearchScreen
 import pe.modaviva.app.ui.product.ProductDetailScreen
+import pe.modaviva.app.ui.profile.ProfileTab
+import pe.modaviva.app.ui.search.SearchScreen
+import pe.modaviva.app.ui.session.SessionViewModel
+import pe.modaviva.app.ui.stock.StockTestScreen
+import pe.modaviva.app.ui.theme.ModaVivaTheme
 
 /**
- * Navegación de la app. Se entra directo a Inicio, sin pedir sesión
- * (HT-01 CA-03). La barra inferior solo se muestra en las pestañas; el resto
- * de pantallas se abre encima de ellas.
+ * Navegación de la app. Se entra directo a Inicio, sin pedir sesión (HT-01 CA-03).
+ * La barra inferior solo se muestra en las pestañas; el resto de pantallas se abre encima de ellas.
+ *
+ * Las acciones que requieren cuenta (usar el probador, abrir o marcar favoritos, abrir notificaciones,
+ * abrir Mis pedidos o pagar) interceptan a los invitados mostrando la hoja modal 'Inicia sesión para continuar'
+ * (HU-02 CA-02). Si se descarta el aviso, el usuario sigue navegando como invitado.
  */
 @Composable
-fun AppNavHost() {
+fun AppNavHost(
+    sessionViewModel: SessionViewModel = hiltViewModel(),
+) {
+    val currentUser by sessionViewModel.currentUser.collectAsStateWithLifecycle()
+
+    var showAuthPrompt by remember { mutableStateOf(false) }
+    var authPromptMessage by remember { mutableStateOf("") }
+
+    val defaultPrompt = stringResource(R.string.auth_prompt_body_default)
+    val fittingPrompt = stringResource(R.string.auth_prompt_body_fitting)
+    val favoritesPrompt = stringResource(R.string.auth_prompt_body_favorites)
+    val notificationsPrompt = stringResource(R.string.auth_prompt_body_notifications)
+    val ordersPrompt = stringResource(R.string.auth_prompt_body_orders)
+    val cartPrompt = stringResource(R.string.auth_prompt_body_cart)
+
+    val requireAuth: (String, () -> Unit) -> Unit = { message, onAuthenticated ->
+        if (currentUser == null) {
+            authPromptMessage = message
+            showAuthPrompt = true
+        } else {
+            onAuthenticated()
+        }
+    }
+
     ModaVivaTheme {
         val navController = rememberNavController()
         val backStackEntry by navController.currentBackStackEntryAsState()
@@ -55,14 +88,26 @@ fun AppNavHost() {
         }
 
         Scaffold(
-            // Cada pantalla gestiona sus propios márgenes del sistema; aquí
-            // solo se reserva el espacio de la barra inferior.
             contentWindowInsets = WindowInsets(0),
             bottomBar = {
                 if (currentTab != null) {
                     AppBottomBar(
                         current = currentTab,
-                        onSelect = navController::navigateToTab,
+                        onSelect = { tab ->
+                            when (tab) {
+                                TopLevelDestination.FITTING -> {
+                                    requireAuth(fittingPrompt) {
+                                        navController.navigateToTab(tab)
+                                    }
+                                }
+                                TopLevelDestination.ORDERS -> {
+                                    requireAuth(ordersPrompt) {
+                                        navController.navigateToTab(tab)
+                                    }
+                                }
+                                else -> navController.navigateToTab(tab)
+                            }
+                        },
                     )
                 }
             },
@@ -74,23 +119,64 @@ fun AppNavHost() {
                     .padding(innerPadding)
                     .consumeWindowInsets(innerPadding),
             ) {
-                topLevelGraph(navController)
-                overlayGraph(navController)
+                topLevelGraph(
+                    navController = navController,
+                    requireAuth = requireAuth,
+                    notificationsPrompt = notificationsPrompt,
+                    favoritesPrompt = favoritesPrompt,
+                    cartPrompt = cartPrompt,
+                )
+                overlayGraph(
+                    navController = navController,
+                    requireAuth = requireAuth,
+                    cartPrompt = cartPrompt,
+                )
                 authGraph(navController)
             }
+        }
+
+        if (showAuthPrompt) {
+            MvAuthPromptBottomSheet(
+                onDismiss = { showAuthPrompt = false },
+                onLoginClick = {
+                    showAuthPrompt = false
+                    navController.navigate(Routes.LOGIN)
+                },
+                onRegisterClick = {
+                    showAuthPrompt = false
+                    navController.navigate(Routes.REGISTER)
+                },
+                message = authPromptMessage.ifBlank { defaultPrompt },
+            )
         }
     }
 }
 
 private fun NavGraphBuilder.topLevelGraph(
     navController: NavHostController,
+    requireAuth: (String, () -> Unit) -> Unit,
+    notificationsPrompt: String,
+    favoritesPrompt: String,
+    cartPrompt: String,
 ) {
     composable(TopLevelDestination.HOME.route) {
         HomeScreen(
-            onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) },
+            onNotificationsClick = {
+                requireAuth(notificationsPrompt) {
+                    navController.navigate(Routes.NOTIFICATIONS)
+                }
+            },
             onSearchClick = { navController.navigate(Routes.SEARCH) },
-            onFavoritesClick = { navController.navigate(Routes.FAVORITES) },
-            onCartClick = { navController.navigate(Routes.CART) },
+            onFavoritesClick = {
+                requireAuth(favoritesPrompt) {
+                    navController.navigate(Routes.FAVORITES)
+                }
+            },
+            onCartClick = {
+                requireAuth(cartPrompt) {
+                    navController.navigate(Routes.CART)
+                }
+            },
             onPrendaClick = { codigo -> navController.navigate(Routes.prenda(codigo)) },
         )
     }
@@ -120,6 +206,8 @@ private fun NavGraphBuilder.topLevelGraph(
 /** Pantallas que se abren desde Inicio, con flecha para volver. */
 private fun NavGraphBuilder.overlayGraph(
     navController: NavHostController,
+    requireAuth: (String, () -> Unit) -> Unit,
+    cartPrompt: String,
 ) {
     composable(Routes.SEARCH) {
         SearchScreen(
@@ -143,7 +231,6 @@ private fun NavGraphBuilder.overlayGraph(
             onBack = { navController.popBackStack() },
         )
     }
-    // Ficha de la prenda: la construye HU-07.
     composable(
         route = Routes.PRENDA,
         arguments = listOf(
@@ -152,12 +239,16 @@ private fun NavGraphBuilder.overlayGraph(
             },
         ),
     ) { backStackEntry ->
-
         val codigo = backStackEntry.arguments?.getString("codigo").orEmpty()
 
         ProductDetailScreen(
             codigo = codigo,
             onBack = { navController.popBackStack() },
+            onAddToCartClick = {
+                requireAuth(cartPrompt) {
+                    navController.navigate(Routes.CART)
+                }
+            },
         )
     }
     composable(Routes.CART) {
@@ -170,13 +261,11 @@ private fun NavGraphBuilder.overlayGraph(
     composable("stock-test") {
         StockTestScreen()
     }
-
 }
 
 /**
- * Acceso y registro, abiertos desde Perfil. Al terminar se vuelve a Perfil,
- * que muestra la sesión. HU-02 cambiará esto para volver a la pantalla desde
- * donde se pidió iniciar sesión.
+ * Acceso y registro. Al autenticarse con éxito, vuelve a la pantalla desde donde se solicitó
+ * o a Perfil si se abrió desde allí (HU-01 y HU-02).
  */
 private fun NavGraphBuilder.authGraph(
     navController: NavHostController,
@@ -195,7 +284,11 @@ private fun NavGraphBuilder.authGraph(
             onBackClick = {
                 navController.popBackStack()
             },
-            onLoggedIn = { backToProfile() },
+            onLoggedIn = {
+                if (!navController.popBackStack()) {
+                    backToProfile()
+                }
+            },
             modifier = Modifier.safeDrawingPadding(),
         )
     }
@@ -203,7 +296,9 @@ private fun NavGraphBuilder.authGraph(
         RegisterScreen(
             onRegistered = { success ->
                 if (success.profile.emailVerificado) {
-                    backToProfile()
+                    if (!navController.popBackStack()) {
+                        backToProfile()
+                    }
                 } else {
                     val route = Routes.EMAIL_VERIFY.replace(
                         "{email}",
@@ -236,7 +331,11 @@ private fun NavGraphBuilder.authGraph(
     ) { backStackEntry ->
         EmailVerifyScreen(
             email = backStackEntry.arguments?.getString("email").orEmpty(),
-            onBack = backToProfile,
+            onBack = {
+                if (!navController.popBackStack()) {
+                    backToProfile()
+                }
+            },
             modifier = Modifier.safeDrawingPadding(),
         )
     }

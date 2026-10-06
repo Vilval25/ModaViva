@@ -17,5 +17,11 @@ interface AuthRepository {
 
     suspend fun syncEmailVerification(): Boolean
 
+    suspend fun updateProfile(
+        nombres: String,
+        apellidos: String,
+        telefono: String?,
+    ): Result<UserProfile>
+
     suspend fun signOut()
 }

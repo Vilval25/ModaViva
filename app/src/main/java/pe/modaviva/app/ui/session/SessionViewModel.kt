@@ -49,6 +49,36 @@ class SessionViewModel @Inject constructor(
         _passwordResetError.value = null
     }
 
+    private val _isUpdatingProfile = MutableStateFlow(false)
+    val isUpdatingProfile: StateFlow<Boolean> = _isUpdatingProfile.asStateFlow()
+
+    private val _updateProfileError = MutableStateFlow<String?>(null)
+    val updateProfileError: StateFlow<String?> = _updateProfileError.asStateFlow()
+
+    fun updateProfile(
+        nombres: String,
+        apellidos: String,
+        telefono: String?,
+        onSuccess: () -> Unit,
+    ) {
+        viewModelScope.launch {
+            _isUpdatingProfile.value = true
+            _updateProfileError.value = null
+            val result = authRepository.updateProfile(nombres, apellidos, telefono)
+            _isUpdatingProfile.value = false
+            result.onSuccess { updated ->
+                sessionRepository.signIn(updated)
+                onSuccess()
+            }.onFailure { e ->
+                _updateProfileError.value = e.localizedMessage ?: "No se pudieron actualizar los datos."
+            }
+        }
+    }
+
+    fun dismissUpdateProfileError() {
+        _updateProfileError.value = null
+    }
+
     fun signOut() {
         viewModelScope.launch {
             authRepository.signOut()

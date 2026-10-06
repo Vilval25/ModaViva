@@ -54,8 +54,15 @@
     <string name="profile_item_about">Acerca de ModaViva</string>
     <string name="profile_item_about_desc">Versión de la app y tiendas físicas</string>
 
-    <string name="profile_dialog_personal_title">Datos personales</string>
+    <string name="profile_dialog_personal_title">Editar datos personales</string>
     <string name="profile_dialog_close">Cerrar</string>
+    <string name="profile_edit_save">Guardar cambios</string>
+    <string name="profile_edit_saving">Guardando…</string>
+    <string name="profile_edit_success">Cambios guardados correctamente</string>
+    <string name="profile_edit_email_notice">El correo identifica tu cuenta y no se puede modificar.</string>
+    <string name="profile_edit_error_empty">Este campo no puede estar vacío</string>
+    <string name="profile_edit_error_phone">Ingresa un número de celular válido de 9 dígitos</string>
+    <string name="field_telefono_optional">Celular (opcional)</string>
     <string name="profile_label_auth_method">Método de acceso</string>
     <string name="profile_label_email_status">Estado del correo</string>
     <string name="profile_value_google">Cuenta Google</string>
@@ -135,6 +142,15 @@
     <string name="profile_guest_body">Con tu cuenta podrás usar el probador virtual, guardar favoritos y comprar.</string>
     <string name="profile_guest_login">Iniciar sesión</string>
     <string name="profile_guest_register">Crear cuenta</string>
+
+    <!-- Aviso de inicio de sesión requerido (HU-02 CA-02) -->
+    <string name="auth_prompt_title">Inicia sesión para continuar</string>
+    <string name="auth_prompt_body_default">Crea tu cuenta o inicia sesión para usar el probador virtual, guardar favoritos y comprar.</string>
+    <string name="auth_prompt_body_fitting">Inicia sesión para usar el probador virtual y probarte prendas con tu propia foto.</string>
+    <string name="auth_prompt_body_favorites">Inicia sesión para guardar tus prendas favoritas y revisarlas en cualquier momento.</string>
+    <string name="auth_prompt_body_notifications">Inicia sesión para ver las notificaciones y novedades sobre tus pedidos.</string>
+    <string name="auth_prompt_body_orders">Inicia sesión para revisar tu historial de compras y pedidos realizados.</string>
+    <string name="auth_prompt_body_cart">Inicia sesión para continuar con tu compra y pagar tus prendas de forma segura.</string>
 
     <!-- Componentes comunes (HT-01) -->
     <string name="state_loading">Cargando…</string>

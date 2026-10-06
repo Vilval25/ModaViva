@@ -50,6 +50,7 @@ import androidx.compose.material3.HorizontalDivider
 fun ProductDetailScreen(
     codigo: String,
     onBack: () -> Unit,
+    onAddToCartClick: () -> Unit = {},
     viewModel: ProductDetailViewModel = hiltViewModel(),
     stockViewModel: StockViewModel = hiltViewModel(),
 ) {
@@ -192,9 +193,7 @@ fun ProductDetailScreen(
         }
 
         Button(
-            onClick = {
-                // Pendiente: agregar al carrito
-            },
+            onClick = onAddToCartClick,
             enabled = tallaSeleccionada != null && colorSeleccionado,
             modifier = Modifier.fillMaxWidth(),
         ) {

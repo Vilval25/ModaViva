@@ -58,6 +58,11 @@ import pe.modaviva.app.ui.session.dialogs.AboutModaVivaDialog
 import pe.modaviva.app.ui.session.dialogs.PersonalDataDialog
 import pe.modaviva.app.ui.session.dialogs.ResetPasswordDialog
 
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+
 @Composable
 fun SessionScreen(
     onSignOut: () -> Unit,
@@ -68,6 +73,12 @@ fun SessionScreen(
     val isSendingReset by viewModel.isSendingPasswordReset.collectAsStateWithLifecycle()
     val resetSent by viewModel.passwordResetSent.collectAsStateWithLifecycle()
     val resetError by viewModel.passwordResetError.collectAsStateWithLifecycle()
+    val isUpdatingProfile by viewModel.isUpdatingProfile.collectAsStateWithLifecycle()
+    val updateProfileError by viewModel.updateProfileError.collectAsStateWithLifecycle()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val updateSuccessMessage = stringResource(R.string.profile_edit_success)
 
     var showSignOutConfirm by remember { mutableStateOf(false) }
     var showPersonalDataDialog by remember { mutableStateOf(false) }
@@ -242,6 +253,13 @@ fun SessionScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp),
+        )
     }
 
     // Diálogo de Confirmación para Cerrar Sesión
@@ -264,7 +282,20 @@ fun SessionScreen(
     if (showPersonalDataDialog && profile != null) {
         PersonalDataDialog(
             profile = profile,
-            onDismiss = { showPersonalDataDialog = false },
+            isUpdating = isUpdatingProfile,
+            errorMessage = updateProfileError,
+            onSave = { nombres, apellidos, telefono ->
+                viewModel.updateProfile(nombres, apellidos, telefono) {
+                    showPersonalDataDialog = false
+                    scope.launch {
+                        snackbarHostState.showSnackbar(updateSuccessMessage)
+                    }
+                }
+            },
+            onDismiss = {
+                showPersonalDataDialog = false
+                viewModel.dismissUpdateProfileError()
+            },
         )
     }
 
