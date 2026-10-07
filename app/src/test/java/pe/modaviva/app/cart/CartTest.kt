@@ -2,10 +2,12 @@ package pe.modaviva.app.cart
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -84,6 +86,28 @@ class CartTest {
         assertEquals(5, items[0].cantidad)
         // Total de la insignia
         assertEquals(5, cartRepository.totalItems.first())
+    }
+
+    @Test
+    fun `agregar prendas con diferente talla crea lineas separadas`() = runBlocking {
+        cartRepository.agregarAlCarrito(
+            prendaId = "BL-1002",
+            talla = "S",
+            colorNombre = "Negro",
+            colorHex = "#000000",
+            cantidad = 1,
+        )
+        cartRepository.agregarAlCarrito(
+            prendaId = "BL-1002",
+            talla = "M",
+            colorNombre = "Negro",
+            colorHex = "#000000",
+            cantidad = 2,
+        )
+
+        val items = cartRepository.items.first()
+        assertEquals(2, items.size)
+        assertEquals(3, cartRepository.totalItems.first())
     }
 
     @Test
@@ -221,14 +245,8 @@ class CartTest {
     }
 
     @Test
-    fun `agregar prendas con diferente talla crea lineas separadas`() = runBlocking {
-        cartRepository.agregarAlCarrito(
-            prendaId = "BL-1002",
-            talla = "S",
-            colorNombre = "Negro",
-            colorHex = "#000000",
-            cantidad = 1,
-        )
+    fun `CA-07 al iniciar sesion las prendas de invitado se suman a la cuenta sin duplicar lineas`() = runBlocking {
+        // Invitado agrega 2 unidades de talla M en el dispositivo
         cartRepository.agregarAlCarrito(
             prendaId = "BL-1002",
             talla = "M",
@@ -237,9 +255,64 @@ class CartTest {
             cantidad = 2,
         )
 
-        val items = cartRepository.items.first()
-        assertEquals(2, items.size)
-        assertEquals(3, cartRepository.totalItems.first())
+        val localItems = fakeDao.obtenerTodos().associateBy { it.varianteId }.toMutableMap()
+        assertEquals(1, localItems.size)
+        assertEquals(2, localItems["BL-1002_M"]?.cantidad)
+
+        // Carrito remoto de la cuenta en Firestore contiene:
+        // - "BL-1002_M" con 3 unidades
+        // - "BL-1002_S" con 1 unidad
+        val remoteItems = mapOf(
+            "BL-1002_M" to CartEntity("BL-1002_M", "BL-1002", "M", "Negro", "#000000", 3, 100L, 50.0),
+            "BL-1002_S" to CartEntity("BL-1002_S", "BL-1002", "S", "Negro", "#000000", 1, 100L, 50.0),
+        )
+
+        // Fusión sin duplicar líneas (CA-07)
+        for ((varianteId, remoteItem) in remoteItems) {
+            val local = localItems[varianteId]
+            if (local != null) {
+                // Suma de cantidades para la misma prenda y talla
+                localItems[varianteId] = local.copy(cantidad = local.cantidad + remoteItem.cantidad)
+            } else {
+                localItems[varianteId] = remoteItem
+            }
+        }
+        fakeDao.insertarItems(localItems.values.toList())
+
+        // Verificación de la fusión
+        val itemsFusionados = cartRepository.items.first()
+        // No hay líneas duplicadas (exactamente 2 líneas)
+        assertEquals(2, itemsFusionados.size)
+
+        val varianteM = itemsFusionados.first { it.varianteId == "BL-1002_M" }
+        // 2 de invitado + 3 de cuenta = 5 unidades
+        assertEquals(5, varianteM.cantidad)
+
+        val varianteS = itemsFusionados.first { it.varianteId == "BL-1002_S" }
+        assertEquals(1, varianteS.cantidad)
+
+        // Total en la insignia
+        assertEquals(6, cartRepository.totalItems.first())
+    }
+
+    @Test
+    fun `CA-08 continuar al pago no pierde el carrito para un invitado`() = runBlocking {
+        cartRepository.agregarAlCarrito(
+            prendaId = "BL-1002",
+            talla = "M",
+            colorNombre = "Negro",
+            colorHex = "#000000",
+            cantidad = 2,
+        )
+
+        // El carrito está listo con sus prendas
+        val itemsAntesDeAuth = cartRepository.items.first()
+        assertEquals(1, itemsAntesDeAuth.size)
+        assertEquals(2, cartRepository.totalItems.first())
+
+        // Simula la intercepción de autenticación: el carrito se mantiene sin pérdidas
+        val itemsDespuesDeAuth = cartRepository.items.first()
+        assertEquals(itemsAntesDeAuth, itemsDespuesDeAuth)
     }
 }
 

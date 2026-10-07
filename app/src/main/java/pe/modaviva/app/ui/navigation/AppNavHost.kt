@@ -253,7 +253,9 @@ private fun NavGraphBuilder.overlayGraph(
                 navController.popBackStack(TopLevelDestination.HOME.route, inclusive = false)
             },
             onCheckout = {
-                // Proceder al pago
+                requireAuth(cartPrompt) {
+                    // Acción al pagar
+                }
             },
         )
     }
