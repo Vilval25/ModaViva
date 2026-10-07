@@ -36,6 +36,7 @@ import pe.modaviva.app.R
 import pe.modaviva.app.ui.auth.login.LoginScreen
 import pe.modaviva.app.ui.auth.register.RegisterScreen
 import pe.modaviva.app.ui.auth.verify.EmailVerifyScreen
+import pe.modaviva.app.ui.cart.CartScreen
 import pe.modaviva.app.ui.components.MvAuthPromptBottomSheet
 import pe.modaviva.app.ui.home.HomeScreen
 import pe.modaviva.app.ui.orders.OrderHistoryScreen
@@ -173,9 +174,7 @@ private fun NavGraphBuilder.topLevelGraph(
                 }
             },
             onCartClick = {
-                requireAuth(cartPrompt) {
-                    navController.navigate(Routes.CART)
-                }
+                navController.navigate(Routes.CART)
             },
             onPrendaClick = { codigo -> navController.navigate(Routes.prenda(codigo)) },
         )
@@ -244,18 +243,18 @@ private fun NavGraphBuilder.overlayGraph(
         ProductDetailScreen(
             codigo = codigo,
             onBack = { navController.popBackStack() },
-            onAddToCartClick = {
-                requireAuth(cartPrompt) {
-                    navController.navigate(Routes.CART)
-                }
-            },
+            onCartClick = { navController.navigate(Routes.CART) },
         )
     }
     composable(Routes.CART) {
-        ComingSoonScreen(
-            title = stringResource(R.string.cart_title),
-            icon = Icons.Outlined.ShoppingCart,
+        CartScreen(
             onBack = { navController.popBackStack() },
+            onGoToHome = {
+                navController.popBackStack(TopLevelDestination.HOME.route, inclusive = false)
+            },
+            onCheckout = {
+                // Proceder al pago
+            },
         )
     }
     composable("stock-test") {

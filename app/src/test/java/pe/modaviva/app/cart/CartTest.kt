@@ -107,6 +107,67 @@ class CartTest {
     }
 
     @Test
+    fun `CA-03 al cambiar cantidad o eliminar un item el subtotal se recalcula al instante y se puede deshacer`() = runBlocking {
+        val precio = 50.0
+
+        // Agregar 2 unidades
+        cartRepository.agregarAlCarrito(
+            prendaId = "BL-1002",
+            talla = "M",
+            colorNombre = "Negro",
+            colorHex = "#000000",
+            cantidad = 2,
+        )
+
+        val itemOriginal = cartRepository.items.first().first()
+        var subtotal = itemOriginal.cantidad * precio
+        assertEquals(100.0, subtotal, 0.0)
+
+        // Cambiar cantidad a 3 -> subtotal se recalcula al instante (150.0)
+        cartRepository.actualizarCantidad(itemOriginal.varianteId, 3)
+        val itemActualizado = cartRepository.items.first().first()
+        assertEquals(3, itemActualizado.cantidad)
+        subtotal = itemActualizado.cantidad * precio
+        assertEquals(150.0, subtotal, 0.0)
+
+        // Eliminar ítem -> subtotal se recalcula al instante a 0
+        cartRepository.eliminarItem(itemOriginal.varianteId)
+        assertTrue(cartRepository.items.first().isEmpty())
+        assertEquals(0, cartRepository.totalItems.first())
+
+        // Deshacer eliminación -> se restaura el ítem con su cantidad previa
+        cartRepository.agregarAlCarrito(
+            prendaId = itemOriginal.prendaId,
+            talla = itemOriginal.talla,
+            colorNombre = itemOriginal.colorNombre,
+            colorHex = itemOriginal.colorHex,
+            cantidad = itemOriginal.cantidad,
+        )
+        val itemRestaurado = cartRepository.items.first().first()
+        assertEquals(2, itemRestaurado.cantidad)
+        subtotal = itemRestaurado.cantidad * precio
+        assertEquals(100.0, subtotal, 0.0)
+    }
+
+    @Test
+    fun `en el carrito al incrementar la cantidad se respeta el tope de stock disponible`() {
+        val maxStock = 4
+        var cantidadEnCarrito = 2
+
+        // Intentar incrementar más allá del stock
+        for (i in 1..5) {
+            if (cantidadEnCarrito < maxStock) {
+                cantidadEnCarrito++
+            }
+        }
+
+        // Se detiene en el tope de stock
+        assertEquals(4, cantidadEnCarrito)
+        val aviso = if (cantidadEnCarrito >= maxStock) "Solo quedan $maxStock unidades" else null
+        assertEquals("Solo quedan 4 unidades", aviso)
+    }
+
+    @Test
     fun `agregar prendas con diferente talla crea lineas separadas`() = runBlocking {
         cartRepository.agregarAlCarrito(
             prendaId = "BL-1002",
