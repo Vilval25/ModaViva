@@ -314,6 +314,42 @@ class CartTest {
         val itemsDespuesDeAuth = cartRepository.items.first()
         assertEquals(itemsAntesDeAuth, itemsDespuesDeAuth)
     }
+
+    @Test
+    fun `al cerrar sesion el carrito local se limpia y al iniciar sesion se restaura desde la nube`() = runBlocking {
+        // 1. Usuario con sesión tiene 2 prendas guardadas en su cuenta en la nube (Firestore)
+        val prendasRemotas = mapOf(
+            "BL-1002_M" to CartEntity("BL-1002_M", "BL-1002", "M", "Negro", "#000000", 2, 100L, 50.0),
+            "BL-1003_S" to CartEntity("BL-1003_S", "BL-1003", "S", "Blanco", "#FFFFFF", 1, 100L, 40.0),
+        )
+
+        // 2. Usuario cierra sesión: el carrito local en el dispositivo se vacía protegiendo la privacidad
+        fakeDao.vaciarCarrito()
+        assertEquals(0, cartRepository.totalItems.first())
+        assertTrue(cartRepository.items.first().isEmpty())
+
+        // 3. Invitado navega o interactúa, el carrito local está limpio
+        assertTrue(cartRepository.items.first().isEmpty())
+
+        // 4. Usuario vuelve a iniciar sesión con su cuenta: se sincroniza y restaura desde la nube
+        val localItems = fakeDao.obtenerTodos().associateBy { it.varianteId }.toMutableMap()
+        for ((varianteId, remoteItem) in prendasRemotas) {
+            val local = localItems[varianteId]
+            if (local != null) {
+                localItems[varianteId] = local.copy(cantidad = local.cantidad + remoteItem.cantidad)
+            } else {
+                localItems[varianteId] = remoteItem
+            }
+        }
+        fakeDao.insertarItems(localItems.values.toList())
+
+        // 5. Sus 2 prendas vuelven a aparecer intactas en el carrito
+        val itemsRestaurados = cartRepository.items.first()
+        assertEquals(2, itemsRestaurados.size)
+        assertEquals(3, cartRepository.totalItems.first())
+        assertTrue(itemsRestaurados.any { it.varianteId == "BL-1002_M" && it.cantidad == 2 })
+        assertTrue(itemsRestaurados.any { it.varianteId == "BL-1003_S" && it.cantidad == 1 })
+    }
 }
 
 private class FakeCartDao : CartDao {

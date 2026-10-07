@@ -42,9 +42,16 @@ class RoomCartRepository @Inject constructor(
                     }
                 }
             } else {
-                lastSyncedUid = null
-                remoteListener?.remove()
-                remoteListener = null
+                if (lastSyncedUid != null) {
+                    // Al cerrar sesión: el carrito de la cuenta queda a salvo en Firestore,
+                    // y limpiamos el carrito local para proteger la privacidad del usuario.
+                    lastSyncedUid = null
+                    remoteListener?.remove()
+                    remoteListener = null
+                    scope.launch {
+                        cartDao.vaciarCarrito()
+                    }
+                }
             }
         }
     }
