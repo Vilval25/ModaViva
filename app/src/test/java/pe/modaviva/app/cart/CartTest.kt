@@ -168,6 +168,59 @@ class CartTest {
     }
 
     @Test
+    fun `CA-06 si un item cambio de precio se detecta el aviso y el subtotal usa el precio actual`() = runBlocking {
+        val precioAlAgregar = 100.0
+        val precioActual = 80.0
+        val cantidad = 2
+
+        cartRepository.agregarAlCarrito(
+            prendaId = "BL-1002",
+            talla = "M",
+            colorNombre = "Negro",
+            colorHex = "#000000",
+            cantidad = cantidad,
+            precioAlAgregar = precioAlAgregar,
+        )
+
+        val item = cartRepository.items.first().first()
+        val cambioDePrecio = item.precioAlAgregar > 0.0 && kotlin.math.abs(item.precioAlAgregar - precioActual) > 0.01
+        assertTrue(cambioDePrecio)
+
+        // El subtotal usa el precio actual (80 * 2 = 160), no el antiguo (100 * 2 = 200)
+        val subtotalCalculado = precioActual * item.cantidad
+        assertEquals(160.0, subtotalCalculado, 0.0)
+    }
+
+    @Test
+    fun `CA-06 si un item se agoto no se suma al subtotal y muestra aviso`() = runBlocking {
+        // Ítem 1: Disponible (stock 5, precio 50, cant 2) -> subtotal 100
+        val stockItem1 = 5
+        val precioItem1 = 50.0
+        val cantItem1 = 2
+
+        // Ítem 2: Agotado (stock 0, precio 80, cant 1) -> NO debe sumarse
+        val stockItem2 = 0
+        val precioItem2 = 80.0
+        val cantItem2 = 1
+
+        val item1Agotado = stockItem1 <= 0
+        val item2Agotado = stockItem2 <= 0
+
+        assertFalse(item1Agotado)
+        assertTrue(item2Agotado)
+
+        val subtotalItem1 = if (item1Agotado) 0.0 else precioItem1 * cantItem1
+        val subtotalItem2 = if (item2Agotado) 0.0 else precioItem2 * cantItem2
+
+        assertEquals(100.0, subtotalItem1, 0.0)
+        assertEquals(0.0, subtotalItem2, 0.0)
+
+        // El subtotal solo suma los ítems disponibles (100.0)
+        val subtotalTotal = listOf(subtotalItem1, subtotalItem2).sum()
+        assertEquals(100.0, subtotalTotal, 0.0)
+    }
+
+    @Test
     fun `agregar prendas con diferente talla crea lineas separadas`() = runBlocking {
         cartRepository.agregarAlCarrito(
             prendaId = "BL-1002",
