@@ -11,8 +11,10 @@ import pe.modaviva.app.data.repository.FirebaseBackendRepository
 import pe.modaviva.app.data.repository.FirestoreCatalogoRepository
 import pe.modaviva.app.data.repository.FirestoreStockRepository
 import pe.modaviva.app.data.repository.PersistentSessionRepository
+import pe.modaviva.app.data.repository.RoomCartRepository
 import pe.modaviva.app.domain.repository.AuthRepository
 import pe.modaviva.app.domain.repository.BackendRepository
+import pe.modaviva.app.domain.repository.CartRepository
 import pe.modaviva.app.domain.repository.CatalogoRepository
 import pe.modaviva.app.domain.repository.SessionRepository
 import pe.modaviva.app.domain.repository.StockRepository
@@ -57,4 +59,10 @@ abstract class RepositoryModule {
     abstract fun bindStockRepository(
         impl: FirestoreStockRepository,
     ): StockRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCartRepository(
+        impl: RoomCartRepository,
+    ): CartRepository
 }

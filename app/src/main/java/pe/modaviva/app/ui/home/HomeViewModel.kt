@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pe.modaviva.app.data.network.MonitorDeConexion
 import pe.modaviva.app.domain.model.Prenda
+import pe.modaviva.app.domain.repository.CartRepository
 import pe.modaviva.app.domain.repository.CatalogoRepository
 import pe.modaviva.app.ui.format.formatearSoles
 import java.time.Clock
@@ -28,9 +29,13 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val catalogo: CatalogoRepository,
+    private val cartRepository: CartRepository,
     conexion: MonitorDeConexion,
     private val reloj: Clock,
 ) : ViewModel() {
+
+    val cartItemCount: StateFlow<Int> = cartRepository.totalItems
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     private val reintentos = MutableStateFlow(0)
     private val refrescando = MutableStateFlow(false)

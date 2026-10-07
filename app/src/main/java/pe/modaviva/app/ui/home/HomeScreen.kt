@@ -85,6 +85,7 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val mensaje by viewModel.mensaje.collectAsStateWithLifecycle()
+    val conteoCarrito by viewModel.cartItemCount.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val textoMensaje = mensaje?.let { stringResource(it.texto()) }
 
@@ -105,7 +106,7 @@ fun HomeScreen(
                 onFavoritesClick = onFavoritesClick,
                 onCartClick = onCartClick,
                 unreadNotifications = unreadNotifications,
-                cartItemCount = cartItemCount,
+                cartItemCount = conteoCarrito,
             )
         },
         snackbarHost = { SnackbarHost(snackbar) },

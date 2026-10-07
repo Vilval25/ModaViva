@@ -14,13 +14,14 @@ import pe.modaviva.app.domain.model.MedidasPrenda
  * migraciones.
  */
 @Database(
-    entities = [PrendaEntity::class, SincronizacionEntity::class],
-    version = 3,
+    entities = [PrendaEntity::class, SincronizacionEntity::class, CartEntity::class],
+    version = 5,
     exportSchema = false,
 )
 @TypeConverters(Convertidores::class)
 abstract class ModaVivaDatabase : RoomDatabase() {
     abstract fun catalogoDao(): CatalogoDao
+    abstract fun cartDao(): CartDao
 }
 
 class Convertidores {

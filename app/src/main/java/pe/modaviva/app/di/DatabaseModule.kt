@@ -7,6 +7,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import pe.modaviva.app.data.local.CartDao
 import pe.modaviva.app.data.local.CatalogoDao
 import pe.modaviva.app.data.local.ModaVivaDatabase
 import java.time.Clock
@@ -27,6 +28,9 @@ object DatabaseModule {
 
     @Provides
     fun provideCatalogoDao(database: ModaVivaDatabase): CatalogoDao = database.catalogoDao()
+
+    @Provides
+    fun provideCartDao(database: ModaVivaDatabase): CartDao = database.cartDao()
 
     @Provides
     @Singleton
