@@ -51,4 +51,31 @@ class FirestoreStockRepository @Inject constructor(
             listener.remove()
         }
     }
+
+    override fun observeStocks(): Flow<Map<String, Stock>> = callbackFlow {
+        val listener = firestore
+            .collection("stock")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot == null) {
+                    trySend(emptyMap())
+                    return@addSnapshotListener
+                }
+
+                val mapaStock = snapshot.documents.mapNotNull { doc ->
+                    val stock = doc.toObject(Stock::class.java)
+                    if (stock != null) doc.id to stock else null
+                }.toMap()
+
+                trySend(mapaStock)
+            }
+
+        awaitClose {
+            listener.remove()
+        }
+    }
 }

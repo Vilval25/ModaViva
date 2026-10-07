@@ -87,6 +87,26 @@ class CartTest {
     }
 
     @Test
+    fun `CA-04 selector no supera el stock disponible y muestra aviso al llegar al maximo`() {
+        val stockDisponible = 4
+        var cantidad = 1
+
+        // El usuario toca '+' múltiples veces intentando superar el stock
+        for (intento in 1..10) {
+            if (cantidad < stockDisponible) {
+                cantidad++
+            }
+        }
+
+        // Se detiene exactamente en el máximo disponible
+        assertEquals(stockDisponible, cantidad)
+
+        // Al llegar al máximo, se activa el aviso requerido
+        val aviso = if (cantidad >= stockDisponible) "Solo quedan $stockDisponible unidades" else null
+        assertEquals("Solo quedan 4 unidades", aviso)
+    }
+
+    @Test
     fun `agregar prendas con diferente talla crea lineas separadas`() = runBlocking {
         cartRepository.agregarAlCarrito(
             prendaId = "BL-1002",

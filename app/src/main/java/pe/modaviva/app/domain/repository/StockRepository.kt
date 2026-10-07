@@ -9,4 +9,6 @@ interface StockRepository {
         prendaId: String,
         talla: String,
     ): Flow<Stock?>
+
+    fun observeStocks(): Flow<Map<String, Stock>>
 }

@@ -298,7 +298,20 @@ fun ProductDetailScreen(
                 }
             }
 
-            // En Fase 2 se agrega la validación de stock disponible
+            // CA-04: Aviso cuando se alcanza el stock máximo disponible
+            if (!estaAgotado && tallaSeleccionada != null && maxStock > 0 && cantidad >= maxStock) {
+                Text(
+                    text = "Solo quedan $maxStock unidades",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            } else if (estaAgotado) {
+                Text(
+                    text = "Agotado en esta talla",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
 
             Button(
                 onClick = {
