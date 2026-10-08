@@ -6,6 +6,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -28,6 +29,7 @@ class RoomCartRepository @Inject constructor(
 ) : CartRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var syncJob: Job? = null
     private var remoteListener: ListenerRegistration? = null
     private var lastSyncedUid: String? = null
 
@@ -37,7 +39,8 @@ class RoomCartRepository @Inject constructor(
             if (user != null) {
                 if (lastSyncedUid != user.uid) {
                     lastSyncedUid = user.uid
-                    scope.launch {
+                    syncJob?.cancel()
+                    syncJob = scope.launch {
                         sincronizarConCuenta(user.uid)
                     }
                 }
@@ -48,7 +51,8 @@ class RoomCartRepository @Inject constructor(
                     lastSyncedUid = null
                     remoteListener?.remove()
                     remoteListener = null
-                    scope.launch {
+                    syncJob?.cancel()
+                    syncJob = scope.launch {
                         cartDao.vaciarCarrito()
                     }
                 }
@@ -157,17 +161,14 @@ class RoomCartRepository @Inject constructor(
                 val varianteId = doc.id
                 val prendaId = doc.getString("prendaId").orEmpty()
                 val talla = doc.getString("talla").orEmpty()
-                val colorNombre = doc.getString("colorNombre").orEmpty()
-                val colorHex = doc.getString("colorHex").orEmpty()
                 val cantidadRemota = doc.getLong("cantidad")?.toInt() ?: 1
-                val precioAlAgregar = doc.getDouble("precioAlAgregar") ?: 0.0
                 val agregadoEnMillis = doc.getTimestamp("agregadoEn")?.toDate()?.time
                     ?: System.currentTimeMillis()
 
                 val local = localItems[varianteId]
                 if (local != null) {
                     // CA-07: Sumar la cantidad en lugar de crear otra línea
-                    val cantidadFusionada = local.cantidad + cantidadRemota
+                    val cantidadFusionada = (local.cantidad + cantidadRemota).coerceAtMost(99)
                     val fusionado = local.copy(cantidad = cantidadFusionada)
                     localItems[varianteId] = fusionado
                     guardarEnFirestore(uid, fusionado)
@@ -177,11 +178,11 @@ class RoomCartRepository @Inject constructor(
                         varianteId = varianteId,
                         prendaId = prendaId,
                         talla = talla,
-                        colorNombre = colorNombre,
-                        colorHex = colorHex,
+                        colorNombre = "",
+                        colorHex = "",
                         cantidad = cantidadRemota,
                         agregadoEnMillis = agregadoEnMillis,
-                        precioAlAgregar = precioAlAgregar,
+                        precioAlAgregar = 0.0,
                     )
                     localItems[varianteId] = nuevoLocal
                 }
@@ -199,8 +200,8 @@ class RoomCartRepository @Inject constructor(
 
             // Escuchar cambios remotos en vivo para persistencia multi-dispositivo (CA-05)
             escucharCambiosRemotos(uid)
-        } catch (_: Exception) {
-            // Sin conexión: el carrito se conserva en Room (CA-05)
+        } catch (e: Exception) {
+            android.util.Log.e("RoomCartRepository", "Error al sincronizar con cuenta: ${e.message}", e)
         }
     }
 
@@ -211,21 +212,27 @@ class RoomCartRepository @Inject constructor(
             .document(uid)
             .collection("carrito")
             .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null) return@addSnapshotListener
+                if (error != null || snapshot == null) {
+                    if (error != null) {
+                        android.util.Log.e("RoomCartRepository", "Error en listener remoto: ${error.message}", error)
+                    }
+                    return@addSnapshotListener
+                }
                 scope.launch {
                     val remotos = snapshot.documents.mapNotNull { doc ->
                         val prendaId = doc.getString("prendaId") ?: return@mapNotNull null
                         val talla = doc.getString("talla") ?: return@mapNotNull null
+                        val localExistente = cartDao.obtenerPorVarianteId(doc.id)
                         CartEntity(
                             varianteId = doc.id,
                             prendaId = prendaId,
                             talla = talla,
-                            colorNombre = doc.getString("colorNombre").orEmpty(),
-                            colorHex = doc.getString("colorHex").orEmpty(),
+                            colorNombre = localExistente?.colorNombre.orEmpty(),
+                            colorHex = localExistente?.colorHex.orEmpty(),
                             cantidad = doc.getLong("cantidad")?.toInt() ?: 1,
                             agregadoEnMillis = doc.getTimestamp("agregadoEn")?.toDate()?.time
                                 ?: System.currentTimeMillis(),
-                            precioAlAgregar = doc.getDouble("precioAlAgregar") ?: 0.0,
+                            precioAlAgregar = localExistente?.precioAlAgregar ?: 0.0,
                         )
                     }
                     if (remotos.isNotEmpty()) {
@@ -237,14 +244,12 @@ class RoomCartRepository @Inject constructor(
 
     private suspend fun guardarEnFirestore(uid: String, item: CartEntity) {
         val fs = firestore ?: return
-        runCatching {
+        try {
+            // firestore.rules solo permite: ['prendaId', 'talla', 'cantidad', 'agregadoEn']
             val datos = mapOf(
                 "prendaId" to item.prendaId,
                 "talla" to item.talla,
-                "colorNombre" to item.colorNombre,
-                "colorHex" to item.colorHex,
-                "cantidad" to item.cantidad,
-                "precioAlAgregar" to item.precioAlAgregar,
+                "cantidad" to item.cantidad.coerceIn(1, 99),
                 "agregadoEn" to Timestamp(Instant.ofEpochMilli(item.agregadoEnMillis)),
             )
             fs.collection("clientes")
@@ -253,6 +258,9 @@ class RoomCartRepository @Inject constructor(
                 .document(item.varianteId)
                 .set(datos)
                 .await()
+            android.util.Log.d("RoomCartRepository", "Firestore guardó exitosamente ${item.varianteId} para $uid")
+        } catch (e: Exception) {
+            android.util.Log.e("RoomCartRepository", "Error al guardar ${item.varianteId} en Firestore: ${e.message}", e)
         }
     }
 }
