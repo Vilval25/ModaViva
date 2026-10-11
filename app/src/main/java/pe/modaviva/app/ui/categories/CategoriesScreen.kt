@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -24,12 +25,9 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,13 +45,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -65,24 +60,27 @@ import pe.modaviva.app.ui.components.MvGarmentCard
 import pe.modaviva.app.ui.search.SearchViewModel
 import java.time.Instant
 import java.util.Locale
-import androidx.compose.foundation.layout.statusBarsPadding
-private val ColoresTarjeta = listOf(
-    Color(0xFFEEF0F6),
-    Color(0xFFEDE7E6),
-    Color(0xFFE6EFE3),
-    Color(0xFFE8E8E8),
-)
-private val TextoOscuro = Color(0xFF222222)
-private val TextoGris = Color(0xFF777777)
 
+/** Convierte "casacas-y-abrigos" en "Casacas y abrigos" (solo para mostrar). */
 private fun String.paraMostrar(): String =
     replace("-", " ").replaceFirstChar { it.uppercase() }
 
+/** Imagen decorativa de cada género (res/drawable). Si no hay, se muestra la inicial. */
 @DrawableRes
 private fun imagenGenero(genero: String): Int? = when (genero.lowercase()) {
     "mujer", "mujeres" -> R.drawable.cat_mujer
     "hombre", "hombres" -> R.drawable.cat_hombre
     else -> null
+}
+
+@Composable
+private fun coloresTarjeta(index: Int): Pair<Color, Color> {
+    val colores = MaterialTheme.colorScheme
+    return when (index % 3) {
+        0 -> colores.secondaryContainer to colores.onSecondaryContainer
+        1 -> colores.tertiaryContainer to colores.onTertiaryContainer
+        else -> colores.primaryContainer to colores.onPrimaryContainer
+    }
 }
 
 @Composable
@@ -126,19 +124,20 @@ fun CategoriesScreen(
                 Text(
                     text = "Categorías",
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
                 )
             }
 
             item { BannerOferta() }
 
             itemsIndexed(generos) { index, genero ->
+                val (fondo, texto) = coloresTarjeta(index)
                 TarjetaGenero(
                     titulo = genero.paraMostrar(),
                     subtitulo = categorias
                         .take(3)
                         .joinToString(", ") { it.paraMostrar() },
-                    color = ColoresTarjeta[index % ColoresTarjeta.size],
+                    containerColor = fondo,
+                    contentColor = texto,
                     imagenALaIzquierda = index % 2 == 1,
                     imagen = imagenGenero(genero),
                     onClick = { viewModel.seleccionarGenero(genero) },
@@ -179,7 +178,6 @@ fun CategoriesScreen(
                     Text(
                         text = generoSeleccionado?.paraMostrar() ?: "Todas las prendas",
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
@@ -196,7 +194,6 @@ fun CategoriesScreen(
                                 )
                             },
                             label = { Text(categoria.paraMostrar()) },
-                            shape = CircleShape,
                         )
                     }
                 }
@@ -215,11 +212,6 @@ fun CategoriesScreen(
                                     )
                                 },
                                 label = { Text(sub.paraMostrar()) },
-                                shape = CircleShape,
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor =
-                                        MaterialTheme.colorScheme.primaryContainer,
-                                ),
                             )
                         }
                     }
@@ -242,6 +234,7 @@ fun CategoriesScreen(
                             .fillMaxWidth()
                             .padding(vertical = 40.dp),
                         textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -263,8 +256,8 @@ private fun BannerOferta() {
         modifier = Modifier
             .fillMaxWidth()
             .height(120.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(ColoresTarjeta[0]),
+            .clip(MaterialTheme.shapes.large)
+            .background(MaterialTheme.colorScheme.primaryContainer),
     ) {
         Column(
             modifier = Modifier
@@ -274,16 +267,14 @@ private fun BannerOferta() {
         ) {
             Text(
                 text = "Sale",
-                fontFamily = FontFamily.Cursive,
+                style = MaterialTheme.typography.headlineLarge,
                 fontStyle = FontStyle.Italic,
-                fontSize = 40.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFFF4D4D),
+                color = MaterialTheme.colorScheme.primary,
             )
             Text(
                 text = "Hasta 50% de descuento en prendas seleccionadas",
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextoGris,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
         }
         Image(
@@ -303,7 +294,8 @@ private fun BannerOferta() {
 private fun TarjetaGenero(
     titulo: String,
     subtitulo: String,
-    color: Color,
+    containerColor: Color,
+    contentColor: Color,
     imagenALaIzquierda: Boolean,
     @DrawableRes imagen: Int?,
     onClick: () -> Unit,
@@ -312,8 +304,8 @@ private fun TarjetaGenero(
         modifier = Modifier
             .fillMaxWidth()
             .height(170.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(color)
+            .clip(MaterialTheme.shapes.large)
+            .background(containerColor)
             .clickable(onClick = onClick),
     ) {
         val ladoImagen = if (imagenALaIzquierda) Alignment.CenterStart else Alignment.CenterEnd
@@ -333,9 +325,8 @@ private fun TarjetaGenero(
         } else {
             Text(
                 text = titulo.take(1).uppercase(),
-                fontSize = 90.sp,
-                fontWeight = FontWeight.Black,
-                color = Color.Black.copy(alpha = 0.06f),
+                style = MaterialTheme.typography.displayLarge,
+                color = contentColor.copy(alpha = 0.08f),
                 modifier = Modifier
                     .align(ladoImagen)
                     .padding(horizontal = 28.dp),
@@ -352,13 +343,12 @@ private fun TarjetaGenero(
             Text(
                 text = titulo.uppercase(),
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = TextoOscuro,
+                color = contentColor,
             )
             Text(
                 text = subtitulo,
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextoGris,
+                color = contentColor.copy(alpha = 0.75f),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = if (imagenALaIzquierda) TextAlign.End else TextAlign.Start,
