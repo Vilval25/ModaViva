@@ -41,7 +41,7 @@ class SearchViewModel @Inject constructor(
     private val catalogo: CatalogoRepository,
 ) : ViewModel() {
 
-    private val tamanoPagina = 6
+    private val tamanoPagina = 20
     private val _paginaActual = MutableStateFlow(1)
 
     private val _hayMasResultados = MutableStateFlow(true)
@@ -243,11 +243,13 @@ class SearchViewModel @Inject constructor(
                 filtradas
         }
 
+
         val cantidadMostrada = pagina * tamanoPagina
 
         _hayMasResultados.value = ordenadas.size > cantidadMostrada
 
         ordenadas.take(cantidadMostrada)
+
 
     }.stateIn(
         viewModelScope,
@@ -321,13 +323,23 @@ class SearchViewModel @Inject constructor(
         _hayMasResultados.value = true
     }
 
+
+
     fun cargarSiguientePagina() {
         if (_hayMasResultados.value && !_cargandoMas.value) {
             _cargandoMas.value = true
             _paginaActual.value++
+        }
+    }
+
+    fun finalizarCarga() {
+        if (_cargandoMas.value) {
             _cargandoMas.value = false
         }
     }
+
+
+
 
     private fun reiniciarPaginacion() {
         _paginaActual.value = 1
