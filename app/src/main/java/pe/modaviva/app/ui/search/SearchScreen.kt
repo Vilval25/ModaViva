@@ -87,6 +87,12 @@ fun SearchScreen(
     val gridState = rememberLazyGridState()
     var usuarioDesplazo by remember { mutableStateOf(false) }
 
+    LaunchedEffect(resultados, cargandoMas) {
+        if (cargandoMas) {
+            viewModel.finalizarCarga()
+        }
+    }
+
     LaunchedEffect(gridState) {
         snapshotFlow {
             gridState.firstVisibleItemIndex to
@@ -97,13 +103,18 @@ fun SearchScreen(
                 usuarioDesplazo = true
             }
 
+
             if (
                 usuarioDesplazo &&
+                hayMasResultados &&
+                !cargandoMas &&
+                resultados.isNotEmpty() &&
                 ultimoIndice != null &&
                 ultimoIndice >= gridState.layoutInfo.totalItemsCount - 1
             ) {
                 viewModel.cargarSiguientePagina()
             }
+
         }
     }
 
@@ -158,119 +169,28 @@ fun SearchScreen(
                 .padding(padding),
 
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                FilterChip(
-                    selected = categoriaSeleccionada == null,
-                    onClick = {
-                        viewModel.seleccionarCategoria(null)
-                    },
-                    label = {
-                        Text("Todas")
-                    },
-                )
-
-                categorias.forEach { categoria ->
-                    FilterChip(
-                        selected = categoriaSeleccionada == categoria,
-                        onClick = {
-                            viewModel.seleccionarCategoria(categoria)
-                        },
-                        label = {
-                            Text(categoria)
-                        },
-                    )
-                }
-            }
-            if (subcategorias.isNotEmpty()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    FilterChip(
-                        selected = subcategoriaSeleccionada == null,
-                        onClick = {
-                            viewModel.seleccionarSubcategoria(null)
-                        },
-                        label = {
-                            Text("Todas las subcategorías")
-                        },
-                    )
-
-                    subcategorias.forEach { subcategoria ->
-                        FilterChip(
-                            selected = subcategoriaSeleccionada == subcategoria,
-                            onClick = {
-                                viewModel.seleccionarSubcategoria(subcategoria)
-                            },
-                            label = {
-                                Text(subcategoria)
-                            },
-                        )
-                    }
-                }
-            }
-
-            if (generos.isNotEmpty()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    FilterChip(
-                        selected = generoSeleccionado == null,
-                        onClick = {
-                            viewModel.seleccionarGenero(null)
-                        },
-                        label = {
-                            Text("Todos los géneros")
-                        },
-                    )
-
-                    generos.forEach { genero ->
-                        FilterChip(
-                            selected = generoSeleccionado == genero,
-                            onClick = {
-                                viewModel.seleccionarGenero(genero)
-                            },
-                            label = {
-                                Text(genero)
-                            },
-                        )
-                    }
-                }
-            }
-
-            Button(
-                onClick = {
-                    mostrarFiltros = true
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-            ) {
-                Text("Filtros")
-            }
 
             var mostrarOrden by remember { mutableStateOf(false) }
 
-            Button(
-                onClick = { mostrarOrden = true },
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Text("Ordenar")
+                Button(
+                    onClick = { mostrarFiltros = true },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text("Filtros")
+                }
+
+                Button(
+                    onClick = { mostrarOrden = true },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text("Ordenar")
+                }
             }
 
             if (mostrarOrden) {
@@ -464,6 +384,18 @@ fun SearchScreen(
                         )
                     }
 
+                    if (cargandoMas) {
+                        item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.Center,
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    }
                 }
             }
         }
