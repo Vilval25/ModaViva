@@ -1,10 +1,11 @@
 package pe.modaviva.app.ui.product
 
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -62,8 +63,12 @@ import pe.modaviva.app.R
 import pe.modaviva.app.ui.stock.StockAvailability
 import pe.modaviva.app.ui.stock.StockViewModel
 import java.time.Instant
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import pe.modaviva.app.ui.component.MvImageGalleryDialog
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ProductDetailScreen(
     codigo: String,
@@ -77,11 +82,15 @@ fun ProductDetailScreen(
         .collectAsStateWithLifecycle(initialValue = null)
 
     val cartItemCount by viewModel.cartItemCount.collectAsStateWithLifecycle()
+    val allStocks by stockViewModel.stocksMap.collectAsStateWithLifecycle()
+    val tiendas by stockViewModel.tiendas.collectAsStateWithLifecycle()
 
     var tallaSeleccionada by remember { mutableStateOf<String?>(null) }
     var cantidad by remember { mutableIntStateOf(1) }
-    var colorSeleccionado by remember { mutableStateOf(false) }
     var mostrarMedidas by remember { mutableStateOf(false) }
+
+    var mostrarGaleria by remember { mutableStateOf(false) }
+    var fotoSeleccionada by remember { mutableIntStateOf(0) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -152,20 +161,52 @@ fun ProductDetailScreen(
             }
 
             val ahora = Instant.now()
-            val fotoPrincipal = prenda!!.fotos.firstOrNull()
 
-            if (fotoPrincipal != null) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(fotoPrincipal)
-                        .build(),
-                    contentDescription = prenda!!.nombre,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(280.dp),
-                    contentScale = ContentScale.Fit,
-                )
+            val fotos = prenda!!.fotos
+
+            val pagerState = rememberPagerState(
+                pageCount = { fotos.size },
+            )
+
+            if (fotos.isNotEmpty()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { pagina ->
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(fotos[pagina])
+                                .build(),
+                            contentDescription = "${prenda!!.nombre}, foto ${pagina + 1}",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(280.dp)
+                                .clickable {
+                                    fotoSeleccionada = pagina
+                                    mostrarGaleria = true
+                                },
+                            contentScale = ContentScale.Fit,
+                        )
+                    }
+
+                    Text(
+                        text = "${pagerState.currentPage + 1} / ${fotos.size}",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+
+                    Text(
+                        text = "Desliza para ver más fotos. Toca una para ampliarla.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
+
 
             Text(
                 text = prenda!!.nombre,
@@ -181,6 +222,21 @@ fun ProductDetailScreen(
             Text(text = "Marca: ${prenda!!.marca}")
             Text(text = "Categoría: ${prenda!!.categoria}")
             Text(text = "Subcategoría: ${prenda!!.subcategoria}")
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = "Color:",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = prenda!!.color.nombre,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+
             if (prenda!!.enPromocion(ahora)) {
                 Text(
                     text = "S/ ${prenda!!.precioVigente(ahora)}",
@@ -202,17 +258,26 @@ fun ProductDetailScreen(
                 style = MaterialTheme.typography.titleMedium,
             )
 
-            Row(
+            FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 prenda!!.tallas.forEach { talla ->
+                    val claveStock = "${codigo}_${talla}"
+                    val stockTalla = allStocks[claveStock]
+                    val esAgotada = (stockTalla != null && stockTalla.total <= 0) || (stockTalla == null && prenda!!.stockTotal <= 0)
+
                     FilterChip(
                         selected = tallaSeleccionada == talla,
                         onClick = {
                             tallaSeleccionada = talla
                         },
+                        enabled = !esAgotada,
                         label = {
-                            Text(text = talla)
+                            Text(
+                                text = if (esAgotada) "$talla (Agotado)" else talla,
+                                maxLines = 1,
+                            )
                         },
                     )
                 }
@@ -226,33 +291,22 @@ fun ProductDetailScreen(
                 Text("Ver tabla de medidas")
             }
 
-            Text(
-                text = "Color",
-                style = MaterialTheme.typography.titleMedium,
-            )
-
-            FilterChip(
-                selected = colorSeleccionado,
-                onClick = {
-                    colorSeleccionado = !colorSeleccionado
-                },
-                label = {
-                    Text(text = prenda!!.color.nombre)
-                },
-            )
-
             stock?.let {
                 StockAvailability(
                     stockByStore = it.porTienda,
+                    tiendas = tiendas,
                 )
             }
 
+            val stockDoc = if (tallaSeleccionada != null) allStocks["${codigo}_${tallaSeleccionada}"] else null
+            val esCargaPendiente = tallaSeleccionada != null && allStocks.isEmpty()
             val maxStock = when {
+                stockDoc != null -> stockDoc.total
                 stock != null -> stock!!.total
                 tallaSeleccionada != null -> prenda!!.stockTotal
                 else -> prenda!!.stockTotal
             }
-            val estaAgotado = tallaSeleccionada != null && stock != null && stock!!.total <= 0
+            val estaAgotado = tallaSeleccionada != null && !esCargaPendiente && ((stockDoc != null && stockDoc.total <= 0) || (stock != null && stock!!.total <= 0) || (stockDoc == null && stock == null && prenda!!.stockTotal <= 0))
 
             Text(
                 text = "Cantidad",
@@ -269,7 +323,7 @@ fun ProductDetailScreen(
                             cantidad--
                         }
                     },
-                    enabled = !estaAgotado && cantidad > 1,
+                    enabled = !estaAgotado && !esCargaPendiente && tallaSeleccionada != null && cantidad > 1,
                 ) {
                     Icon(
                         imageVector = Icons.Default.Remove,
@@ -278,7 +332,7 @@ fun ProductDetailScreen(
                 }
 
                 Text(
-                    text = if (estaAgotado) "0" else cantidad.toString(),
+                    text = if (estaAgotado || tallaSeleccionada == null) "0" else cantidad.toString(),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(horizontal = 8.dp),
                 )
@@ -289,7 +343,7 @@ fun ProductDetailScreen(
                             cantidad++
                         }
                     },
-                    enabled = !estaAgotado && cantidad < maxStock,
+                    enabled = !estaAgotado && !esCargaPendiente && tallaSeleccionada != null && cantidad < maxStock,
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
@@ -298,25 +352,37 @@ fun ProductDetailScreen(
                 }
             }
 
-            // CA-04: Aviso cuando se alcanza el stock máximo disponible
-            if (!estaAgotado && tallaSeleccionada != null && maxStock > 0 && cantidad >= maxStock) {
+            // CA-04: Avisos sobre disponibilidad y stock máximo
+            if (!estaAgotado && !esCargaPendiente && tallaSeleccionada != null && maxStock > 0 && cantidad >= maxStock) {
                 Text(
                     text = "Solo quedan $maxStock unidades",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                 )
-            } else if (estaAgotado) {
+            } else if (estaAgotado && tallaSeleccionada != null) {
                 Text(
                     text = "Agotado en esta talla",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                 )
+            } else if (esCargaPendiente) {
+                Text(
+                    text = "Verificando disponibilidad en tienda...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            val textoBoton = when {
+                tallaSeleccionada == null -> "Elige una talla"
+                esCargaPendiente -> "Verificando disponibilidad..."
+                estaAgotado -> "Agotado"
+                else -> "Agregar al carrito"
             }
 
             Button(
                 onClick = {
                     val talla = tallaSeleccionada ?: return@Button
-                    if (!colorSeleccionado) return@Button
                     viewModel.agregarAlCarrito(
                         prenda = prenda!!,
                         talla = talla,
@@ -335,10 +401,10 @@ fun ProductDetailScreen(
                         },
                     )
                 },
-                enabled = tallaSeleccionada != null && colorSeleccionado && !estaAgotado && cantidad in 1..maxStock,
+                enabled = tallaSeleccionada != null && !esCargaPendiente && !estaAgotado && cantidad in 1..maxStock,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(if (estaAgotado) "Agotado" else "Agregar al carrito")
+                Text(textoBoton)
             }
         }
     }
@@ -458,5 +524,15 @@ fun ProductDetailScreen(
                 }
             }
         }
+    }
+
+    if (mostrarGaleria && prenda!!.fotos.isNotEmpty()) {
+        MvImageGalleryDialog(
+            fotos = prenda!!.fotos,
+            initialPage = fotoSeleccionada,
+            onDismiss = {
+                mostrarGaleria = false
+            },
+        )
     }
 }
