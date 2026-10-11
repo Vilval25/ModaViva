@@ -47,6 +47,7 @@ import pe.modaviva.app.ui.search.SearchScreen
 import pe.modaviva.app.ui.session.SessionViewModel
 import pe.modaviva.app.ui.stock.StockTestScreen
 import pe.modaviva.app.ui.theme.ModaVivaTheme
+import pe.modaviva.app.ui.categories.CategoriesScreen
 
 /**
  * Navegación de la app. Se entra directo a Inicio, sin pedir sesión (HT-01 CA-03).
@@ -180,9 +181,10 @@ private fun NavGraphBuilder.topLevelGraph(
         )
     }
     composable(TopLevelDestination.CATEGORIES.route) {
-        ComingSoonScreen(
-            title = stringResource(R.string.tab_categories),
-            icon = Icons.Outlined.Category,
+        CategoriesScreen(
+            onPrendaClick = { codigo ->
+                navController.navigate(Routes.prenda(codigo))
+            },
         )
     }
     composable(TopLevelDestination.PROFILE.route) {
