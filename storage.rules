@@ -17,5 +17,11 @@ service firebase.storage {
       allow read: if true;
       allow write: if false;
     }
+
+    // Fotos de la vitrina de Inicio (portada de campaña, HU-04).
+    match /inicio/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
   }
 }

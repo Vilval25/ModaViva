@@ -123,8 +123,9 @@
     <string name="home_audience_kids">Niños</string>
 
     <!-- Catálogo (HU-04) -->
-    <string name="catalog_featured">Ofertas</string>
-    <string name="catalog_all">Novedades</string>
+    <string name="home_section_sale">En Oferta</string>
+    <string name="home_section_new">Lo Nuevo</string>
+    <string name="home_section_for_you">Te podría gustar</string>
     <string name="catalog_empty_title">Aún no hay prendas</string>
     <string name="catalog_empty_body">Pronto verás aquí las prendas de la tienda.</string>
     <string name="catalog_offline_banner">Sin conexión – datos del %1$s</string>

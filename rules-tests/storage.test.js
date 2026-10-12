@@ -19,6 +19,7 @@ before(async () => {
   });
   await env.withSecurityRulesDisabled(async (ctx) => {
     await uploadBytes(ref(ctx.storage(), "prendas/BL-1002/1.jpg"), bytes);
+    await uploadBytes(ref(ctx.storage(), "inicio/portada.jpg"), bytes);
     await uploadBytes(ref(ctx.storage(), "privado/x.jpg"), bytes);
   });
 });
@@ -29,6 +30,11 @@ describe("storage", () => {
   test("las fotos del catálogo son públicas", async () => {
     const storage = env.unauthenticatedContext().storage();
     await assertSucceeds(getBytes(ref(storage, "prendas/BL-1002/1.jpg")));
+  });
+
+  test("la foto de la portada de Inicio es pública y nadie la reemplaza desde la app", async () => {
+    await assertSucceeds(getBytes(ref(env.unauthenticatedContext().storage(), "inicio/portada.jpg")));
+    await assertFails(uploadBytes(ref(env.authenticatedContext("cli-ana").storage(), "inicio/portada.jpg"), bytes));
   });
 
   test("nadie sube ni reemplaza fotos del catálogo desde la app", async () => {

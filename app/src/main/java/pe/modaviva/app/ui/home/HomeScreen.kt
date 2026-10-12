@@ -1,5 +1,6 @@
 package pe.modaviva.app.ui.home
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,12 +15,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyGridScope
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -178,64 +176,85 @@ private fun Vitrina(
     onAudienciaClick: (String) -> Unit,
 ) {
     val textoSinConexion = textoSinConexion(state.ultimaActualizacion)
-    val tituloDestacados = stringResource(R.string.catalog_featured)
-    val tituloCatalogo = stringResource(R.string.catalog_all)
+    val margen = Modifier.padding(horizontal = 16.dp)
 
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 160.dp),
+    LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         if (state.contenido == ContenidoHome.CARGANDO) {
-            // Claves propias: así la cuadrícula no confunde estas posiciones con
-            // las del catálogo y arranca arriba cuando llegan los datos.
-            items(ESQUELETOS, key = { "esqueleto-$it" }) { MvGarmentCardSkeleton() }
-            return@LazyVerticalGrid
+            // Claves propias: así la lista no confunde estas filas con las del
+            // catálogo y arranca arriba cuando llegan los datos.
+            items(FILAS_ESQUELETO, key = { "esqueleto-$it" }) { CarruselEsqueleto() }
+            return@LazyColumn
         }
 
         // Datos guardados sin conexión: se avisa de qué momento son (CA-07).
         if (state.sinConexion) {
-            filaCompleta { MvOfflineBanner(message = textoSinConexion) }
+            item { MvOfflineBanner(message = textoSinConexion, modifier = margen) }
         }
 
         // Portada y accesos sin clave propia: si la portada llega después que
         // el catálogo, la lista no se queda anclada en los accesos y la
         // portada aparece arriba, a la vista.
         state.portada?.let { portada ->
-            filaCompleta {
-                PortadaCampana(portada = portada, onClick = { onPortadaClick(portada.categoria) })
+            item {
+                PortadaCampana(
+                    portada = portada,
+                    onClick = { onPortadaClick(portada.categoria) },
+                    modifier = margen,
+                )
             }
         }
 
-        filaCompleta { Audiencias(onClick = onAudienciaClick) }
+        item { Audiencias(onClick = onAudienciaClick, modifier = margen) }
 
-        if (state.destacados.isNotEmpty()) {
-            filaCompleta { TituloSeccion(tituloDestacados) }
-            filaCompleta {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(state.destacados, key = { it.codigo }) { prenda ->
-                        TarjetaPrenda(
-                            prenda = prenda,
-                            onClick = { onPrendaClick(prenda.codigo) },
-                            modifier = Modifier.width(160.dp),
-                        )
-                    }
+        carrusel(R.string.home_section_sale, state.enOferta, onPrendaClick)
+        carrusel(R.string.home_section_new, state.loNuevo, onPrendaClick)
+        carrusel(R.string.home_section_for_you, state.teGusta, onPrendaClick)
+    }
+}
+
+/** Título y fila horizontal de prendas; no se muestra si no hay prendas. */
+private fun LazyListScope.carrusel(
+    @StringRes titulo: Int,
+    prendas: List<PrendaUi>,
+    onPrendaClick: (String) -> Unit,
+) {
+    if (prendas.isEmpty()) return
+    item(key = "carrusel-$titulo") {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            TituloSeccion(stringResource(titulo))
+            LazyRow(
+                // El carrusel llega hasta el borde de la pantalla al deslizar.
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(prendas, key = { it.codigo }) { prenda ->
+                    TarjetaPrenda(
+                        prenda = prenda,
+                        onClick = { onPrendaClick(prenda.codigo) },
+                        modifier = Modifier.width(ANCHO_TARJETA),
+                    )
                 }
             }
-        }
-
-        filaCompleta { TituloSeccion(tituloCatalogo) }
-        items(state.prendas, key = { it.codigo }) { prenda ->
-            TarjetaPrenda(prenda = prenda, onClick = { onPrendaClick(prenda.codigo) })
         }
     }
 }
 
-private fun LazyGridScope.filaCompleta(content: @Composable () -> Unit) {
-    item(span = { GridItemSpan(maxLineSpan) }) { content() }
+@Composable
+private fun CarruselEsqueleto() {
+    Row(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        repeat(3) { MvGarmentCardSkeleton(modifier = Modifier.width(ANCHO_TARJETA)) }
+    }
 }
+
+private val ANCHO_TARJETA = 160.dp
+private val FILAS_ESQUELETO = List(2) { it }
 
 @Composable
 private fun TituloSeccion(texto: String) {
@@ -243,7 +262,7 @@ private fun TituloSeccion(texto: String) {
         text = texto,
         style = MaterialTheme.typography.headlineSmall,
         modifier = Modifier
-            .padding(top = 8.dp)
+            .padding(start = 16.dp, end = 16.dp, top = 8.dp)
             .semantics { heading() },
     )
 }
@@ -253,10 +272,10 @@ private fun TituloSeccion(texto: String) {
  * acción. Abre el catálogo de la categoría de la campaña.
  */
 @Composable
-private fun PortadaCampana(portada: Portada, onClick: () -> Unit) {
+private fun PortadaCampana(portada: Portada, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val relleno = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHigh)
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .aspectRatio(4f / 5f)
             .clip(MaterialTheme.shapes.large)
@@ -319,9 +338,9 @@ private fun PortadaCampana(portada: Portada, onClick: () -> Unit) {
 
 /** Accesos por público, debajo de la portada. */
 @Composable
-private fun Audiencias(onClick: (String) -> Unit) {
+private fun Audiencias(onClick: (String) -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
         AUDIENCIAS.forEach { (genero, texto) ->
@@ -397,7 +416,6 @@ private fun MensajeHome.texto(): Int = when (this) {
 }
 
 private val FORMATO_FECHA = DateTimeFormatter.ofPattern("dd/MM HH:mm")
-private val ESQUELETOS = List(6) { it }
 
 /**
  * Barra superior de Inicio (HT-01 CA-05): Notificaciones, el nombre de la

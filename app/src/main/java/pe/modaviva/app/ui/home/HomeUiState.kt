@@ -7,9 +7,10 @@ data class HomeUiState(
     val contenido: ContenidoHome = ContenidoHome.CARGANDO,
     /** Campaña destacada de la vitrina; null = Inicio sin portada. */
     val portada: Portada? = null,
-    val prendas: List<PrendaUi> = emptyList(),
-    /** Prendas en promoción y con stock, para la fila de destacados. */
-    val destacados: List<PrendaUi> = emptyList(),
+    /** Carruseles de la vitrina, en orden (ver seccionesVitrina). */
+    val enOferta: List<PrendaUi> = emptyList(),
+    val loNuevo: List<PrendaUi> = emptyList(),
+    val teGusta: List<PrendaUi> = emptyList(),
     val sinConexion: Boolean = false,
     /** Fecha de la copia local, para el aviso "Sin conexión – datos del…" (HU-04 CA-07). */
     val ultimaActualizacion: Instant? = null,

@@ -147,7 +147,7 @@ if (!confirmado) {
 }
 
 if (sobrantes) await borrarSobrantes(sobrantes);
-const fotos = await subirFotos();
+const { porPrenda: fotos, portada: portadaUrl } = await subirFotos();
 await cargarCatalogo(fotos);
 await cargarClientes();
 
@@ -242,10 +242,14 @@ function validar() {
     }
   }
 
-  const prendaPortada = prendas.find((p) => p.codigo === portada?.imagenDe);
   if (!portada?.titulo || !portada?.categoria) errores.push("inicio.json: la portada necesita titulo y categoria");
-  if (!prendaPortada) errores.push(`inicio.json: imagenDe apunta a una prenda que no existe (${portada?.imagenDe})`);
-  else if (!prendaPortada.fotosLocales[(portada.foto ?? 1) - 1]) errores.push(`inicio.json: la prenda ${portada.imagenDe} no tiene la foto ${portada.foto}`);
+  if (portada?.imagen) {
+    if (!existsSync(join(DATA, portada.imagen))) errores.push(`inicio.json: no existe la imagen ${portada.imagen}`);
+  } else {
+    const prendaPortada = prendas.find((p) => p.codigo === portada?.imagenDe);
+    if (!prendaPortada) errores.push(`inicio.json: imagenDe apunta a una prenda que no existe (${portada?.imagenDe})`);
+    else if (!prendaPortada.fotosLocales[(portada.foto ?? 1) - 1]) errores.push(`inicio.json: la prenda ${portada.imagenDe} no tiene la foto ${portada.foto}`);
+  }
   if (portada && !subcategorias.has(portada.categoria)) errores.push(`inicio.json: categoría desconocida (${portada.categoria})`);
 
   for (const c of categorias) {
@@ -321,32 +325,39 @@ async function subirFotos() {
   let subidas = 0;
   let sinCambios = 0;
 
+  /** Sube el archivo solo si cambió y devuelve su URL pública. */
+  async function subir(local, remota) {
+    const contenido = readFileSync(local);
+    const md5 = createHash("md5").update(contenido).digest("base64");
+    const archivo = bucket.file(remota);
+    const [existe] = await archivo.exists();
+    if (existe && (await archivo.getMetadata())[0].md5Hash === md5) {
+      sinCambios++;
+    } else {
+      await archivo.save(contenido, {
+        contentType: "image/jpeg",
+        metadata: { cacheControl: "public, max-age=86400" },
+      });
+      subidas++;
+    }
+    // Las reglas de Storage hacen públicas estas rutas: la URL no necesita token.
+    return `${destino.hostFotos}/v0/b/${destino.bucket}/o/${encodeURIComponent(remota)}?alt=media`;
+  }
+
   for (const p of prendas) {
     resultado[p.codigo] = [];
     for (const [i, local] of p.fotosLocales.entries()) {
-      const remota = `prendas/${p.codigo}/${i + 1}.jpg`;
-      const contenido = readFileSync(local);
-      const md5 = createHash("md5").update(contenido).digest("base64");
-      const archivo = bucket.file(remota);
-      const [existe] = await archivo.exists();
-      if (existe && (await archivo.getMetadata())[0].md5Hash === md5) {
-        sinCambios++;
-      } else {
-        await archivo.save(contenido, {
-          contentType: "image/jpeg",
-          metadata: { cacheControl: "public, max-age=86400" },
-        });
-        subidas++;
-      }
-      // Las reglas de Storage hacen públicas estas rutas: la URL no necesita token.
-      resultado[p.codigo].push(
-        `${destino.hostFotos}/v0/b/${destino.bucket}/o/${encodeURIComponent(remota)}?alt=media`,
-      );
+      resultado[p.codigo].push(await subir(local, `prendas/${p.codigo}/${i + 1}.jpg`));
     }
   }
 
+  // Foto propia de la portada de Inicio, si la tiene (si no, usa la de una prenda).
+  const portadaUrl = portada.imagen
+    ? await subir(join(DATA, portada.imagen), "inicio/portada.jpg")
+    : resultado[portada.imagenDe][(portada.foto ?? 1) - 1];
+
   console.log(`Fotos: ${subidas} subidas, ${sinCambios} sin cambios`);
-  return resultado;
+  return { porPrenda: resultado, portada: portadaUrl };
 }
 
 // --- Catálogo --------------------------------------------------------------
@@ -419,7 +430,7 @@ async function cargarCatalogo(fotos) {
   escritor.set(db.doc("inicio/portada"), {
     etiqueta: portada.etiqueta ?? "",
     titulo: portada.titulo,
-    imagenUrl: fotos[portada.imagenDe][(portada.foto ?? 1) - 1],
+    imagenUrl: portadaUrl,
     accion: portada.accion ?? "Descubrir",
     categoria: portada.categoria,
     activa: portada.activa !== false,
