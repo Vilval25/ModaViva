@@ -4,11 +4,11 @@ import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
-import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Checkroom
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.Category
+import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
@@ -35,8 +35,8 @@ enum class TopLevelDestination(
     CATEGORIES(
         "categories",
         R.string.tab_categories,
-        Icons.Filled.Category,
-        Icons.Outlined.Category,
+        Icons.Filled.GridView,
+        Icons.Outlined.GridView,
     ),
     FITTING(
         "fitting",
