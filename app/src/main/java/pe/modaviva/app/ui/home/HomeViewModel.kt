@@ -24,6 +24,7 @@ import pe.modaviva.app.domain.repository.PortadaRepository
 import pe.modaviva.app.ui.format.formatearSoles
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -78,7 +79,7 @@ class HomeViewModel @Inject constructor(
         refrescando,
     ) { prendas, ultimaActualizacion, conectado, sincronizacion, refrescando ->
         val ahora = Instant.now(reloj)
-        val tarjetas = prendas.map { it.aUi(ahora) }
+        val secciones = seccionesVitrina(prendas, ahora, LocalDate.now(reloj))
         HomeUiState(
             contenido = when {
                 prendas.isNotEmpty() -> ContenidoHome.CATALOGO
@@ -87,10 +88,9 @@ class HomeViewModel @Inject constructor(
                 sincronizacion == Sincronizacion.AL_DIA -> ContenidoHome.VACIO
                 else -> ContenidoHome.CARGANDO
             },
-            prendas = tarjetas,
-            destacados = prendas
-                .filter { it.enPromocion(ahora) && !it.agotada }
-                .map { it.aUi(ahora) },
+            enOferta = secciones.enOferta.map { it.aUi(ahora) },
+            loNuevo = secciones.loNuevo.map { it.aUi(ahora) },
+            teGusta = secciones.teGusta.map { it.aUi(ahora) },
             sinConexion = !conectado,
             ultimaActualizacion = ultimaActualizacion,
             refrescando = refrescando,
