@@ -1,6 +1,7 @@
 package pe.modaviva.app.data.local
 
 import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
  * Migraciones de la base local, una por cada cambio de versión desde la 5.
@@ -12,5 +13,17 @@ import androidx.room.migration.Migration
  */
 object Migraciones {
 
-    val TODAS: Array<Migration> = arrayOf()
+    /** 5 → 6: tabla de la portada de Inicio (HU-04). No toca el carrito. */
+    val DE_5_A_6 = object : Migration(5, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `portada` (`id` TEXT NOT NULL, " +
+                    "`etiqueta` TEXT NOT NULL, `titulo` TEXT NOT NULL, " +
+                    "`imagenUrl` TEXT NOT NULL, `accion` TEXT NOT NULL, " +
+                    "`categoria` TEXT NOT NULL, PRIMARY KEY(`id`))",
+            )
+        }
+    }
+
+    val TODAS: Array<Migration> = arrayOf(DE_5_A_6)
 }

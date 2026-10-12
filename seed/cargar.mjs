@@ -103,6 +103,7 @@ const tiendas = leer("tiendas.json");
 const tarifas = leer("tarifasEnvio.json");
 const cupones = leer("cupones.json").cupones;
 const clientes = leer("clientes.json").clientes;
+const portada = leer("inicio.json").portada;
 const prendas = leer("prendas.json").prendas.map(completarConDataset);
 
 validar();
@@ -240,6 +241,12 @@ function validar() {
       errores.push(`${id}: categoría/subcategoría inválida (${p.categoria}/${p.subcategoria})`);
     }
   }
+
+  const prendaPortada = prendas.find((p) => p.codigo === portada?.imagenDe);
+  if (!portada?.titulo || !portada?.categoria) errores.push("inicio.json: la portada necesita titulo y categoria");
+  if (!prendaPortada) errores.push(`inicio.json: imagenDe apunta a una prenda que no existe (${portada?.imagenDe})`);
+  else if (!prendaPortada.fotosLocales[(portada.foto ?? 1) - 1]) errores.push(`inicio.json: la prenda ${portada.imagenDe} no tiene la foto ${portada.foto}`);
+  if (portada && !subcategorias.has(portada.categoria)) errores.push(`inicio.json: categoría desconocida (${portada.categoria})`);
 
   for (const c of categorias) {
     if (!prendas.some((p) => p.codigo === c.imagenDe)) {
@@ -408,6 +415,17 @@ async function cargarCatalogo(fotos) {
     });
   }
 
+  // Vitrina de Inicio: la portada de campaña (HU-04).
+  escritor.set(db.doc("inicio/portada"), {
+    etiqueta: portada.etiqueta ?? "",
+    titulo: portada.titulo,
+    imagenUrl: fotos[portada.imagenDe][(portada.foto ?? 1) - 1],
+    accion: portada.accion ?? "Descubrir",
+    categoria: portada.categoria,
+    activa: portada.activa !== false,
+    actualizadaEn: ahora,
+  });
+
   for (const t of tiendas) {
     escritor.set(db.doc(`tiendas/${t.id}`), {
       nombre: t.nombre,
@@ -443,7 +461,7 @@ async function cargarCatalogo(fotos) {
   await escritor.close();
   console.log(
     `Catálogo: ${categorias.length} categorías, ${prendas.length} prendas, ${variantes} variantes de stock, ` +
-      `${tiendas.length} tiendas, ${tarifas.length} tarifas, ${cupones.length} cupones`,
+      `${tiendas.length} tiendas, ${tarifas.length} tarifas, ${cupones.length} cupones, portada de Inicio`,
   );
 }
 

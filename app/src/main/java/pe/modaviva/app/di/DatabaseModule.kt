@@ -11,6 +11,7 @@ import pe.modaviva.app.data.local.CartDao
 import pe.modaviva.app.data.local.CatalogoDao
 import pe.modaviva.app.data.local.Migraciones
 import pe.modaviva.app.data.local.ModaVivaDatabase
+import pe.modaviva.app.data.local.PortadaDao
 import java.time.Clock
 import javax.inject.Singleton
 
@@ -35,6 +36,9 @@ object DatabaseModule {
 
     @Provides
     fun provideCartDao(database: ModaVivaDatabase): CartDao = database.cartDao()
+
+    @Provides
+    fun providePortadaDao(database: ModaVivaDatabase): PortadaDao = database.portadaDao()
 
     @Provides
     @Singleton

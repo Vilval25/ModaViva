@@ -20,6 +20,7 @@ prenda para no leer todo el stock al pintar el catálogo).
 | `stock/{varianteId}` | `{prendaId}_{talla}` | back-office | todos | HU-05, HU-07, HU-09 |
 | `tiendas/{tiendaId}` | `T01`…`T05` | back-office | todos | HU-05, HU-20 |
 | `tarifasEnvio/{distrito}` | slug del distrito | back-office | todos | HU-19, HU-20 |
+| `inicio/portada` | fijo: `portada` | back-office | todos | HU-04 |
 | `cupones/{codigo}` | código del cupón | back-office | **solo el servidor** | HU-19 |
 
 "Back-office" es la consola de Firebase o el script de carga (`seed/`); la app
@@ -294,6 +295,22 @@ las tiendas con stock de la talla elegida (HU-05 CA-04).
 | `cobertura` | boolean | `false` = sin despacho (HU-20 CA-06, CA-07). |
 | `costo` | number | Soles. |
 | `plazoDias` | number | Días hábiles estimados (HU-20 CA-10). |
+
+## `inicio/portada` (HU-04)
+
+Portada de campaña de la vitrina de Inicio. La tienda la cambia desde la
+consola (o con `datos/inicio.json` y el script de carga) sin publicar otra
+versión de la app. La app guarda una copia en Room para mostrarla sin conexión.
+
+| Campo | Tipo | Notas |
+| :--- | :--- | :--- |
+| `etiqueta` | string | Texto pequeño sobre el título, p. ej. "Nueva temporada". |
+| `titulo` | string | Obligatorio. |
+| `imagenUrl` | string | Obligatorio. URL de descarga de Storage. |
+| `accion` | string | Texto del enlace, p. ej. "Descubrir". |
+| `categoria` | string | Slug de la categoría que abre la portada. |
+| `activa` | boolean | `false` = Inicio se muestra sin portada. |
+| `actualizadaEn` | timestamp | |
 
 ## `cupones/{codigo}` (HU-19)
 

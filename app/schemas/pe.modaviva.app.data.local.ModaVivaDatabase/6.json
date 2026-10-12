@@ -1,0 +1,267 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 6,
+    "identityHash": "c0934c657bbdde9a2629da6946957b4a",
+    "entities": [
+      {
+        "tableName": "prendas",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`codigo` TEXT NOT NULL, `nombre` TEXT NOT NULL, `descripcion` TEXT NOT NULL, `marca` TEXT NOT NULL, `categoria` TEXT NOT NULL, `subcategoria` TEXT NOT NULL, `genero` TEXT, `precio` REAL NOT NULL, `precioPromo` REAL, `promoHastaMillis` INTEGER, `colorSlug` TEXT NOT NULL, `colorNombre` TEXT NOT NULL, `colorHex` TEXT NOT NULL, `tallas` TEXT NOT NULL, `medidasJson` TEXT NOT NULL, `fotos` TEXT NOT NULL, `stockTotal` INTEGER NOT NULL, `creadaEnMillis` INTEGER NOT NULL, `actualizadaEnMillis` INTEGER, PRIMARY KEY(`codigo`))",
+        "fields": [
+          {
+            "fieldPath": "codigo",
+            "columnName": "codigo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descripcion",
+            "columnName": "descripcion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "marca",
+            "columnName": "marca",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categoria",
+            "columnName": "categoria",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "subcategoria",
+            "columnName": "subcategoria",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "genero",
+            "columnName": "genero",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "precio",
+            "columnName": "precio",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "precioPromo",
+            "columnName": "precioPromo",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "promoHastaMillis",
+            "columnName": "promoHastaMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "colorSlug",
+            "columnName": "colorSlug",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "colorNombre",
+            "columnName": "colorNombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "colorHex",
+            "columnName": "colorHex",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tallas",
+            "columnName": "tallas",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "medidasJson",
+            "columnName": "medidasJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fotos",
+            "columnName": "fotos",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stockTotal",
+            "columnName": "stockTotal",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "creadaEnMillis",
+            "columnName": "creadaEnMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actualizadaEnMillis",
+            "columnName": "actualizadaEnMillis",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "codigo"
+          ]
+        }
+      },
+      {
+        "tableName": "sincronizacion",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`clave` TEXT NOT NULL, `millis` INTEGER NOT NULL, PRIMARY KEY(`clave`))",
+        "fields": [
+          {
+            "fieldPath": "clave",
+            "columnName": "clave",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "millis",
+            "columnName": "millis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "clave"
+          ]
+        }
+      },
+      {
+        "tableName": "carrito",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`varianteId` TEXT NOT NULL, `prendaId` TEXT NOT NULL, `talla` TEXT NOT NULL, `colorNombre` TEXT NOT NULL, `colorHex` TEXT NOT NULL, `cantidad` INTEGER NOT NULL, `agregadoEnMillis` INTEGER NOT NULL, `precioAlAgregar` REAL NOT NULL, PRIMARY KEY(`varianteId`))",
+        "fields": [
+          {
+            "fieldPath": "varianteId",
+            "columnName": "varianteId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "prendaId",
+            "columnName": "prendaId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "talla",
+            "columnName": "talla",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "colorNombre",
+            "columnName": "colorNombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "colorHex",
+            "columnName": "colorHex",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cantidad",
+            "columnName": "cantidad",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "agregadoEnMillis",
+            "columnName": "agregadoEnMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "precioAlAgregar",
+            "columnName": "precioAlAgregar",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "varianteId"
+          ]
+        }
+      },
+      {
+        "tableName": "portada",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `etiqueta` TEXT NOT NULL, `titulo` TEXT NOT NULL, `imagenUrl` TEXT NOT NULL, `accion` TEXT NOT NULL, `categoria` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "etiqueta",
+            "columnName": "etiqueta",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "titulo",
+            "columnName": "titulo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "imagenUrl",
+            "columnName": "imagenUrl",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accion",
+            "columnName": "accion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categoria",
+            "columnName": "categoria",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c0934c657bbdde9a2629da6946957b4a')"
+    ]
+  }
+}

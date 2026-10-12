@@ -74,6 +74,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Contenido de la vitrina de Inicio (portada de campaña), editable solo
+    // desde el back-office (HU-04).
+    match /inicio/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // --- Solo servidor ----------------------------------------------------
 
     // Los lee la Cloud Function que calcula el pedido (HU-19). Si la app
