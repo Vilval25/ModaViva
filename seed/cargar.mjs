@@ -41,6 +41,7 @@ const NOMBRES_MEDIDAS = {
   "length": "largo",
   "chest circumference": "pecho",
   "waist circumference": "cintura",
+  "waistband": "cintura",
   "hip circumference": "cadera",
   "thigh circumference": "muslo",
   "inseam": "entrepierna",
@@ -158,8 +159,9 @@ process.exit(0);
 
 /**
  * Agrega a la prenda lo que viene del dataset: marca, descripción, detalles,
- * ajuste, género, fotos y medidas. Marca y textos se mantienen como en el
- * dataset; nombre, precio, tallas y color son los de ModaViva.
+ * ajuste, género, fotos y medidas. Nombre, precio, tallas y color son los de
+ * ModaViva; descripción, detalles y ajuste también, si la prenda los trae
+ * (en español), y si no se usan los del dataset (en inglés).
  */
 function completarConDataset(p) {
   const carpeta = join(DATASET, p.carpeta);
@@ -176,10 +178,10 @@ function completarConDataset(p) {
   return {
     ...p,
     marca: info.marca,
-    descripcion: info.descripcion,
+    descripcion: p.descripcion ?? info.descripcion?.trim(),
     // El número de artículo es de la tienda de origen; no se muestra.
-    detalles: (secciones["Product details"] ?? []).filter((l) => !l.startsWith("Item number")),
-    ajuste: secciones["Size & fit"] ?? [],
+    detalles: p.detalles ?? (secciones["Product details"] ?? []).filter((l) => !l.startsWith("Item number")),
+    ajuste: p.ajuste ?? secciones["Size & fit"] ?? [],
     genero: info.categorias?.[0] === "Women" ? "mujer" : info.categorias?.[0] === "Men" ? "hombre" : null,
     fotosLocales: fotosLocales.map((f) => join(carpetaFotos, f)),
     medidas: medidasDe(p, info),
