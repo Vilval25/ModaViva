@@ -90,7 +90,7 @@ respecto a la versión anterior".
   ícono en la barra superior de Inicio, que queda así, de izquierda a derecha:
   Notificaciones, buscador, Favoritos y Carrito.
 - **Rediseño editorial (HT-01, HU-04):** el Probador pasa al centro de la
-  barra inferior y Perfil al final (Inicio, Categorías, Probador, Mis pedidos,
+  barra inferior y Perfil al final (Inicio, Categorías, Probador, Pedidos,
   Perfil). La barra superior de Inicio muestra Notificaciones, el nombre de la
   tienda al centro, Favoritos y Carrito, con el buscador debajo. HT-01 CA-04 y
   CA-05 se reescriben y se vuelven a verificar.
