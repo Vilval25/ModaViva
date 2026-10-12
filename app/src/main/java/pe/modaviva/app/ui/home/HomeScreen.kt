@@ -200,13 +200,16 @@ private fun Vitrina(
             filaCompleta { MvOfflineBanner(message = textoSinConexion) }
         }
 
+        // Portada y accesos sin clave propia: si la portada llega después que
+        // el catálogo, la lista no se queda anclada en los accesos y la
+        // portada aparece arriba, a la vista.
         state.portada?.let { portada ->
-            filaCompleta(key = "portada") {
+            filaCompleta {
                 PortadaCampana(portada = portada, onClick = { onPortadaClick(portada.categoria) })
             }
         }
 
-        filaCompleta(key = "audiencias") { Audiencias(onClick = onAudienciaClick) }
+        filaCompleta { Audiencias(onClick = onAudienciaClick) }
 
         if (state.destacados.isNotEmpty()) {
             filaCompleta { TituloSeccion(tituloDestacados) }
@@ -230,8 +233,8 @@ private fun Vitrina(
     }
 }
 
-private fun LazyGridScope.filaCompleta(key: String? = null, content: @Composable () -> Unit) {
-    item(key = key, span = { GridItemSpan(maxLineSpan) }) { content() }
+private fun LazyGridScope.filaCompleta(content: @Composable () -> Unit) {
+    item(span = { GridItemSpan(maxLineSpan) }) { content() }
 }
 
 @Composable
