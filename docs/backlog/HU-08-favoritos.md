@@ -30,14 +30,14 @@ El cliente marca o desmarca prendas con el ícono de corazón en la ficha de det
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que tengo sesión, cuando toco el corazón en la ficha o en la tarjeta de una prenda, entonces queda marcada como favorita y el ícono se rellena; si lo vuelvo a tocar, se desmarca.
-- [ ] **CA-02** Dado que tengo favoritos, cuando toco el ícono de Favoritos en la barra superior de Inicio, entonces veo mis prendas favoritas, de la más reciente a la más antigua, con su precio vigente.
-- [ ] **CA-03** Dado que una prenda favorita se agotó, cambió de precio o se despublicó, cuando abro Favoritos, entonces se muestra con la etiqueta 'Agotado', con el precio actualizado o con el aviso 'Ya no disponible', según corresponda.
-- [ ] **CA-04** Dado que toco una prenda en Favoritos, cuando se abre, entonces veo su ficha de detalle.
-- [ ] **CA-05** Dado que quito una prenda de Favoritos, cuando lo hago, entonces desaparece de la lista y puedo deshacerlo durante unos segundos.
-- [ ] **CA-06** Dado que marqué favoritos, cuando reinicio la app o inicio sesión en otro dispositivo, entonces veo los mismos favoritos.
-- [ ] **CA-07** Dado que no tengo favoritos, cuando abro la pantalla, entonces veo un mensaje y un botón para ir a Inicio.
-- [ ] **CA-08** Dado que no tengo sesión, cuando toco un corazón o el ícono de Favoritos, entonces aparece el aviso 'Inicia sesión para continuar'; si inicio sesión desde una prenda, esta queda marcada como favorita.
+- [x] **CA-01** Dado que tengo sesión, cuando toco el corazón en la ficha o en la tarjeta de una prenda, entonces queda marcada como favorita y el ícono se rellena; si lo vuelvo a tocar, se desmarca.
+- [x] **CA-02** Dado que tengo favoritos, cuando toco el ícono de Favoritos en la barra superior de Inicio, entonces veo mis prendas favoritas, de la más reciente a la más antigua, con su precio vigente.
+- [x] **CA-03** Dado que una prenda favorita se agotó, cambió de precio o se despublicó, cuando abro Favoritos, entonces se muestra con la etiqueta 'Agotado', con el precio actualizado o con el aviso 'Ya no disponible', según corresponda.
+- [x] **CA-04** Dado que toco una prenda en Favoritos, cuando se abre, entonces veo su ficha de detalle.
+- [x] **CA-05** Dado que quito una prenda de Favoritos, cuando lo hago, entonces desaparece de la lista y puedo deshacerlo durante unos segundos.
+- [x] **CA-06** Dado que marqué favoritos, cuando reinicio la app o inicio sesión en otro dispositivo, entonces veo los mismos favoritos.
+- [x] **CA-07** Dado que no tengo favoritos, cuando abro la pantalla, entonces veo un mensaje y un botón para ir a Inicio.
+- [x] **CA-08** Dado que no tengo sesión, cuando toco un corazón o el ícono de Favoritos, entonces aparece el aviso 'Inicia sesión para continuar'; si inicio sesión desde una prenda, esta queda marcada como favorita.
 
 ## Tecnologías
 
