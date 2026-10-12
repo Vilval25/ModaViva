@@ -66,9 +66,10 @@ vigenteHasta, combinable, activo } ] }`; fechas `AAAA-MM-DD` en hora de Lima.
 | `publicada`, `fotosAprobadas` | `true`, `true` | Visibilidad en Inicio (HU-04 CA-03). |
 | `diasDesdeCreacion` | `30` | Orden "novedades". |
 | `agotada` | `true` (opcional) | Carga todo su stock en 0. |
+| `descripcion`, `detalles`, `ajuste` | texto y listas (opcional) | En español. Reemplazan a los de `info.json`, que están en inglés. |
 
-Marca, descripción, detalles, ajuste, género, fotos y medidas se leen de
-`info.json`. Antes de escribir nada, el script valida que cada prenda esté
+Marca, género, fotos y medidas se leen de `info.json`, y también la
+descripción, los detalles y el ajuste si la prenda no los trae en español. Antes de escribir nada, el script valida que cada prenda esté
 completa (código, precio, tallas, color, fotos y medidas de todas sus tallas);
 si algo falta, no carga.
 

@@ -224,9 +224,9 @@ El ID es el código de la prenda (`BL-1002`).
 | :--- | :--- | :--- |
 | `codigo` | string | Igual al ID; se muestra en la ficha (HU-07 CA-01). |
 | `nombre` | string | |
-| `descripcion` | string | Texto del dataset de prendas, en su idioma original. |
-| `detalles` | array\<string\> | Material, cuidado, origen ("Material: 100% cotton"). Para la ficha (HU-07). |
-| `ajuste` | array\<string\> | Calce y talla que usa la modelo ("Height of model is 175cm and wears a size 26"). Útil para HU-15. |
+| `descripcion` | string | Descripción de la prenda, en español. |
+| `detalles` | array\<string\> | Material, cuidado, origen ("Material: 100 % algodón"). Para la ficha (HU-07). |
+| `ajuste` | array\<string\> | Calce y talla que usa la modelo ("La modelo mide 175 cm y usa la talla 26"). Útil para HU-15. |
 | `marca` | string | |
 | `genero` | `"mujer"` \| `"hombre"` \| null | Para filtrar (HU-06) y recomendar (HU-26). |
 | `categoria` | string | Slug de `categorias`. |
