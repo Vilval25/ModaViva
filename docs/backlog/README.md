@@ -46,7 +46,7 @@ estos archivos al cerrar cada hito; entre hitos no se edita.
 | [HU-05 — Visualización de disponibilidad de las prendas](HU-05-visualizacion-de-disponibilidad-de-las-prendas.md) | E2 | Rojas | SEM 6 | 0/5 |
 | [HU-06 — Exploración y búsqueda del catálogo](HU-06-exploracion-y-busqueda-del-catalogo.md) | E3 | Rojas | SEM 6 – SEM 7 | 0/7 |
 | [HU-07 — Detalle de la prenda](HU-07-detalle-de-la-prenda.md) | E3 | Rojas | SEM 7 | 0/5 |
-| [HU-08 — Favoritos](HU-08-favoritos.md) | E3 | Vila | SEM 7 | 0/8 |
+| [HU-08 — Favoritos](HU-08-favoritos.md) | E3 | Vila | SEM 7 | 8/8 |
 | [HU-09 — Carrito de compras](HU-09-carrito-de-compras.md) | E3 | Perez | SEM 7 | 0/9 |
 
 ### Sprint 2 (SEM 8 – SEM 11) — _borrador, se revisa al cerrar el Hito 1_
