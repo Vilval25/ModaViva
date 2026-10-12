@@ -83,6 +83,11 @@ const categoriaMal = [...prendas].filter(
 check(categoriaMal.length === 0, `prendas: todas apuntan a una categoría y subcategoría existentes`);
 check([...prendas.values()].every((p) => p.fotos?.length > 0), `prendas: todas tienen al menos una foto`);
 
+// Vitrina de Inicio (HU-04)
+const portada = (await db.doc("inicio/portada").get()).data();
+check(Boolean(portada?.titulo && portada?.imagenUrl && categorias.has(portada.categoria)),
+  "inicio/portada: tiene título, imagen y una categoría existente");
+
 // CA-02: cada cliente de la tienda está en Auth y en Firestore con el mismo UID
 const clientesData = [...leer("clientes.json").clientes];
 let sinAuth = 0;

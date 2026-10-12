@@ -130,7 +130,7 @@ describe("carrito", () => {
 });
 
 describe("catálogo", () => {
-  for (const coleccion of ["categorias", "prendas", "stock", "tiendas", "tarifasEnvio"]) {
+  for (const coleccion of ["categorias", "prendas", "stock", "tiendas", "tarifasEnvio", "inicio"]) {
     test(`${coleccion}: lectura pública y sin escritura desde la app`, async () => {
       await assertSucceeds(getDocs(collection(guest(), coleccion)));
       await assertSucceeds(getDocs(collection(as(ANA), coleccion)));
