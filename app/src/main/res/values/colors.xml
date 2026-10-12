@@ -2,6 +2,6 @@
 <resources>
     <!-- Fondo de la ventana antes de que Compose dibuje; igual a background del tema. -->
     <color name="window_background">#FFFDF8F8</color>
-    <!-- Fondo corporativo del launcher icon -->
-    <color name="brand_green">#345F3E</color>
+    <!-- Fondo del ícono de la app: blanco roto de la dirección editorial. -->
+    <color name="launcher_background">#FAF8F5</color>
 </resources>
