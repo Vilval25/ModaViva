@@ -27,6 +27,7 @@ fun MvScreen(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
+    snackbarHost: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
     Scaffold(
@@ -47,6 +48,7 @@ fun MvScreen(
                 actions = actions,
             )
         },
+        snackbarHost = snackbarHost,
         content = content,
     )
 }

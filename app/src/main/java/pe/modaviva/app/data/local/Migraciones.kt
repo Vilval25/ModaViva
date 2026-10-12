@@ -32,5 +32,15 @@ object Migraciones {
         }
     }
 
-    val TODAS: Array<Migration> = arrayOf(DE_5_A_6, DE_6_A_7)
+    /** 7 → 8: copia local de los favoritos de la cuenta (HU-08). */
+    val DE_7_A_8 = object : Migration(7, 8) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `favoritos` (`prendaId` TEXT NOT NULL, " +
+                    "`agregadoEnMillis` INTEGER NOT NULL, PRIMARY KEY(`prendaId`))",
+            )
+        }
+    }
+
+    val TODAS: Array<Migration> = arrayOf(DE_5_A_6, DE_6_A_7, DE_7_A_8)
 }

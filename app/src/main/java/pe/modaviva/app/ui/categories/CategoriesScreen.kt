@@ -57,6 +57,7 @@ import pe.modaviva.app.R
 import pe.modaviva.app.domain.model.Prenda
 import pe.modaviva.app.ui.components.GarmentImagePlaceholder
 import pe.modaviva.app.ui.components.MvGarmentCard
+import pe.modaviva.app.ui.favorites.LocalFavoritos
 import pe.modaviva.app.ui.search.SearchViewModel
 import java.time.Instant
 import java.util.Locale
@@ -376,6 +377,7 @@ private fun TarjetaPrendaCategoria(
     } else {
         null
     }
+    val favoritos = LocalFavoritos.current
 
     MvGarmentCard(
         name = prenda.nombre,
@@ -383,6 +385,8 @@ private fun TarjetaPrendaCategoria(
         price = precio,
         originalPrice = precioOriginal,
         isSoldOut = prenda.agotada,
+        isFavorite = favoritos?.contiene(prenda.codigo),
+        onFavoriteClick = { favoritos?.alternar(prenda.codigo) },
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         image = {

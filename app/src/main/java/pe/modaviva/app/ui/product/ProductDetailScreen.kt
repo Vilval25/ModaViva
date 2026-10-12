@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,7 +17,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -60,6 +63,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import kotlinx.coroutines.launch
 import pe.modaviva.app.R
+import pe.modaviva.app.ui.favorites.LocalFavoritos
 import pe.modaviva.app.ui.stock.StockAvailability
 import pe.modaviva.app.ui.stock.StockViewModel
 import java.time.Instant
@@ -141,6 +145,19 @@ fun ProductDetailScreen(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Volver",
                     )
+                }
+                Spacer(Modifier.weight(1f))
+                val favoritos = LocalFavoritos.current
+                if (favoritos != null) {
+                    val esFavorita = favoritos.contiene(codigo)
+                    IconButton(onClick = { favoritos.alternar(codigo) }) {
+                        Icon(
+                            imageVector = if (esFavorita) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                            contentDescription = stringResource(
+                                if (esFavorita) R.string.cd_favorite_remove else R.string.cd_favorite_add,
+                            ),
+                        )
+                    }
                 }
                 IconButton(onClick = onCartClick) {
                     BadgedBox(

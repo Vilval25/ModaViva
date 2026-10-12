@@ -76,6 +76,7 @@ import pe.modaviva.app.ui.components.MvOfflineState
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import pe.modaviva.app.ui.favorites.LocalFavoritos
 
 /**
  * Pestaña Inicio: la vitrina de la tienda (HU-04). De arriba abajo: portada de
@@ -377,12 +378,15 @@ private fun TarjetaPrenda(
     modifier: Modifier = Modifier,
 ) {
     val relleno = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHigh)
+    val favoritos = LocalFavoritos.current
     MvGarmentCard(
         name = prenda.nombre,
         brand = prenda.marca,
         price = prenda.precio,
         originalPrice = prenda.precioOriginal,
         isSoldOut = prenda.agotada,
+        isFavorite = favoritos?.contiene(prenda.codigo),
+        onFavoriteClick = { favoritos?.alternar(prenda.codigo) },
         onClick = onClick,
         modifier = modifier,
         image = {

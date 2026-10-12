@@ -9,6 +9,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import pe.modaviva.app.data.local.CartDao
 import pe.modaviva.app.data.local.CatalogoDao
+import pe.modaviva.app.data.local.FavoritoDao
 import pe.modaviva.app.data.local.Migraciones
 import pe.modaviva.app.data.local.ModaVivaDatabase
 import pe.modaviva.app.data.local.PortadaDao
@@ -39,6 +40,9 @@ object DatabaseModule {
 
     @Provides
     fun providePortadaDao(database: ModaVivaDatabase): PortadaDao = database.portadaDao()
+
+    @Provides
+    fun provideFavoritoDao(database: ModaVivaDatabase): FavoritoDao = database.favoritoDao()
 
     @Provides
     @Singleton
