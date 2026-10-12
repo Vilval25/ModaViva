@@ -18,6 +18,7 @@ data class PortadaEntity(
     val imagenUrl: String,
     val accion: String,
     val categoria: String,
+    val marca: String?,
 )
 
 fun PortadaEntity.aDominio() = Portada(
@@ -26,6 +27,7 @@ fun PortadaEntity.aDominio() = Portada(
     imagenUrl = imagenUrl,
     accion = accion,
     categoria = categoria,
+    marca = marca,
 )
 
 fun Portada.aEntidad() = PortadaEntity(
@@ -35,6 +37,7 @@ fun Portada.aEntidad() = PortadaEntity(
     imagenUrl = imagenUrl,
     accion = accion,
     categoria = categoria,
+    marca = marca,
 )
 
 @Dao

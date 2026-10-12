@@ -433,6 +433,8 @@ async function cargarCatalogo(fotos) {
     imagenUrl: portadaUrl,
     accion: portada.accion ?? "Descubrir",
     categoria: portada.categoria,
+    // Si tiene marca, Descubrir abre el catálogo de esa marca.
+    marca: portada.marca ?? null,
     activa: portada.activa !== false,
     actualizadaEn: ahora,
   });

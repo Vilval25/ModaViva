@@ -93,7 +93,7 @@ fun HomeScreen(
     onFavoritesClick: () -> Unit,
     onCartClick: () -> Unit,
     onPrendaClick: (String) -> Unit,
-    onPortadaClick: (categoria: String) -> Unit,
+    onPortadaClick: (Portada) -> Unit,
     onAudienciaClick: (genero: String) -> Unit,
     modifier: Modifier = Modifier,
     unreadNotifications: Int = 0,
@@ -145,7 +145,7 @@ private fun HomeContent(
     state: HomeUiState,
     onRefresh: () -> Unit,
     onPrendaClick: (String) -> Unit,
-    onPortadaClick: (String) -> Unit,
+    onPortadaClick: (Portada) -> Unit,
     onAudienciaClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -172,7 +172,7 @@ private fun HomeContent(
 private fun Vitrina(
     state: HomeUiState,
     onPrendaClick: (String) -> Unit,
-    onPortadaClick: (String) -> Unit,
+    onPortadaClick: (Portada) -> Unit,
     onAudienciaClick: (String) -> Unit,
 ) {
     val textoSinConexion = textoSinConexion(state.ultimaActualizacion)
@@ -202,7 +202,7 @@ private fun Vitrina(
             item {
                 PortadaCampana(
                     portada = portada,
-                    onClick = { onPortadaClick(portada.categoria) },
+                    onClick = { onPortadaClick(portada) },
                     modifier = margen,
                 )
             }
@@ -269,7 +269,8 @@ private fun TituloSeccion(texto: String) {
 
 /**
  * Portada de campaña (`inicio/portada`): foto grande con etiqueta, título y
- * acción. Abre el catálogo de la categoría de la campaña.
+ * acción. Abre el catálogo de la marca de la campaña o, si no tiene, el de su
+ * categoría.
  */
 @Composable
 private fun PortadaCampana(portada: Portada, onClick: () -> Unit, modifier: Modifier = Modifier) {

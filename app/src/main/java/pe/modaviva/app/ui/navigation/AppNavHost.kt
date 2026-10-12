@@ -14,6 +14,7 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavGraphBuilder
@@ -32,11 +34,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.launch
 import pe.modaviva.app.R
 import pe.modaviva.app.ui.auth.login.LoginScreen
 import pe.modaviva.app.ui.auth.register.RegisterScreen
 import pe.modaviva.app.ui.auth.verify.EmailVerifyScreen
 import pe.modaviva.app.ui.cart.CartScreen
+import pe.modaviva.app.ui.categories.CategoriesScreen
 import pe.modaviva.app.ui.components.MvAuthPromptBottomSheet
 import pe.modaviva.app.ui.home.HomeScreen
 import pe.modaviva.app.ui.orders.OrderHistoryScreen
@@ -44,10 +49,10 @@ import pe.modaviva.app.ui.placeholder.ComingSoonScreen
 import pe.modaviva.app.ui.product.ProductDetailScreen
 import pe.modaviva.app.ui.profile.ProfileTab
 import pe.modaviva.app.ui.search.SearchScreen
+import pe.modaviva.app.ui.search.SearchViewModel
 import pe.modaviva.app.ui.session.SessionViewModel
 import pe.modaviva.app.ui.stock.StockTestScreen
 import pe.modaviva.app.ui.theme.ModaVivaTheme
-import pe.modaviva.app.ui.categories.CategoriesScreen
 
 /**
  * Navegación de la app. Se entra directo a Inicio, sin pedir sesión (HT-01 CA-03).
@@ -178,18 +183,31 @@ private fun NavGraphBuilder.topLevelGraph(
                 navController.navigate(Routes.CART)
             },
             onPrendaClick = { codigo -> navController.navigate(Routes.prenda(codigo)) },
-            // Por ahora abren la pestaña Categorías. Cuando exista el listado
-            // compartido con filtro inicial (HU-06), irán directo a la
-            // categoría o al público elegidos.
-            onPortadaClick = { navController.navigateToTab(TopLevelDestination.CATEGORIES) },
-            onAudienciaClick = { navController.navigateToTab(TopLevelDestination.CATEGORIES) },
+            // La portada abre la búsqueda filtrada por su marca o, si no
+            // tiene, Categorías en su categoría. Mujer/Hombre/Niños abren
+            // Categorías en ese público, como tocar su tarjeta allí.
+            onPortadaClick = { portada ->
+                val marca = portada.marca
+                if (marca != null) {
+                    navController.navigate(Routes.SEARCH)
+                    navController.currentBackStackEntry?.savedStateHandle?.set(FILTRO_MARCA, marca)
+                } else {
+                    navController.abrirCategorias(FILTRO_CATEGORIA, portada.categoria)
+                }
+            },
+            onAudienciaClick = { genero ->
+                navController.abrirCategorias(FILTRO_GENERO, genero)
+            },
         )
     }
-    composable(TopLevelDestination.CATEGORIES.route) {
+    composable(TopLevelDestination.CATEGORIES.route) { entry ->
+        val viewModel: SearchViewModel = hiltViewModel()
+        AplicarFiltroInicial(entry, viewModel)
         CategoriesScreen(
             onPrendaClick = { codigo ->
                 navController.navigate(Routes.prenda(codigo))
             },
+            viewModel = viewModel,
         )
     }
     composable(TopLevelDestination.PROFILE.route) {
@@ -215,12 +233,15 @@ private fun NavGraphBuilder.overlayGraph(
     requireAuth: (String, () -> Unit) -> Unit,
     cartPrompt: String,
 ) {
-    composable(Routes.SEARCH) {
+    composable(Routes.SEARCH) { entry ->
+        val viewModel: SearchViewModel = hiltViewModel()
+        AplicarFiltroInicial(entry, viewModel)
         SearchScreen(
             onBack = { navController.popBackStack() },
             onPrendaClick = { codigo ->
                 navController.navigate(Routes.prenda(codigo))
             },
+            viewModel = viewModel,
         )
     }
     composable(Routes.FAVORITES) {
@@ -347,6 +368,42 @@ private fun NavGraphBuilder.authGraph(
             modifier = Modifier.safeDrawingPadding(),
         )
     }
+}
+
+/**
+ * Filtro con el que otra pantalla abre Categorías o la búsqueda (p. ej. Inicio
+ * abre Categorías en "Mujer" o la búsqueda en una marca). Viaja en el
+ * savedStateHandle de la pantalla de destino; se aplica una vez y se borra,
+ * así que no pisa lo que el usuario elija después.
+ */
+private const val FILTRO_GENERO = "filtroGenero"
+private const val FILTRO_MARCA = "filtroMarca"
+private const val FILTRO_CATEGORIA = "filtroCategoria"
+
+@Composable
+private fun AplicarFiltroInicial(entry: NavBackStackEntry, viewModel: SearchViewModel) {
+    val estado = entry.savedStateHandle
+    LaunchedEffect(estado, viewModel) {
+        val filtros = mapOf<String, (String) -> Unit>(
+            FILTRO_GENERO to viewModel::seleccionarGenero,
+            FILTRO_MARCA to viewModel::seleccionarMarca,
+            FILTRO_CATEGORIA to viewModel::seleccionarCategoria,
+        )
+        filtros.forEach { (clave, aplicar) ->
+            launch {
+                estado.getStateFlow<String?>(clave, null).filterNotNull().collect { valor ->
+                    aplicar(valor)
+                    estado[clave] = null
+                }
+            }
+        }
+    }
+}
+
+/** Abre la pestaña Categorías con un filtro ya aplicado (ver AplicarFiltroInicial). */
+private fun NavHostController.abrirCategorias(filtro: String, valor: String) {
+    navigateToTab(TopLevelDestination.CATEGORIES)
+    getBackStackEntry(TopLevelDestination.CATEGORIES.route).savedStateHandle[filtro] = valor
 }
 
 /**
