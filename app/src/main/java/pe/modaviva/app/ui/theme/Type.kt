@@ -7,8 +7,8 @@ import androidx.compose.ui.text.googlefonts.GoogleFont
 import pe.modaviva.app.R
 
 /*
- * Tipografía generada con Material Theme Builder: Playfair Display para
- * títulos y encabezados, Inter para textos y etiquetas. Son fuentes
+ * Tipografía generada con Material Theme Builder (dirección editorial):
+ * Bodoni Moda para títulos y encabezados, Manrope para textos y etiquetas. Son fuentes
  * descargables de Google Fonts; mientras se descargan, o si el dispositivo no
  * tiene Google Play Services, se usa la fuente del sistema.
  */
@@ -20,11 +20,11 @@ private val provider = GoogleFont.Provider(
 )
 
 private val bodyFontFamily = FontFamily(
-    Font(googleFont = GoogleFont("Inter"), fontProvider = provider),
+    Font(googleFont = GoogleFont("Manrope"), fontProvider = provider),
 )
 
 private val displayFontFamily = FontFamily(
-    Font(googleFont = GoogleFont("Playfair Display"), fontProvider = provider),
+    Font(googleFont = GoogleFont("Bodoni Moda"), fontProvider = provider),
 )
 
 // Valores por defecto de Material 3; solo se cambia la familia.
