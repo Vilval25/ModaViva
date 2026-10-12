@@ -7,16 +7,21 @@ import androidx.room.TypeConverters
 import pe.modaviva.app.domain.model.MedidasPrenda
 
 /**
- * Base local de la app. Por ahora solo guarda copias de datos del servidor,
- * así que un cambio de esquema puede borrarla y volver a descargarla (ver
- * DatabaseModule). Si algún día guarda datos que solo existen en el
- * dispositivo, como el carrito de un invitado (HU-09), habrá que escribir
- * migraciones.
+ * Base local de la app.
+ *
+ * Guarda copias de datos del servidor (catálogo) y también datos que SOLO
+ * existen en el teléfono, como el carrito de un invitado (HU-09). Por eso,
+ * desde la versión 5, cada cambio de esquema necesita una migración en
+ * Migraciones.kt: si no, al actualizar la app se perderían esos datos.
+ *
+ * Al cambiar el esquema: subir `version`, compilar (Room guarda el esquema
+ * nuevo en app/schemas/), escribir la migración y su prueba en
+ * MigracionesTest.
  */
 @Database(
     entities = [PrendaEntity::class, SincronizacionEntity::class, CartEntity::class],
     version = 5,
-    exportSchema = false,
+    exportSchema = true,
 )
 @TypeConverters(Convertidores::class)
 abstract class ModaVivaDatabase : RoomDatabase() {
