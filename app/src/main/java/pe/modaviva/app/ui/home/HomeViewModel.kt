@@ -20,6 +20,7 @@ import pe.modaviva.app.data.network.MonitorDeConexion
 import pe.modaviva.app.domain.model.Prenda
 import pe.modaviva.app.domain.repository.CartRepository
 import pe.modaviva.app.domain.repository.CatalogoRepository
+import pe.modaviva.app.domain.repository.PortadaRepository
 import pe.modaviva.app.ui.format.formatearSoles
 import java.time.Clock
 import java.time.Instant
@@ -29,6 +30,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val catalogo: CatalogoRepository,
+    portadas: PortadaRepository,
     private val cartRepository: CartRepository,
     conexion: MonitorDeConexion,
     private val reloj: Clock,
@@ -54,7 +56,21 @@ class HomeViewModel @Inject constructor(
             .catch { emit(Sincronizacion.ERROR) }
     }
 
-    val uiState: StateFlow<HomeUiState> = combine(
+    /**
+     * Portada de la copia local, al día con el servidor mientras Inicio está
+     * en pantalla. Un error de la portada no afecta al catálogo: se sigue
+     * mostrando la última guardada.
+     */
+    private val portada = combine(
+        portadas.portada,
+        reintentos.flatMapLatest {
+            portadas.sincronizarEnTiempoReal()
+                .onStart { emit(Unit) }
+                .catch { emit(Unit) }
+        },
+    ) { portada, _ -> portada }
+
+    private val catalogoUi: Flow<HomeUiState> = combine(
         catalogo.prendas,
         catalogo.ultimaActualizacion,
         conexion.conectado,
@@ -79,6 +95,10 @@ class HomeViewModel @Inject constructor(
             ultimaActualizacion = ultimaActualizacion,
             refrescando = refrescando,
         )
+    }
+
+    val uiState: StateFlow<HomeUiState> = combine(catalogoUi, portada) { estado, portada ->
+        estado.copy(portada = portada)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
     /** Pull-to-refresh (HU-04 CA-05). */

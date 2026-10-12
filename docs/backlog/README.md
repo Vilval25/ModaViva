@@ -37,12 +37,12 @@ estos archivos al cerrar cada hito; entre hitos no se edita.
 
 | Historia | Épica | Encargado | Semanas | Criterios |
 | :--- | :--- | :--- | :--- | :---: |
-| [HT-01 — Diseño base con Material Design 3](HT-01-diseno-base-con-material-design-3.md) | E0 | Vila | SEM 5 | 6/9 |
+| [HT-01 — Diseño base con Material Design 3](HT-01-diseno-base-con-material-design-3.md) | E0 | Vila | SEM 5 | 4/9 |
 | [HT-02 — Infraestructura Firebase y carga de datos existentes](HT-02-infraestructura-firebase-y-carga-de-datos-existentes.md) | E0 | Vila | SEM 5 – SEM 6 | 7/7 |
 | [HU-01 — Registro de la cuenta](HU-01-registro-de-la-cuenta.md) | E1 | Perez | SEM 5 | 0/10 |
 | [HU-02 — Inicio de sesión y recuperación de contraseña](HU-02-inicio-de-sesion-y-recuperacion-de-contrasena.md) | E1 | Perez | SEM 5 – SEM 6 | 0/12 |
 | [HU-03 — Perfil del cliente](HU-03-perfil-del-cliente.md) | E1 | Perez | SEM 6 | 0/7 |
-| [HU-04 — Consulta del catálogo publicado](HU-04-consulta-del-catalogo-publicado.md) | E2 | Vila | SEM 6 | 8/8 |
+| [HU-04 — Consulta del catálogo publicado](HU-04-consulta-del-catalogo-publicado.md) | E2 | Vila | SEM 6 | 8/10 |
 | [HU-05 — Visualización de disponibilidad de las prendas](HU-05-visualizacion-de-disponibilidad-de-las-prendas.md) | E2 | Rojas | SEM 6 | 0/5 |
 | [HU-06 — Exploración y búsqueda del catálogo](HU-06-exploracion-y-busqueda-del-catalogo.md) | E3 | Rojas | SEM 6 – SEM 7 | 0/7 |
 | [HU-07 — Detalle de la prenda](HU-07-detalle-de-la-prenda.md) | E3 | Rojas | SEM 7 | 0/5 |
@@ -89,6 +89,17 @@ respecto a la versión anterior".
   pedidos), porque Material 3 recomienda de 3 a 5 destinos. Carrito se abre desde un
   ícono en la barra superior de Inicio, que queda así, de izquierda a derecha:
   Notificaciones, buscador, Favoritos y Carrito.
+- **Rediseño editorial (HT-01, HU-04):** el Probador pasa al centro de la
+  barra inferior y Perfil al final (Inicio, Categorías, Probador, Mis pedidos,
+  Perfil). La barra superior de Inicio muestra Notificaciones, el nombre de la
+  tienda al centro, Favoritos y Carrito, con el buscador debajo. HT-01 CA-04 y
+  CA-05 se reescriben y se vuelven a verificar.
+- **Inicio como vitrina (HU-04, HU-06):** Inicio muestra contenido elegido
+  por la tienda y nunca resultados de búsqueda: portada de campaña
+  configurable desde Firestore (`inicio/portada`), accesos por público
+  (Mujer, Hombre, Niños), Ofertas y Novedades (HU-04 CA-09 y CA-10, nuevos).
+  La búsqueda, Categorías y los accesos de Inicio llevarán a un mismo listado
+  de prendas con filtros (HU-06, por acordar con Rojas).
 - **Prenda única de un solo color (HU-04, HU-05, HU-07, HU-09; modelo de datos):**
   cada producto del catálogo es una prenda única con un solo color. El color se
   muestra y sirve para buscar y filtrar (HU-06), pero no se elige: el cliente

@@ -1,9 +1,12 @@
 package pe.modaviva.app.ui.home
 
+import pe.modaviva.app.domain.model.Portada
 import java.time.Instant
 
 data class HomeUiState(
     val contenido: ContenidoHome = ContenidoHome.CARGANDO,
+    /** Campaña destacada de la vitrina; null = Inicio sin portada. */
+    val portada: Portada? = null,
     val prendas: List<PrendaUi> = emptyList(),
     /** Prendas en promoción y con stock, para la fila de destacados. */
     val destacados: List<PrendaUi> = emptyList(),

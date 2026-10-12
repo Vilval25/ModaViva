@@ -16,7 +16,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import pe.modaviva.app.R
 
 /**
- * Pestañas de la barra inferior, en el orden que exige HT-01 CA-04. El ícono
+ * Pestañas de la barra inferior, en el orden de HT-01 CA-04: el Probador,
+ * propuesta central de la app, va al medio y Perfil al final. El ícono
  * relleno marca la pestaña actual y el delineado las demás.
  */
 enum class TopLevelDestination(
@@ -37,12 +38,6 @@ enum class TopLevelDestination(
         Icons.Filled.Category,
         Icons.Outlined.Category,
     ),
-    PROFILE(
-        "profile",
-        R.string.tab_profile,
-        Icons.Filled.Person,
-        Icons.Outlined.Person,
-    ),
     FITTING(
         "fitting",
         R.string.tab_fitting,
@@ -54,5 +49,11 @@ enum class TopLevelDestination(
         R.string.tab_orders,
         Icons.AutoMirrored.Filled.ReceiptLong,
         Icons.AutoMirrored.Outlined.ReceiptLong,
+    ),
+    PROFILE(
+        "profile",
+        R.string.tab_profile,
+        Icons.Filled.Person,
+        Icons.Outlined.Person,
     ),
 }

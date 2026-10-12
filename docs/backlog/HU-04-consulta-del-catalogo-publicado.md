@@ -40,6 +40,8 @@ Al abrir la app se muestra directamente Inicio con el catálogo, sin pedir inici
 - [x] **CA-06** Dado que veo el catálogo, cuando reviso una tarjeta, entonces muestra foto, nombre y precio vigente.
 - [x] **CA-07** Dado que no tengo conexión, cuando abro Inicio, entonces veo la última versión guardada y un banner con la fecha y hora de la última actualización.
 - [x] **CA-08** Dado que el precio de una prenda cambió en el servidor, cuando la consulto con conexión, entonces veo el precio nuevo y no el guardado en caché.
+- [ ] **CA-09** Dado que la tienda definió una portada de campaña activa en el back-office, cuando abro Inicio, entonces la veo arriba con su foto, título y acción; si la desactiva o cambia, Inicio lo refleja sin publicar otra versión de la app.
+- [ ] **CA-10** Dado que estoy en Inicio, cuando veo la vitrina, entonces encuentro accesos por público (Mujer, Hombre, Niños) y las secciones Ofertas y Novedades, y ninguna búsqueda se muestra dentro de Inicio.
 
 ## Tecnologías
 
