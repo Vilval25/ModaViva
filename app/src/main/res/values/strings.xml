@@ -117,7 +117,10 @@
     <string name="tab_fitting">Probador</string>
     <string name="tab_orders">Mis pedidos</string>
 
-    <string name="home_search_hint">Buscar prendas</string>
+    <string name="home_search_hint">Buscar prendas, marcas…</string>
+    <string name="home_audience_women">Mujer</string>
+    <string name="home_audience_men">Hombre</string>
+    <string name="home_audience_kids">Niños</string>
 
     <!-- Catálogo (HU-04) -->
     <string name="catalog_featured">Ofertas</string>

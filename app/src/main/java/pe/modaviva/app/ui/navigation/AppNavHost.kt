@@ -178,6 +178,11 @@ private fun NavGraphBuilder.topLevelGraph(
                 navController.navigate(Routes.CART)
             },
             onPrendaClick = { codigo -> navController.navigate(Routes.prenda(codigo)) },
+            // Por ahora abren la pestaña Categorías. Cuando exista el listado
+            // compartido con filtro inicial (HU-06), irán directo a la
+            // categoría o al público elegidos.
+            onPortadaClick = { navController.navigateToTab(TopLevelDestination.CATEGORIES) },
+            onAudienciaClick = { navController.navigateToTab(TopLevelDestination.CATEGORIES) },
         )
     }
     composable(TopLevelDestination.CATEGORIES.route) {

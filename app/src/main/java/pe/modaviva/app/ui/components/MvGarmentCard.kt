@@ -1,6 +1,7 @@
 package pe.modaviva.app.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -17,8 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,7 +26,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -35,6 +36,10 @@ import pe.modaviva.app.R
 
 /**
  * Tarjeta de prenda para el catálogo, las búsquedas y Favoritos.
+ *
+ * Estilo editorial: sin caja, la foto con esquinas redondeadas manda y debajo
+ * van marca, nombre y precio. El precio de oferta usa el color terciario
+ * (terracota), reservado para promociones.
  *
  * La imagen llega como contenido ([image]) para que la tarjeta no dependa de
  * cómo se cargan las fotos; quien la usa pone ahí su AsyncImage. Los precios
@@ -58,18 +63,16 @@ fun MvGarmentCard(
     onFavoriteClick: () -> Unit = {},
     image: @Composable BoxScope.() -> Unit = { GarmentImagePlaceholder() },
 ) {
-    Card(
-        onClick = onClick,
-        modifier = modifier,
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        ),
+    Column(
+        modifier = modifier
+            .clip(MaterialTheme.shapes.large)
+            .clickable(onClick = onClick, role = Role.Button),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(3f / 4f),
+                .aspectRatio(4f / 5f)
+                .clip(MaterialTheme.shapes.large),
         ) {
             image()
             if (isSoldOut) {
@@ -109,8 +112,8 @@ fun MvGarmentCard(
             }
         }
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(start = 4.dp, end = 4.dp, top = 10.dp, bottom = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             if (brand != null) {
                 Text(
@@ -136,7 +139,7 @@ fun MvGarmentCard(
                     text = price,
                     style = MaterialTheme.typography.titleMedium,
                     color = if (originalPrice != null) {
-                        MaterialTheme.colorScheme.primary
+                        MaterialTheme.colorScheme.tertiary
                     } else {
                         MaterialTheme.colorScheme.onSurface
                     },
@@ -183,21 +186,15 @@ fun GarmentImagePlaceholder(modifier: Modifier = Modifier) {
 @Composable
 fun MvGarmentCardSkeleton(modifier: Modifier = Modifier) {
     val relleno = MaterialTheme.colorScheme.surfaceContainerHigh
-    Card(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        ),
-    ) {
+    Column(modifier = modifier) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(3f / 4f)
-                .background(relleno),
+                .aspectRatio(4f / 5f)
+                .background(relleno, MaterialTheme.shapes.large),
         )
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(start = 4.dp, end = 4.dp, top = 10.dp, bottom = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Box(
