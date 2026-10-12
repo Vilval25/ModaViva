@@ -135,6 +135,13 @@
 
     <string name="search_title">Buscar</string>
     <string name="favorites_title">Favoritos</string>
+    <string name="favorites_empty_title">Aún no tienes favoritos</string>
+    <string name="favorites_empty_body">Toca el corazón de una prenda para guardarla aquí y encontrarla rápido.</string>
+    <string name="favorites_go_home">Ir a Inicio</string>
+    <string name="favorites_removed">Se quitó de Favoritos</string>
+    <string name="favorites_undo">Deshacer</string>
+    <string name="favorites_unavailable_name">Prenda retirada</string>
+    <string name="favorites_unavailable_message">Esta prenda ya no está a la venta.</string>
     <string name="notifications_title">Notificaciones</string>
     <string name="cart_title">Carrito</string>
     <string name="fitting_title">Probador virtual</string>
@@ -164,6 +171,7 @@
     <string name="state_offline_body">Revisa tu conexión a internet e inténtalo de nuevo.</string>
     <string name="state_retry">Reintentar</string>
     <string name="garment_sold_out">Agotado</string>
+    <string name="garment_unavailable">Ya no disponible</string>
     <string name="dialog_cancel">Cancelar</string>
 
     <string name="cd_back">Volver</string>

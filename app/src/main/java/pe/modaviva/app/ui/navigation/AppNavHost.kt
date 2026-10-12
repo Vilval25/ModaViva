@@ -8,12 +8,12 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Checkroom
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,6 +43,10 @@ import pe.modaviva.app.ui.auth.verify.EmailVerifyScreen
 import pe.modaviva.app.ui.cart.CartScreen
 import pe.modaviva.app.ui.categories.CategoriesScreen
 import pe.modaviva.app.ui.components.MvAuthPromptBottomSheet
+import pe.modaviva.app.ui.favorites.Favoritos
+import pe.modaviva.app.ui.favorites.FavoritesScreen
+import pe.modaviva.app.ui.favorites.LocalFavoritos
+import pe.modaviva.app.ui.favorites.MarcarFavoritoViewModel
 import pe.modaviva.app.ui.home.HomeScreen
 import pe.modaviva.app.ui.orders.OrderHistoryScreen
 import pe.modaviva.app.ui.placeholder.ComingSoonScreen
@@ -65,8 +69,10 @@ import pe.modaviva.app.ui.theme.ModaVivaTheme
 @Composable
 fun AppNavHost(
     sessionViewModel: SessionViewModel = hiltViewModel(),
+    marcarFavorito: MarcarFavoritoViewModel = hiltViewModel(),
 ) {
     val currentUser by sessionViewModel.currentUser.collectAsStateWithLifecycle()
+    val codigosFavoritos by marcarFavorito.codigos.collectAsStateWithLifecycle()
 
     var showAuthPrompt by remember { mutableStateOf(false) }
     var authPromptMessage by remember { mutableStateOf("") }
@@ -87,6 +93,20 @@ fun AppNavHost(
         }
     }
 
+    // Corazón de tarjetas y fichas (HU-08). Un invitado ve el aviso de
+    // iniciar sesión, y la prenda se marca si entra desde ahí (CA-08).
+    val favoritos = remember(codigosFavoritos, currentUser) {
+        Favoritos(codigosFavoritos) { codigo ->
+            if (currentUser == null) {
+                marcarFavorito.marcarAlIniciarSesion(codigo)
+                authPromptMessage = favoritesPrompt
+                showAuthPrompt = true
+            } else {
+                marcarFavorito.alternar(codigo)
+            }
+        }
+    }
+
     ModaVivaTheme {
         val navController = rememberNavController()
         val backStackEntry by navController.currentBackStackEntryAsState()
@@ -94,57 +114,62 @@ fun AppNavHost(
             backStackEntry?.destination?.hierarchy?.any { it.route == tab.route } == true
         }
 
-        Scaffold(
-            contentWindowInsets = WindowInsets(0),
-            bottomBar = {
-                if (currentTab != null) {
-                    AppBottomBar(
-                        current = currentTab,
-                        onSelect = { tab ->
-                            when (tab) {
-                                TopLevelDestination.FITTING -> {
-                                    requireAuth(fittingPrompt) {
-                                        navController.navigateToTab(tab)
+        CompositionLocalProvider(LocalFavoritos provides favoritos) {
+            Scaffold(
+                contentWindowInsets = WindowInsets(0),
+                bottomBar = {
+                    if (currentTab != null) {
+                        AppBottomBar(
+                            current = currentTab,
+                            onSelect = { tab ->
+                                when (tab) {
+                                    TopLevelDestination.FITTING -> {
+                                        requireAuth(fittingPrompt) {
+                                            navController.navigateToTab(tab)
+                                        }
                                     }
-                                }
-                                TopLevelDestination.ORDERS -> {
-                                    requireAuth(ordersPrompt) {
-                                        navController.navigateToTab(tab)
+                                    TopLevelDestination.ORDERS -> {
+                                        requireAuth(ordersPrompt) {
+                                            navController.navigateToTab(tab)
+                                        }
                                     }
+                                    else -> navController.navigateToTab(tab)
                                 }
-                                else -> navController.navigateToTab(tab)
-                            }
-                        },
+                            },
+                        )
+                    }
+                },
+            ) { innerPadding ->
+                NavHost(
+                    navController = navController,
+                    startDestination = TopLevelDestination.HOME.route,
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .consumeWindowInsets(innerPadding),
+                ) {
+                    topLevelGraph(
+                        navController = navController,
+                        requireAuth = requireAuth,
+                        notificationsPrompt = notificationsPrompt,
+                        favoritesPrompt = favoritesPrompt,
+                        cartPrompt = cartPrompt,
                     )
+                    overlayGraph(
+                        navController = navController,
+                        requireAuth = requireAuth,
+                        cartPrompt = cartPrompt,
+                    )
+                    authGraph(navController)
                 }
-            },
-        ) { innerPadding ->
-            NavHost(
-                navController = navController,
-                startDestination = TopLevelDestination.HOME.route,
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .consumeWindowInsets(innerPadding),
-            ) {
-                topLevelGraph(
-                    navController = navController,
-                    requireAuth = requireAuth,
-                    notificationsPrompt = notificationsPrompt,
-                    favoritesPrompt = favoritesPrompt,
-                    cartPrompt = cartPrompt,
-                )
-                overlayGraph(
-                    navController = navController,
-                    requireAuth = requireAuth,
-                    cartPrompt = cartPrompt,
-                )
-                authGraph(navController)
             }
         }
 
         if (showAuthPrompt) {
             MvAuthPromptBottomSheet(
-                onDismiss = { showAuthPrompt = false },
+                onDismiss = {
+                    showAuthPrompt = false
+                    marcarFavorito.olvidarPendiente()
+                },
                 onLoginClick = {
                     showAuthPrompt = false
                     navController.navigate(Routes.LOGIN)
@@ -245,10 +270,12 @@ private fun NavGraphBuilder.overlayGraph(
         )
     }
     composable(Routes.FAVORITES) {
-        ComingSoonScreen(
-            title = stringResource(R.string.favorites_title),
-            icon = Icons.Outlined.FavoriteBorder,
+        FavoritesScreen(
             onBack = { navController.popBackStack() },
+            onPrendaClick = { codigo -> navController.navigate(Routes.prenda(codigo)) },
+            onGoToHome = {
+                navController.popBackStack(TopLevelDestination.HOME.route, inclusive = false)
+            },
         )
     }
     composable(Routes.NOTIFICATIONS) {

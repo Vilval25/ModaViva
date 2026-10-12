@@ -72,9 +72,32 @@ class MigracionesTest {
     }
 
     @Test
+    fun de7a8CreaFavoritosYConservaElCarrito() {
+        helper.createDatabase(BASE, 7).use { db ->
+            db.execSQL(
+                "INSERT INTO carrito (varianteId, prendaId, talla, colorNombre, colorHex, " +
+                    "cantidad, agregadoEnMillis, precioAlAgregar) " +
+                    "VALUES ('AB-1002-M', 'AB-1002', 'M', 'Negro', '#000000', 1, 1700000000000, 349.9)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(BASE, 8, true, Migraciones.DE_7_A_8).use { db ->
+            db.execSQL("INSERT INTO favoritos (prendaId, agregadoEnMillis) VALUES ('AB-1002', 1700000000000)")
+            db.query("SELECT COUNT(*) FROM favoritos").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(1, cursor.getInt(0))
+            }
+            db.query("SELECT COUNT(*) FROM carrito").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(1, cursor.getInt(0))
+            }
+        }
+    }
+
+    @Test
     fun todasLasMigracionesLleganALaVersionActual() {
         helper.createDatabase(BASE, 5).close()
-        helper.runMigrationsAndValidate(BASE, 7, true, *Migraciones.TODAS).close()
+        helper.runMigrationsAndValidate(BASE, 8, true, *Migraciones.TODAS).close()
     }
 
     private companion object {

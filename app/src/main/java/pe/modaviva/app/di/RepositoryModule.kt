@@ -9,6 +9,7 @@ import pe.modaviva.app.data.network.MonitorDeConexionAndroid
 import pe.modaviva.app.data.repository.FirebaseAuthRepository
 import pe.modaviva.app.data.repository.FirebaseBackendRepository
 import pe.modaviva.app.data.repository.FirestoreCatalogoRepository
+import pe.modaviva.app.data.repository.FirestoreFavoritosRepository
 import pe.modaviva.app.data.repository.FirestorePortadaRepository
 import pe.modaviva.app.data.repository.FirestoreStockRepository
 import pe.modaviva.app.data.repository.FirestoreTiendaRepository
@@ -18,6 +19,7 @@ import pe.modaviva.app.domain.repository.AuthRepository
 import pe.modaviva.app.domain.repository.BackendRepository
 import pe.modaviva.app.domain.repository.CartRepository
 import pe.modaviva.app.domain.repository.CatalogoRepository
+import pe.modaviva.app.domain.repository.FavoritosRepository
 import pe.modaviva.app.domain.repository.PortadaRepository
 import pe.modaviva.app.domain.repository.SessionRepository
 import pe.modaviva.app.domain.repository.StockRepository
@@ -79,4 +81,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindPortadaRepository(impl: FirestorePortadaRepository): PortadaRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFavoritosRepository(impl: FirestoreFavoritosRepository): FavoritosRepository
 }

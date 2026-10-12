@@ -44,6 +44,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import pe.modaviva.app.domain.model.Prenda
 import pe.modaviva.app.ui.components.MvGarmentCard
+import pe.modaviva.app.ui.favorites.LocalFavoritos
 import pe.modaviva.app.ui.format.formatearSoles
 import java.time.Clock
 import java.time.Instant
@@ -561,6 +562,7 @@ private fun TarjetaResultado(
     onClick: () -> Unit,
 ) {
     val ahora = Instant.now(Clock.systemDefaultZone())
+    val favoritos = LocalFavoritos.current
 
     MvGarmentCard(
         name = prenda.nombre,
@@ -572,6 +574,8 @@ private fun TarjetaResultado(
             null
         },
         isSoldOut = prenda.agotada,
+        isFavorite = favoritos?.contiene(prenda.codigo),
+        onFavoriteClick = { favoritos?.alternar(prenda.codigo) },
         onClick = onClick,
         image = {
             AsyncImage(

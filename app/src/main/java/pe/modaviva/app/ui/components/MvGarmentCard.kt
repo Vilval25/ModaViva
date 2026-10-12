@@ -20,12 +20,14 @@ import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -48,6 +50,8 @@ import pe.modaviva.app.R
  * @param brand marca, sobre el nombre; null la oculta.
  * @param originalPrice precio anterior, solo si hay promoción; se muestra tachado.
  * @param isFavorite null oculta el corazón (p. ej. donde no aplica).
+ * @param isUnavailable la prenda ya no se vende (Favoritos, HU-08 CA-03): la
+ *   foto se atenúa y el precio se reemplaza por el aviso "Ya no disponible".
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -59,6 +63,7 @@ fun MvGarmentCard(
     brand: String? = null,
     originalPrice: String? = null,
     isSoldOut: Boolean = false,
+    isUnavailable: Boolean = false,
     isFavorite: Boolean? = null,
     onFavoriteClick: () -> Unit = {},
     image: @Composable BoxScope.() -> Unit = { GarmentImagePlaceholder() },
@@ -74,8 +79,13 @@ fun MvGarmentCard(
                 .aspectRatio(4f / 5f)
                 .clip(MaterialTheme.shapes.large),
         ) {
-            image()
-            if (isSoldOut) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(if (isUnavailable) 0.45f else 1f),
+                content = image,
+            )
+            if (isSoldOut && !isUnavailable) {
                 Surface(
                     modifier = Modifier
                         .align(Alignment.TopStart)
@@ -92,11 +102,17 @@ fun MvGarmentCard(
                 }
             }
             if (isFavorite != null) {
+                // Fondo claro translúcido: se lee sobre cualquier foto sin
+                // competir con ella.
                 FilledTonalIconButton(
                     onClick = onFavoriteClick,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(4.dp),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                    ),
                 ) {
                     Icon(
                         imageVector = if (isFavorite) {
@@ -130,6 +146,14 @@ fun MvGarmentCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+            if (isUnavailable) {
+                Text(
+                    text = stringResource(R.string.garment_unavailable),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                return@Column
+            }
             // FlowRow: si no caben juntos, el precio tachado baja de línea entero.
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
