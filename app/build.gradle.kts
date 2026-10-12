@@ -59,6 +59,13 @@ room {
 }
 
 dependencies {
+    constraints {
+        // room-testing (MigracionesTest) se compiló con kotlinx-serialization
+        // 1.8; Firebase trae la 1.7.3 y las pruebas en el teléfono fallaban con
+        // AbstractMethodError. La 1.8 es compatible con lo que usa la app.
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1")
+    }
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
