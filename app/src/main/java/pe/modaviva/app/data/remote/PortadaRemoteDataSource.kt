@@ -40,6 +40,7 @@ class PortadaRemoteDataSource @Inject constructor(
             imagenUrl = (data["imagenUrl"] as? String)?.takeIf { it.isNotBlank() } ?: return null,
             accion = data["accion"] as? String ?: "",
             categoria = data["categoria"] as? String ?: "",
+            marca = (data["marca"] as? String)?.takeIf { it.isNotBlank() },
         )
     }
 

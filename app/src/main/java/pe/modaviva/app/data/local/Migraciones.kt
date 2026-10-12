@@ -25,5 +25,12 @@ object Migraciones {
         }
     }
 
-    val TODAS: Array<Migration> = arrayOf(DE_5_A_6)
+    /** 6 → 7: la portada puede llevar a una marca (HU-04). */
+    val DE_6_A_7 = object : Migration(6, 7) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `portada` ADD COLUMN `marca` TEXT")
+        }
+    }
+
+    val TODAS: Array<Migration> = arrayOf(DE_5_A_6, DE_6_A_7)
 }

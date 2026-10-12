@@ -9,6 +9,8 @@ data class Portada(
     val titulo: String,
     val imagenUrl: String,
     val accion: String,
-    /** Slug de la categoría que abre la portada. */
+    /** Slug de la categoría que abre la portada si no tiene [marca]. */
     val categoria: String,
+    /** Si está, Descubrir abre el catálogo filtrado por esta marca. */
+    val marca: String? = null,
 )

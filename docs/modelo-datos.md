@@ -308,7 +308,8 @@ versión de la app. La app guarda una copia en Room para mostrarla sin conexión
 | `titulo` | string | Obligatorio. |
 | `imagenUrl` | string | Obligatorio. URL de descarga de Storage. |
 | `accion` | string | Texto del enlace, p. ej. "Descubrir". |
-| `categoria` | string | Slug de la categoría que abre la portada. |
+| `categoria` | string | Slug de la categoría que abre la portada si no tiene `marca`. |
+| `marca` | string \| null | Si está, Descubrir abre el catálogo filtrado por esta marca. |
 | `activa` | boolean | `false` = Inicio se muestra sin portada. |
 | `actualizadaEn` | timestamp | |
 

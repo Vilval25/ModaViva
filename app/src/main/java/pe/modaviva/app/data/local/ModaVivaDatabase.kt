@@ -20,7 +20,7 @@ import pe.modaviva.app.domain.model.MedidasPrenda
  */
 @Database(
     entities = [PrendaEntity::class, SincronizacionEntity::class, CartEntity::class, PortadaEntity::class],
-    version = 6,
+    version = 7,
     exportSchema = true,
 )
 @TypeConverters(Convertidores::class)
