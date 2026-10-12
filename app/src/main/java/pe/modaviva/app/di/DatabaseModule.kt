@@ -9,6 +9,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import pe.modaviva.app.data.local.CartDao
 import pe.modaviva.app.data.local.CatalogoDao
+import pe.modaviva.app.data.local.Migraciones
 import pe.modaviva.app.data.local.ModaVivaDatabase
 import java.time.Clock
 import javax.inject.Singleton
@@ -21,9 +22,12 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): ModaVivaDatabase =
         Room.databaseBuilder(context, ModaVivaDatabase::class.java, "modaviva.db")
-            // Solo hay copias de datos del servidor: ante un cambio de esquema
-            // se borra y se vuelve a descargar (ver ModaVivaDatabase).
-            .fallbackToDestructiveMigration(dropAllTables = true)
+            .addMigrations(*Migraciones.TODAS)
+            // Las versiones 1 a 4 no guardaron su esquema, así que no se
+            // pueden migrar: esas bases (solo de desarrollo) se borran una
+            // vez. Desde la 5, un cambio sin migración hace fallar la app en
+            // vez de borrar datos en silencio.
+            .fallbackToDestructiveMigrationFrom(true, 1, 2, 3, 4)
             .build()
 
     @Provides
