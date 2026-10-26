@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -91,6 +92,10 @@ fun ProductDetailScreen(
 
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val tieneConsentimiento = currentUser?.tieneConsentimientoProbador == true
+    val disabledCategories by viewModel.disabledCategories.collectAsStateWithLifecycle()
+    val prendaHabilitada = remember(prenda, disabledCategories) {
+        prenda?.let { viewModel.isPrendaHabilitadaParaProbador(it) } ?: true
+    }
     val cartItemCount by viewModel.cartItemCount.collectAsStateWithLifecycle()
     val allStocks by stockViewModel.stocksMap.collectAsStateWithLifecycle()
     val tiendas by stockViewModel.tiendas.collectAsStateWithLifecycle()
@@ -430,40 +435,91 @@ fun ProductDetailScreen(
                 Text(textoBoton)
             }
 
-            // CA-05: Botón "Probarme" con indicador de que requiere consentimiento si no lo ha otorgado
-            OutlinedButton(
-                onClick = {
-                    if (!tieneConsentimiento) {
-                        scope.launch {
-                            val res = snackbarHostState.showSnackbar(
-                                message = "El probador virtual requiere consentimiento de fotografía (Ley N° 29733)",
-                                actionLabel = "Ir al probador",
-                                duration = SnackbarDuration.Long,
+            // HU-16 CA-01 y CA-02: Si la prenda pertenece a una categoría no habilitada,
+            // no aparece "Probarme" y se muestra un mensaje breve con la política y enlace a medidas.
+            if (!prendaHabilitada) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    ),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp),
                             )
-                            if (res == SnackbarResult.ActionPerformed) {
-                                onFittingClick()
-                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(R.string.fitting_disabled_policy_title),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
-                    } else {
-                        onFittingClick()
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(R.string.fitting_disabled_policy_message),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        // CA-02: Al tocar 'Ver tabla de medidas', se abre la tabla de medidas de la prenda
+                        TextButton(
+                            onClick = { mostrarMedidas = true },
+                            modifier = Modifier.align(Alignment.End),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.fitting_view_measurements_table),
+                                style = MaterialTheme.typography.labelLarge,
+                            )
+                        }
                     }
-                },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Checkroom,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = stringResource(R.string.fitting_btn_try_on))
-                if (!tieneConsentimiento) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "(${stringResource(R.string.fitting_consent_declined_badge)})",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
+                }
+            } else {
+                // CA-05: Botón "Probarme" con indicador de que requiere consentimiento si no lo ha otorgado
+                OutlinedButton(
+                    onClick = {
+                        if (!tieneConsentimiento) {
+                            scope.launch {
+                                val res = snackbarHostState.showSnackbar(
+                                    message = "El probador virtual requiere consentimiento de fotografía (Ley N° 29733)",
+                                    actionLabel = "Ir al probador",
+                                    duration = SnackbarDuration.Long,
+                                )
+                                if (res == SnackbarResult.ActionPerformed) {
+                                    onFittingClick()
+                                }
+                            }
+                        } else {
+                            onFittingClick()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Checkroom,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = stringResource(R.string.fitting_btn_try_on))
+                    if (!tieneConsentimiento) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "(${stringResource(R.string.fitting_consent_declined_badge)})",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
                 }
             }
         }

@@ -13,6 +13,7 @@ import pe.modaviva.app.domain.model.Prenda
 import pe.modaviva.app.domain.model.UserProfile
 import pe.modaviva.app.domain.repository.CartRepository
 import pe.modaviva.app.domain.repository.CatalogoRepository
+import pe.modaviva.app.domain.repository.FittingConfigRepository
 import pe.modaviva.app.domain.repository.SessionRepository
 import java.time.Instant
 import javax.inject.Inject
@@ -22,9 +23,12 @@ class ProductDetailViewModel @Inject constructor(
     catalogoRepository: CatalogoRepository,
     private val cartRepository: CartRepository,
     sessionRepository: SessionRepository,
+    private val fittingConfigRepository: FittingConfigRepository,
 ) : ViewModel() {
 
     val currentUser: StateFlow<UserProfile?> = sessionRepository.currentUser
+
+    val disabledCategories: StateFlow<Set<String>> = fittingConfigRepository.disabledCategories
 
     private val prendas: Flow<List<Prenda>> = catalogoRepository.prendas
 
@@ -37,6 +41,13 @@ class ProductDetailViewModel @Inject constructor(
                 prenda.codigo == codigo
             }
         }
+    }
+
+    /**
+     * HU-16 CA-01 y CA-04: Verifica si la prenda puede probarse en el probador virtual.
+     */
+    fun isPrendaHabilitadaParaProbador(prenda: Prenda): Boolean {
+        return fittingConfigRepository.isPrendaHabilitadaParaProbador(prenda)
     }
 
     /**

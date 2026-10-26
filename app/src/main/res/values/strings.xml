@@ -179,6 +179,13 @@
     <string name="fitting_consent_revocation_body">Al revocar el consentimiento, el probador virtual quedará deshabilitado y se programará la eliminación de tus fotografías conforme a la Ley N° 29733.</string>
     <string name="fitting_consent_revocation_confirm">Revocar</string>
     <string name="fitting_consent_revoked_success">Consentimiento del probador revocado correctamente</string>
+
+    <!-- Prendas no habilitadas para el probador virtual (HU-16) -->
+    <string name="fitting_disabled_policy_title">No disponible en el probador virtual</string>
+    <string name="fitting_disabled_policy_message">Esta prenda no está disponible en el probador virtual por motivos de higiene y política de la tienda.</string>
+    <string name="fitting_view_measurements_table">Ver tabla de medidas</string>
+    <string name="fitting_disabled_badge">No disponible para probar</string>
+
     <string name="coming_soon_title">Próximamente</string>
     <string name="coming_soon_body">Estamos trabajando en esta sección.</string>
 
