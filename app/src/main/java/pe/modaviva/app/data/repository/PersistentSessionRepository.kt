@@ -115,6 +115,10 @@ class PersistentSessionRepository @Inject constructor(
             val tieneConsentimiento =
                 consentimiento != null && !consentimiento["version"]?.toString().isNullOrBlank()
 
+            val consentimientoProbador = data["consentimientoProbador"] as? Map<*, *>
+            val probadorAceptado = consentimientoProbador?.get("aceptado") as? Boolean ?: false
+            val probadorVersion = consentimientoProbador?.get("version") as? String
+
             val remoteProfile = UserProfile(
                 uid = uid,
                 nombres = data["nombres"] as? String ?: "",
@@ -125,6 +129,8 @@ class PersistentSessionRepository @Inject constructor(
                 emailVerificado = isVerified,
                 consentimientoAceptado = tieneConsentimiento,
                 isGoogleUser = isGoogleUser,
+                consentimientoProbadorAceptado = probadorAceptado,
+                consentimientoProbadorVersion = probadorVersion,
             )
 
             saveCachedProfile(remoteProfile)
@@ -172,6 +178,12 @@ class PersistentSessionRepository @Inject constructor(
             json.put("emailVerificado", emailVerificado)
             json.put("consentimientoAceptado", consentimientoAceptado)
             json.put("isGoogleUser", isGoogleUser)
+            json.put("consentimientoProbadorAceptado", consentimientoProbadorAceptado)
+            if (consentimientoProbadorVersion != null) {
+                json.put("consentimientoProbadorVersion", consentimientoProbadorVersion)
+            } else {
+                json.put("consentimientoProbadorVersion", JSONObject.NULL)
+            }
             return json.toString()
         }
 
@@ -188,6 +200,8 @@ class PersistentSessionRepository @Inject constructor(
                     emailVerificado = json.optBoolean("emailVerificado", false),
                     consentimientoAceptado = json.optBoolean("consentimientoAceptado", false),
                     isGoogleUser = json.optBoolean("isGoogleUser", false),
+                    consentimientoProbadorAceptado = json.optBoolean("consentimientoProbadorAceptado", false),
+                    consentimientoProbadorVersion = if (json.isNull("consentimientoProbadorVersion")) null else json.optString("consentimientoProbadorVersion").ifBlank { null },
                 )
             } catch (_: Exception) {
                 null

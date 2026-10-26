@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.LocationOn
@@ -75,15 +76,18 @@ fun SessionScreen(
     val resetError by viewModel.passwordResetError.collectAsStateWithLifecycle()
     val isUpdatingProfile by viewModel.isUpdatingProfile.collectAsStateWithLifecycle()
     val updateProfileError by viewModel.updateProfileError.collectAsStateWithLifecycle()
+    val isRevokingConsent by viewModel.isRevokingConsent.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val updateSuccessMessage = stringResource(R.string.profile_edit_success)
+    val revokedConsentSuccessMessage = stringResource(R.string.fitting_consent_revoked_success)
 
     var showSignOutConfirm by remember { mutableStateOf(false) }
     var showPersonalDataDialog by remember { mutableStateOf(false) }
     var showResetPasswordDialog by remember { mutableStateOf(false) }
     var showTermsDialog by remember { mutableStateOf(false) }
+    var showRevokeConsentConfirm by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
     var soonDialogInfo by remember { mutableStateOf<Pair<String, String>?>(null) }
 
@@ -205,6 +209,23 @@ fun SessionScreen(
                         title = stringResource(R.string.profile_item_terms),
                         subtitle = stringResource(R.string.profile_item_terms_desc),
                         onClick = { showTermsDialog = true },
+                    )
+                    ProfileItemRow(
+                        icon = Icons.Outlined.Checkroom,
+                        title = stringResource(R.string.fitting_privacy_section_title),
+                        subtitle = if (profile.tieneConsentimientoProbador) {
+                            stringResource(
+                                R.string.fitting_consent_status_active,
+                                profile.consentimientoProbadorVersion ?: "1.0",
+                            )
+                        } else {
+                            stringResource(R.string.fitting_consent_status_inactive)
+                        },
+                        onClick = {
+                            if (profile.tieneConsentimientoProbador) {
+                                showRevokeConsentConfirm = true
+                            }
+                        },
                         showDivider = false,
                     )
                 }
@@ -350,5 +371,24 @@ fun SessionScreen(
     // Diálogo Acerca de ModaViva
     if (showAboutDialog) {
         AboutModaVivaDialog(onDismiss = { showAboutDialog = false })
+    }
+
+    // Diálogo de Confirmación para Revocar Consentimiento del Probador (HU-10 CA-06)
+    if (showRevokeConsentConfirm) {
+        MvConfirmDialog(
+            title = stringResource(R.string.fitting_consent_revocation_title),
+            message = stringResource(R.string.fitting_consent_revocation_body),
+            confirmLabel = stringResource(R.string.fitting_consent_revocation_confirm),
+            destructive = true,
+            onConfirm = {
+                showRevokeConsentConfirm = false
+                viewModel.revokeProbadorConsent {
+                    scope.launch {
+                        snackbarHostState.showSnackbar(revokedConsentSuccessMessage)
+                    }
+                }
+            },
+            onDismiss = { showRevokeConsentConfirm = false },
+        )
     }
 }

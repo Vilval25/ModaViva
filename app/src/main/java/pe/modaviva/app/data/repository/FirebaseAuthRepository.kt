@@ -117,6 +117,48 @@ class FirebaseAuthRepository @Inject constructor(
         }
     }
 
+    override suspend fun acceptProbadorConsent(version: String): Result<Unit> {
+        val uid = firebaseAuth.currentUser?.uid
+            ?: return Result.failure(AuthException(AuthError.PROFILE_NOT_FOUND))
+
+        return try {
+            firestore.collection(CLIENTES).document(uid).update(
+                mapOf(
+                    "consentimientoProbador" to mapOf(
+                        "version" to version,
+                        "aceptado" to true,
+                        "aceptadoEn" to FieldValue.serverTimestamp(),
+                    ),
+                    "actualizadoEn" to FieldValue.serverTimestamp(),
+                )
+            ).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e.toAuthException())
+        }
+    }
+
+    override suspend fun revokeProbadorConsent(): Result<Unit> {
+        val uid = firebaseAuth.currentUser?.uid
+            ?: return Result.failure(AuthException(AuthError.PROFILE_NOT_FOUND))
+
+        return try {
+            firestore.collection(CLIENTES).document(uid).update(
+                mapOf(
+                    "consentimientoProbador" to mapOf(
+                        "version" to UserProfile.PROBADOR_AVISO_VERSION_ACTUAL,
+                        "aceptado" to false,
+                        "revocadoEn" to FieldValue.serverTimestamp(),
+                    ),
+                    "actualizadoEn" to FieldValue.serverTimestamp(),
+                )
+            ).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e.toAuthException())
+        }
+    }
+
     override suspend fun signOut() {
         firebaseAuth.signOut()
     }
@@ -240,6 +282,10 @@ class FirebaseAuthRepository @Inject constructor(
         val consentimiento = data["consentimiento"] as? Map<*, *>
         val tieneConsentimiento = consentimiento != null && !consentimiento["version"]?.toString().isNullOrBlank()
 
+        val consentimientoProbador = data["consentimientoProbador"] as? Map<*, *>
+        val probadorAceptado = consentimientoProbador?.get("aceptado") as? Boolean ?: false
+        val probadorVersion = consentimientoProbador?.get("version") as? String
+
         return Result.success(
             UserProfile(
                 uid = uid,
@@ -251,6 +297,8 @@ class FirebaseAuthRepository @Inject constructor(
                 emailVerificado = isVerified,
                 consentimientoAceptado = tieneConsentimiento,
                 isGoogleUser = isGoogleUser,
+                consentimientoProbadorAceptado = probadorAceptado,
+                consentimientoProbadorVersion = probadorVersion,
             )
         )
     }

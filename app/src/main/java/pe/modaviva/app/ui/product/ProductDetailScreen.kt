@@ -1,6 +1,7 @@
 package pe.modaviva.app.ui.product
 
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,11 +20,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -78,6 +81,7 @@ fun ProductDetailScreen(
     codigo: String,
     onBack: () -> Unit,
     onCartClick: () -> Unit = {},
+    onFittingClick: () -> Unit = {},
     viewModel: ProductDetailViewModel = hiltViewModel(),
     stockViewModel: StockViewModel = hiltViewModel(),
 ) {
@@ -85,6 +89,8 @@ fun ProductDetailScreen(
         .obtenerPrenda(codigo)
         .collectAsStateWithLifecycle(initialValue = null)
 
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val tieneConsentimiento = currentUser?.tieneConsentimientoProbador == true
     val cartItemCount by viewModel.cartItemCount.collectAsStateWithLifecycle()
     val allStocks by stockViewModel.stocksMap.collectAsStateWithLifecycle()
     val tiendas by stockViewModel.tiendas.collectAsStateWithLifecycle()
@@ -422,6 +428,43 @@ fun ProductDetailScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(textoBoton)
+            }
+
+            // CA-05: Botón "Probarme" con indicador de que requiere consentimiento si no lo ha otorgado
+            OutlinedButton(
+                onClick = {
+                    if (!tieneConsentimiento) {
+                        scope.launch {
+                            val res = snackbarHostState.showSnackbar(
+                                message = "El probador virtual requiere consentimiento de fotografía (Ley N° 29733)",
+                                actionLabel = "Ir al probador",
+                                duration = SnackbarDuration.Long,
+                            )
+                            if (res == SnackbarResult.ActionPerformed) {
+                                onFittingClick()
+                            }
+                        }
+                    } else {
+                        onFittingClick()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Checkroom,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = stringResource(R.string.fitting_btn_try_on))
+                if (!tieneConsentimiento) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "(${stringResource(R.string.fitting_consent_declined_badge)})",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
             }
         }
     }

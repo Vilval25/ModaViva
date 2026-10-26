@@ -23,5 +23,9 @@ interface AuthRepository {
         telefono: String?,
     ): Result<UserProfile>
 
+    suspend fun acceptProbadorConsent(version: String = "1.0"): Result<Unit>
+
+    suspend fun revokeProbadorConsent(): Result<Unit>
+
     suspend fun signOut()
 }

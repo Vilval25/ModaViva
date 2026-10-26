@@ -10,8 +10,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pe.modaviva.app.domain.model.Prenda
+import pe.modaviva.app.domain.model.UserProfile
 import pe.modaviva.app.domain.repository.CartRepository
 import pe.modaviva.app.domain.repository.CatalogoRepository
+import pe.modaviva.app.domain.repository.SessionRepository
 import java.time.Instant
 import javax.inject.Inject
 
@@ -19,7 +21,10 @@ import javax.inject.Inject
 class ProductDetailViewModel @Inject constructor(
     catalogoRepository: CatalogoRepository,
     private val cartRepository: CartRepository,
+    sessionRepository: SessionRepository,
 ) : ViewModel() {
+
+    val currentUser: StateFlow<UserProfile?> = sessionRepository.currentUser
 
     private val prendas: Flow<List<Prenda>> = catalogoRepository.prendas
 

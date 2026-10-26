@@ -79,6 +79,25 @@ class SessionViewModel @Inject constructor(
         _updateProfileError.value = null
     }
 
+    private val _isRevokingConsent = MutableStateFlow(false)
+    val isRevokingConsent: StateFlow<Boolean> = _isRevokingConsent.asStateFlow()
+
+    fun revokeProbadorConsent(onSuccess: () -> Unit) {
+        val user = currentUser.value ?: return
+        viewModelScope.launch {
+            _isRevokingConsent.value = true
+            val result = authRepository.revokeProbadorConsent()
+            _isRevokingConsent.value = false
+            result.onSuccess {
+                val updated = user.copy(
+                    consentimientoProbadorAceptado = false,
+                )
+                sessionRepository.signIn(updated)
+                onSuccess()
+            }
+        }
+    }
+
     fun signOut() {
         viewModelScope.launch {
             authRepository.signOut()

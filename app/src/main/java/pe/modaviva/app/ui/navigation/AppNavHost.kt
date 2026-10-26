@@ -47,6 +47,7 @@ import pe.modaviva.app.ui.favorites.Favoritos
 import pe.modaviva.app.ui.favorites.FavoritesScreen
 import pe.modaviva.app.ui.favorites.LocalFavoritos
 import pe.modaviva.app.ui.favorites.MarcarFavoritoViewModel
+import pe.modaviva.app.ui.fitting.FittingTab
 import pe.modaviva.app.ui.home.HomeScreen
 import pe.modaviva.app.ui.orders.OrderHistoryScreen
 import pe.modaviva.app.ui.placeholder.ComingSoonScreen
@@ -123,11 +124,6 @@ fun AppNavHost(
                             current = currentTab,
                             onSelect = { tab ->
                                 when (tab) {
-                                    TopLevelDestination.FITTING -> {
-                                        requireAuth(fittingPrompt) {
-                                            navController.navigateToTab(tab)
-                                        }
-                                    }
                                     TopLevelDestination.ORDERS -> {
                                         requireAuth(ordersPrompt) {
                                             navController.navigateToTab(tab)
@@ -242,9 +238,12 @@ private fun NavGraphBuilder.topLevelGraph(
         )
     }
     composable(TopLevelDestination.FITTING.route) {
-        ComingSoonScreen(
-            title = stringResource(R.string.fitting_title),
-            icon = Icons.Outlined.Checkroom,
+        FittingTab(
+            onLoginClick = { navController.navigate(Routes.LOGIN) },
+            onRegisterClick = { navController.navigate(Routes.REGISTER) },
+            onExploreClick = {
+                navController.popBackStack(TopLevelDestination.HOME.route, inclusive = false)
+            },
         )
     }
     composable(TopLevelDestination.ORDERS.route) {
@@ -299,6 +298,7 @@ private fun NavGraphBuilder.overlayGraph(
             codigo = codigo,
             onBack = { navController.popBackStack() },
             onCartClick = { navController.navigate(Routes.CART) },
+            onFittingClick = { navController.navigate(TopLevelDestination.FITTING.route) },
         )
     }
     composable(Routes.CART) {
