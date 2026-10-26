@@ -37,16 +37,16 @@ La app no exige cuenta para explorar. El registro se inicia desde Perfil (sin se
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que falta un campo obligatorio o alguno es inválido, cuando reviso el formulario, entonces el botón 'Crear cuenta' permanece deshabilitado y el campo muestra el motivo.
-- [ ] **CA-02** Dado que ingreso un correo que no tiene cuenta y datos válidos, cuando toco 'Crear cuenta', entonces se crean mi cuenta y mi perfil de cliente, y veo mis datos en Perfil.
-- [ ] **CA-03** Dado que el correo ingresado ya tiene una cuenta (cliente existente de la tienda o registrado antes en la app), cuando toco 'Crear cuenta', entonces no se crea una cuenta nueva y veo 'Ya tienes una cuenta con este correo' con las opciones 'Iniciar sesión' y 'Recuperar contraseña'.
-- [ ] **CA-04** Dado que la contraseña no tiene 8 o más caracteres, mayúscula, minúscula y número, cuando la escribo, entonces el indicador marca el requisito incumplido y no puedo enviar el formulario.
-- [ ] **CA-05** Dado que me registré con correo, cuando se crea la cuenta, entonces recibo un correo de verificación y la app muestra 'Verifica tu correo' con opción de reenviarlo; hasta verificar no puedo confirmar pedidos.
-- [ ] **CA-06** Dado que toco 'Continuar con Google' por primera vez y elijo una cuenta, cuando autorizo el acceso, entonces se crea mi cuenta con el nombre y el correo de Google, sin pedirme contraseña ni verificación de correo.
-- [ ] **CA-07** Dado que inicié el registro desde una acción que requiere cuenta (probador, favoritos, notificaciones, mis pedidos o pagar), cuando termino de crear la cuenta, entonces vuelvo a esa pantalla y puedo continuar con la acción.
-- [ ] **CA-08** Dado que el correo de mi cuenta de Google ya pertenece a un cliente existente, cuando continúo con Google, entonces ingreso a esa misma cuenta y no se crea un perfil duplicado.
-- [ ] **CA-09** Dado que cancelo el selector de Google o falla la conexión, cuando vuelvo a la app, entonces sigo en la pantalla de registro con un mensaje y puedo intentarlo de nuevo.
-- [ ] **CA-10** Dado que no acepto los T&C y la Política de Privacidad, cuando intento crear la cuenta (con correo o con Google), entonces no puedo continuar; si los acepto, se guardan en mi perfil la fecha y la versión aceptada.
+- [x] **CA-01** Dado que falta un campo obligatorio o alguno es inválido, cuando reviso el formulario, entonces el botón 'Crear cuenta' permanece deshabilitado y el campo muestra el motivo.
+- [x] **CA-02** Dado que ingreso un correo que no tiene cuenta y datos válidos, cuando toco 'Crear cuenta', entonces se crean mi cuenta y mi perfil de cliente, y veo mis datos en Perfil.
+- [x] **CA-03** Dado que el correo ingresado ya tiene una cuenta (cliente existente de la tienda o registrado antes en la app), cuando toco 'Crear cuenta', entonces no se crea una cuenta nueva y veo 'Ya tienes una cuenta con este correo' con las opciones 'Iniciar sesión' y 'Recuperar contraseña'.
+- [x] **CA-04** Dado que la contraseña no tiene 8 o más caracteres, mayúscula, minúscula y número, cuando la escribo, entonces el indicador marca el requisito incumplido y no puedo enviar el formulario.
+- [x] **CA-05** Dado que me registré con correo, cuando se crea la cuenta, entonces recibo un correo de verificación y la app muestra 'Verifica tu correo' con opción de reenviarlo; hasta verificar no puedo confirmar pedidos.
+- [x] **CA-06** Dado que toco 'Continuar con Google' por primera vez y elijo una cuenta, cuando autorizo el acceso, entonces se crea mi cuenta con el nombre y el correo de Google, sin pedirme contraseña ni verificación de correo.
+- [x] **CA-07** Dado que inicié el registro desde una acción que requiere cuenta (probador, favoritos, notificaciones, mis pedidos o pagar), cuando termino de crear la cuenta, entonces vuelvo a esa pantalla y puedo continuar con la acción.
+- [x] **CA-08** Dado que el correo de mi cuenta de Google ya pertenece a un cliente existente, cuando continúo con Google, entonces ingreso a esa misma cuenta y no se crea un perfil duplicado.
+- [x] **CA-09** Dado que cancelo el selector de Google o falla la conexión, cuando vuelvo a la app, entonces sigo en la pantalla de registro con un mensaje y puedo intentarlo de nuevo.
+- [x] **CA-10** Dado que no acepto los T&C y la Política de Privacidad, cuando intento crear la cuenta (con correo o con Google), entonces no puedo continuar; si los acepto, se guardan en mi perfil la fecha y la versión aceptada.
 
 ## Tecnologías
 

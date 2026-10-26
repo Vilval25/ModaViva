@@ -32,13 +32,13 @@ Con sesión iniciada, la pestaña Perfil muestra los datos del cliente (nombre, 
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que tengo sesión, cuando abro la pestaña Perfil, entonces veo mi nombre, mi correo y si ingreso con correo o con Google.
-- [ ] **CA-02** Dado que estoy en Perfil, cuando reviso el menú, entonces cada opción disponible abre su pantalla y Cerrar sesión pide confirmación.
-- [ ] **CA-03** Dado que edito mi nombre o apellidos con valores válidos, cuando guardo, entonces el cambio se ve en Perfil y se mantiene al reiniciar la app o al entrar desde otro dispositivo.
-- [ ] **CA-04** Dado que dejo un campo obligatorio vacío o inválido, cuando intento guardar, entonces veo el motivo y no se guarda.
-- [ ] **CA-05** Dado que abro Editar datos, cuando veo el formulario, entonces el correo se muestra pero no se puede modificar, porque identifica la cuenta.
-- [ ] **CA-06** Dado que ingresé con Google, cuando veo el menú, entonces la opción Cambiar contraseña no aparece.
-- [ ] **CA-07** Dado que abro Acerca de, cuando se muestra, entonces veo la versión de la app y los enlaces a los T&C y a la Política de Privacidad vigentes.
+- [x] **CA-01** Dado que tengo sesión, cuando abro la pestaña Perfil, entonces veo mi nombre, mi correo y si ingreso con correo o con Google.
+- [x] **CA-02** Dado que estoy en Perfil, cuando reviso el menú, entonces cada opción disponible abre su pantalla y Cerrar sesión pide confirmación.
+- [x] **CA-03** Dado que edito mi nombre o apellidos con valores válidos, cuando guardo, entonces el cambio se ve en Perfil y se mantiene al reiniciar la app o al entrar desde otro dispositivo.
+- [x] **CA-04** Dado que dejo un campo obligatorio vacío o inválido, cuando intento guardar, entonces veo el motivo y no se guarda.
+- [x] **CA-05** Dado que abro Editar datos, cuando veo el formulario, entonces el correo se muestra pero no se puede modificar, porque identifica la cuenta.
+- [x] **CA-06** Dado que ingresé con Google, cuando veo el menú, entonces la opción Cambiar contraseña no aparece.
+- [x] **CA-07** Dado que abro Acerca de, cuando se muestra, entonces veo la versión de la app y los enlaces a los T&C y a la Política de Privacidad vigentes.
 
 ## Tecnologías
 

@@ -32,15 +32,15 @@ El cliente agrega prendas indicando talla y cantidad; puede editar cantidades o 
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que elegí talla y cantidad, cuando toco 'Agregar al carrito', entonces el ítem aparece en el carrito y la insignia se actualiza.
-- [ ] **CA-02** Dado que la misma prenda con la misma talla ya está en el carrito, cuando la agrego otra vez, entonces se suma la cantidad en lugar de crear otra línea.
-- [ ] **CA-03** Dado que cambio la cantidad o elimino un ítem, cuando confirmo, entonces el subtotal se recalcula al instante y puedo deshacer la eliminación durante unos segundos.
-- [ ] **CA-04** Dado que intento una cantidad mayor al stock disponible, cuando toco '+', entonces el selector se detiene en el máximo y veo 'Solo quedan N unidades'.
-- [ ] **CA-05** Dado que cierro la app o pierdo la conexión, cuando vuelvo, entonces el carrito se mantiene; y al iniciar sesión en otro dispositivo veo el mismo carrito.
-- [ ] **CA-06** Dado que un ítem se agotó o cambió de precio desde que lo agregué, cuando abro el carrito, entonces el ítem muestra un aviso, el subtotal usa el precio actual y los ítems agotados no se suman.
-- [ ] **CA-07** Dado que no tengo sesión, cuando agrego prendas, entonces se guardan en el carrito del dispositivo; al iniciar sesión, se suman al carrito de mi cuenta sin duplicar líneas.
-- [ ] **CA-08** Dado que no tengo sesión, cuando toco 'Continuar' para pagar, entonces se me pide iniciar sesión o crear una cuenta y después continúo con el pedido sin perder el carrito.
-- [ ] **CA-09** Dado que el carrito está vacío, cuando lo abro, entonces veo un mensaje y un botón para ir a Inicio.
+- [x] **CA-01** Dado que elegí talla y cantidad, cuando toco 'Agregar al carrito', entonces el ítem aparece en el carrito y la insignia se actualiza.
+- [x] **CA-02** Dado que la misma prenda con la misma talla ya está en el carrito, cuando la agrego otra vez, entonces se suma la cantidad en lugar de crear otra línea.
+- [x] **CA-03** Dado que cambio la cantidad o elimino un ítem, cuando confirmo, entonces el subtotal se recalcula al instante y puedo deshacer la eliminación durante unos segundos.
+- [x] **CA-04** Dado que intento una cantidad mayor al stock disponible, cuando toco '+', entonces el selector se detiene en el máximo y veo 'Solo quedan N unidades'.
+- [x] **CA-05** Dado que cierro la app o pierdo la conexión, cuando vuelvo, entonces el carrito se mantiene; y al iniciar sesión en otro dispositivo veo el mismo carrito.
+- [x] **CA-06** Dado que un ítem se agotó o cambió de precio desde que lo agregué, cuando abro el carrito, entonces el ítem muestra un aviso, el subtotal usa el precio actual y los ítems agotados no se suman.
+- [x] **CA-07** Dado que no tengo sesión, cuando agrego prendas, entonces se guardan en el carrito del dispositivo; al iniciar sesión, se suman al carrito de mi cuenta sin duplicar líneas.
+- [x] **CA-08** Dado que no tengo sesión, cuando toco 'Continuar' para pagar, entonces se me pide iniciar sesión o crear una cuenta y después continúo con el pedido sin perder el carrito.
+- [x] **CA-09** Dado que el carrito está vacío, cuando lo abro, entonces veo un mensaje y un botón para ir a Inicio.
 
 ## Tecnologías
 
