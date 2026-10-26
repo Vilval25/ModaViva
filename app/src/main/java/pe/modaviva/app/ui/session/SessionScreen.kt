@@ -340,13 +340,18 @@ fun SessionScreen(
     // Diálogo de Próximamente (Direcciones, Medidas, Pagos)
     soonDialogInfo?.let { (title, description) ->
         val isMeasurements = (title == measurementsTitle)
+        val tieneConsentimiento = profile?.tieneConsentimientoProbador == true
         AlertDialog(
             onDismissRequest = { soonDialogInfo = null },
             title = { Text(text = title, fontWeight = FontWeight.Bold) },
             text = {
                 Column {
                     Text(
-                        text = description,
+                        text = if (isMeasurements && tieneConsentimiento) {
+                            stringResource(R.string.profile_measurements_consent_active_desc)
+                        } else {
+                            description
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -359,7 +364,7 @@ fun SessionScreen(
                 }
             },
             confirmButton = {
-                if (isMeasurements) {
+                if (isMeasurements && !tieneConsentimiento) {
                     Button(
                         onClick = {
                             soonDialogInfo = null
@@ -380,7 +385,7 @@ fun SessionScreen(
                     }
                 }
             },
-            dismissButton = if (isMeasurements) {
+            dismissButton = if (isMeasurements && !tieneConsentimiento) {
                 {
                     TextButton(onClick = { soonDialogInfo = null }) {
                         Text(text = stringResource(R.string.dialog_understood))
