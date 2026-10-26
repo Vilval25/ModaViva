@@ -17,6 +17,10 @@ data class RegisterUiState(
     val isGoogleSubmitting: Boolean = false,
     val pendingConsentProfile: UserProfile? = null,
     val isAcceptingTerms: Boolean = false,
+    val showAccountExistsDialog: Boolean = false,
+    val isSendingReset: Boolean = false,
+    val resetSent: Boolean = false,
+    val resetError: String? = null,
     val globalError: String? = null,
 ) {
     fun errorFor(field: AuthFormField): String? =

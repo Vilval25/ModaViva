@@ -62,17 +62,58 @@ class RegisterViewModel @Inject constructor(
                     onSuccess(RegisterResult.Success(profile))
                 }
                 .onFailure { error ->
-                    val message = (error as? AuthException)
-                        ?.error
-                        ?.toUserMessage()
-                        ?: "No se pudo completar el registro"
-                    _uiState.update {
-                        it.copy(
-                            isSubmitting = false,
-                            globalError = message,
-                        )
+                    val authError = (error as? AuthException)?.error
+                    if (authError == pe.modaviva.app.domain.exception.AuthError.EMAIL_ALREADY_IN_USE) {
+                        _uiState.update {
+                            it.copy(
+                                isSubmitting = false,
+                                showAccountExistsDialog = true,
+                                globalError = null,
+                            )
+                        }
+                    } else {
+                        val message = authError?.toUserMessage() ?: "No se pudo completar el registro"
+                        _uiState.update {
+                            it.copy(
+                                isSubmitting = false,
+                                globalError = message,
+                            )
+                        }
                     }
                 }
+        }
+    }
+
+    fun onDismissAccountExistsDialog() {
+        _uiState.update { it.copy(showAccountExistsDialog = false) }
+    }
+
+    fun sendPasswordReset(email: String) {
+        val cleanEmail = email.trim()
+        if (cleanEmail.isBlank() || !cleanEmail.contains("@")) {
+            _uiState.update { it.copy(resetError = "Ingresa un correo electrónico válido") }
+            return
+        }
+        _uiState.update { it.copy(isSendingReset = true, resetError = null) }
+        viewModelScope.launch {
+            authRepository.sendPasswordResetEmail(cleanEmail)
+            _uiState.update {
+                it.copy(
+                    isSendingReset = false,
+                    resetSent = true,
+                    resetError = null,
+                )
+            }
+        }
+    }
+
+    fun onDismissResetDialog() {
+        _uiState.update {
+            it.copy(
+                isSendingReset = false,
+                resetSent = false,
+                resetError = null,
+            )
         }
     }
 
