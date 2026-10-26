@@ -28,6 +28,7 @@ import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -68,6 +69,7 @@ import kotlinx.coroutines.launch
 fun SessionScreen(
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier,
+    onNavigateToFitting: () -> Unit = {},
     viewModel: SessionViewModel = hiltViewModel(),
 ) {
     val user by viewModel.currentUser.collectAsStateWithLifecycle()
@@ -337,6 +339,7 @@ fun SessionScreen(
 
     // Diálogo de Próximamente (Direcciones, Medidas, Pagos)
     soonDialogInfo?.let { (title, description) ->
+        val isMeasurements = (title == measurementsTitle)
         AlertDialog(
             onDismissRequest = { soonDialogInfo = null },
             title = { Text(text = title, fontWeight = FontWeight.Bold) },
@@ -356,10 +359,34 @@ fun SessionScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { soonDialogInfo = null }) {
-                    Text(text = stringResource(R.string.dialog_understood))
+                if (isMeasurements) {
+                    Button(
+                        onClick = {
+                            soonDialogInfo = null
+                            onNavigateToFitting()
+                        },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Checkroom,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(text = stringResource(R.string.profile_measurements_go_to_fitting))
+                    }
+                } else {
+                    TextButton(onClick = { soonDialogInfo = null }) {
+                        Text(text = stringResource(R.string.dialog_understood))
+                    }
                 }
             },
+            dismissButton = if (isMeasurements) {
+                {
+                    TextButton(onClick = { soonDialogInfo = null }) {
+                        Text(text = stringResource(R.string.dialog_understood))
+                    }
+                }
+            } else null,
         )
     }
 

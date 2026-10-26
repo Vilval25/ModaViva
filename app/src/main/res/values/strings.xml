@@ -92,6 +92,7 @@
     <string name="profile_measurements_soon_desc">Podrás registrar tus medidas de busto/pecho, cintura y cadera para obtener recomendaciones automáticas de talla con el probador virtual.</string>
     <string name="profile_payments_soon_desc">Podrás guardar tus tarjetas de crédito/débito y vincular pagos directos con Yape o Plin de forma 100% segura.</string>
     <string name="profile_soon_footer">Esta funcionalidad estará disponible en la próxima actualización de ModaViva.</string>
+    <string name="profile_measurements_go_to_fitting">Ir al probador virtual</string>
     <string name="dialog_understood">Entendido</string>
     <string name="profile_about_title">Acerca de ModaViva</string>
     <string name="profile_about_version">ModaViva v1.0.0</string>

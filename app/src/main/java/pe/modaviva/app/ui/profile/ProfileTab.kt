@@ -27,6 +27,7 @@ fun ProfileTab(
     onLoginClick: () -> Unit,
     onRegisterClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onNavigateToFitting: () -> Unit = {},
     sessionViewModel: SessionViewModel = hiltViewModel(),
 ) {
     val user by sessionViewModel.currentUser.collectAsStateWithLifecycle()
@@ -54,6 +55,7 @@ fun ProfileTab(
             SessionScreen(
                 onSignOut = {},
                 modifier = Modifier.padding(padding),
+                onNavigateToFitting = onNavigateToFitting,
                 viewModel = sessionViewModel,
             )
         }
