@@ -34,13 +34,13 @@ La pestaña Probador requiere sesión: sin ella explica qué es el probador y of
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que no tengo sesión, cuando toco la pestaña Probador, entonces veo una explicación breve del probador y las opciones 'Iniciar sesión' y 'Crear cuenta'.
-- [ ] **CA-02** Dado que tengo sesión y no he dado consentimiento, cuando entro al Probador, entonces veo el aviso de privacidad antes de cualquier opción para subir una foto.
-- [ ] **CA-03** Dado que estoy en el aviso, cuando se abre, entonces la casilla aparece desmarcada y 'Aceptar y continuar' está deshabilitado hasta que la marque.
-- [ ] **CA-04** Dado que acepto, cuando se guarda el consentimiento, entonces queda registrado mi identificador, la fecha y hora y la versión del aviso aceptada.
-- [ ] **CA-05** Dado que elijo 'Ahora no', cuando sigo usando la app, entonces puedo navegar y comprar normalmente y el botón 'Probarme' indica que requiere consentimiento.
-- [ ] **CA-06** Dado que revoco el consentimiento en Perfil, cuando confirmo, entonces el probador se deshabilita y se inicia la eliminación de mi foto e imágenes generadas (ver HU-17).
-- [ ] **CA-07** Dado que se publica una nueva versión del aviso, cuando vuelvo a entrar al Probador, entonces se me pide aceptarla de nuevo.
+- [x] **CA-01** Dado que no tengo sesión, cuando toco la pestaña Probador, entonces veo una explicación breve del probador y las opciones 'Iniciar sesión' y 'Crear cuenta'.
+- [x] **CA-02** Dado que tengo sesión y no he dado consentimiento, cuando entro al Probador, entonces veo el aviso de privacidad antes de cualquier opción para subir una foto.
+- [x] **CA-03** Dado que estoy en el aviso, cuando se abre, entonces la casilla aparece desmarcada y 'Aceptar y continuar' está deshabilitado hasta que la marque.
+- [x] **CA-04** Dado que acepto, cuando se guarda el consentimiento, entonces queda registrado mi identificador, la fecha y hora y la versión del aviso aceptada.
+- [x] **CA-05** Dado que elijo 'Ahora no', cuando sigo usando la app, entonces puedo navegar y comprar normalmente y el botón 'Probarme' indica que requiere consentimiento.
+- [x] **CA-06** Dado que revoco el consentimiento en Perfil, cuando confirmo, entonces el probador se deshabilita y se inicia la eliminación de mi foto e imágenes generadas (ver HU-17).
+- [x] **CA-07** Dado que se publica una nueva versión del aviso, cuando vuelvo a entrar al Probador, entonces se me pide aceptarla de nuevo.
 
 ## Tecnologías
 

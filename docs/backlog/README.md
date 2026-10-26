@@ -53,7 +53,7 @@ estos archivos al cerrar cada hito; entre hitos no se edita.
 
 | Historia | Épica | Encargado | Semanas | Criterios |
 | :--- | :--- | :--- | :--- | :---: |
-| [HU-10 — Consentimiento para el uso de la fotografía](HU-10-consentimiento-para-el-uso-de-la-fotografia.md) | E4 | Perez | SEM 8 | 0/7 |
+| [HU-10 — Consentimiento para el uso de la fotografía](HU-10-consentimiento-para-el-uso-de-la-fotografia.md) | E4 | Perez | SEM 8 | 7/7 |
 | [HU-11 — Registro de la fotografía del cliente](HU-11-registro-de-la-fotografia-del-cliente.md) | E4 | Vila | SEM 8 – SEM 9 | 0/6 |
 | [HU-12 — Generación de la imagen con la prenda puesta](HU-12-generacion-de-la-imagen-con-la-prenda-puesta.md) | E4 | Rojas | SEM 8 – SEM 9 | 0/7 |
 | [HU-13 — Historial y límite de pruebas virtuales](HU-13-historial-y-limite-de-pruebas-virtuales.md) | E4 | Perez | SEM 10 – SEM 11 | 0/6 |
