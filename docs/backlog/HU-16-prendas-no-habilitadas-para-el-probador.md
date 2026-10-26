@@ -1,7 +1,5 @@
 # HU-16 — Prendas no habilitadas para el probador
 
-> ⚠️ **Borrador.** Las historias del Sprint 2 y 3 son una base y se revisarán al cerrar el Hito 1. No implementar sin confirmar que el texto es definitivo.
-
 | Campo | Detalle |
 | :--- | :--- |
 | **Tipo** | Historia de usuario |
@@ -30,11 +28,11 @@ Ciertas categorías (ropa interior, trajes de baño) no pueden usarse en el prob
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que una prenda pertenece a una categoría no habilitada, cuando abro su ficha, entonces no aparece 'Probarme' y veo un mensaje breve con la política.
-- [ ] **CA-02** Dado que veo ese mensaje, cuando toco 'Ver tabla de medidas', entonces se abre la tabla de medidas de la prenda.
-- [ ] **CA-03** Dado que se agrega o quita una categoría en Remote Config, cuando pasan como máximo 15 min, entonces la app aplica el cambio sin publicar una nueva versión.
-- [ ] **CA-04** Dado que una prenda no habilitada aparece en catálogo, búsqueda, favoritos o carrito, cuando la veo en cualquiera de esas pantallas, entonces no hay acceso al probador.
-- [ ] **CA-05** Dado que una versión desactualizada de la app envía una solicitud de prueba para una prenda no habilitada, cuando llega al servidor, entonces la Cloud Function la rechaza y no se genera imagen.
+- [x] **CA-01** Dado que una prenda pertenece a una categoría no habilitada, cuando abro su ficha, entonces no aparece 'Probarme' y veo un mensaje breve con la política.
+- [x] **CA-02** Dado que veo ese mensaje, cuando toco 'Ver tabla de medidas', entonces se abre la tabla de medidas de la prenda.
+- [x] **CA-03** Dado que se agrega o quita una categoría en Remote Config, cuando pasan como máximo 15 min, entonces la app aplica el cambio sin publicar una nueva versión.
+- [x] **CA-04** Dado que una prenda no habilitada aparece en catálogo, búsqueda, favoritos o carrito, cuando la veo en cualquiera de esas pantallas, entonces no hay acceso al probador.
+- [x] **CA-05** Dado que una versión desactualizada de la app envía una solicitud de prueba para una prenda no habilitada, cuando llega al servidor, entonces la Cloud Function la rechaza y no se genera imagen.
 
 ## Tecnologías
 
