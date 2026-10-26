@@ -42,6 +42,18 @@ import pe.modaviva.app.ui.components.MvPrimaryButton
 import pe.modaviva.app.ui.components.MvTextButton
 import pe.modaviva.app.ui.components.MvTextField
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.font.FontWeight
+
 @Composable
 fun LoginScreen(
     onRegisterClick: () -> Unit,
@@ -53,6 +65,8 @@ fun LoginScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var showResetDialog by remember { mutableStateOf(false) }
+    var resetEmailInput by remember { mutableStateOf("") }
 
     BoxWithConstraints(
         modifier = modifier.fillMaxSize(),
@@ -158,6 +172,26 @@ fun LoginScreen(
                 imeAction = ImeAction.Done,
             )
 
+            // Enlace "¿Olvidaste tu contraseña?" (HU-02 CA-05 / CA-08)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                Text(
+                    text = stringResource(R.string.login_forgot_password),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                    modifier = Modifier
+                        .clickable {
+                            resetEmailInput = state.email
+                            showResetDialog = true
+                        }
+                        .padding(vertical = 4.dp),
+                )
+            }
+
             MvPrimaryButton(
                 text = stringResource(R.string.login_cta),
                 onClick = { viewModel.onSubmit(onLoggedIn) },
@@ -179,6 +213,99 @@ fun LoginScreen(
                 onMessageShown = viewModel::onDismissError,
             )
         }
+    }
+
+    if (showResetDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showResetDialog = false
+                viewModel.onDismissResetDialog()
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.dialog_forgot_password_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    if (state.resetSent) {
+                        Text(
+                            text = stringResource(R.string.dialog_forgot_password_success),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(R.string.dialog_forgot_password_body),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        MvTextField(
+                            value = resetEmailInput,
+                            onValueChange = { resetEmailInput = it },
+                            label = stringResource(R.string.field_email),
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Email,
+                                imeAction = ImeAction.Done,
+                            ),
+                        )
+                        if (state.resetError != null) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = state.resetError.orEmpty(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                if (state.resetSent) {
+                    TextButton(
+                        onClick = {
+                            showResetDialog = false
+                            viewModel.onDismissResetDialog()
+                        },
+                    ) {
+                        Text(text = stringResource(R.string.profile_dialog_close))
+                    }
+                } else {
+                    TextButton(
+                        onClick = { viewModel.sendPasswordReset(resetEmailInput) },
+                        enabled = !state.isSendingReset,
+                    ) {
+                        if (state.isSendingReset) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        } else {
+                            Text(text = stringResource(R.string.dialog_forgot_password_send))
+                        }
+                    }
+                }
+            },
+            dismissButton = {
+                if (!state.resetSent) {
+                    TextButton(
+                        onClick = {
+                            showResetDialog = false
+                            viewModel.onDismissResetDialog()
+                        },
+                        enabled = !state.isSendingReset,
+                    ) {
+                        Text(text = stringResource(R.string.dialog_cancel))
+                    }
+                }
+            },
+        )
     }
 
     state.pendingConsentProfile?.let { profile ->

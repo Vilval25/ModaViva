@@ -42,13 +42,21 @@ class PersistentSessionRepository @Inject constructor(
     init {
         val firebaseUser = firebaseAuth.currentUser
         if (firebaseUser != null) {
-            val cached = loadCachedProfile()
-            if (cached != null && cached.uid == firebaseUser.uid) {
-                _currentUser.value = cached
-            }
-            // Sincronizar en segundo plano con Firestore
-            scope.launch {
-                syncProfileWithRemote(firebaseUser.uid)
+            val lastActive = prefs.getLong(KEY_LAST_ACTIVE, 0L)
+            val now = System.currentTimeMillis()
+            if (lastActive > 0L && now - lastActive > THIRTY_DAYS_MILLIS) {
+                // CA-11: Pasados 30 días sin uso, la sesión se cierra y se entra como invitado.
+                signOut()
+            } else {
+                updateLastActive(now)
+                val cached = loadCachedProfile()
+                if (cached != null && cached.uid == firebaseUser.uid) {
+                    _currentUser.value = cached
+                }
+                // Sincronizar en segundo plano con Firestore
+                scope.launch {
+                    syncProfileWithRemote(firebaseUser.uid)
+                }
             }
         } else {
             clearCachedProfile()
@@ -73,6 +81,7 @@ class PersistentSessionRepository @Inject constructor(
 
     override fun signIn(profile: UserProfile) {
         saveCachedProfile(profile)
+        updateLastActive(System.currentTimeMillis())
         _currentUser.value = profile
     }
 
@@ -82,6 +91,10 @@ class PersistentSessionRepository @Inject constructor(
         if (firebaseAuth.currentUser != null) {
             firebaseAuth.signOut()
         }
+    }
+
+    private fun updateLastActive(timestamp: Long) {
+        prefs.edit().putLong(KEY_LAST_ACTIVE, timestamp).apply()
     }
 
     private suspend fun syncProfileWithRemote(uid: String) {
@@ -131,12 +144,17 @@ class PersistentSessionRepository @Inject constructor(
     }
 
     private fun clearCachedProfile() {
-        prefs.edit().remove(KEY_PROFILE).apply()
+        prefs.edit()
+            .remove(KEY_PROFILE)
+            .remove(KEY_LAST_ACTIVE)
+            .apply()
     }
 
     private companion object {
         const val PREFS_NAME = "pe.modaviva.app.session"
         const val KEY_PROFILE = "current_user_profile"
+        const val KEY_LAST_ACTIVE = "last_active_timestamp"
+        const val THIRTY_DAYS_MILLIS = 30L * 24 * 60 * 60 * 1000
         const val CLIENTES = "clientes"
 
         fun UserProfile.toJsonString(): String {

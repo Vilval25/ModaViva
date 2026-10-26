@@ -9,6 +9,16 @@
     <string name="login_title">Iniciar sesión</string>
     <string name="login_subtitle">Ingresa tu correo y contraseña para entrar a tu cuenta.</string>
     <string name="login_cta">Iniciar sesión</string>
+    <string name="login_forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="dialog_forgot_password_title">Recuperar contraseña</string>
+    <string name="dialog_forgot_password_body">Ingresa tu correo para recibir un enlace seguro de restablecimiento.</string>
+    <string name="dialog_forgot_password_send">Enviar enlace</string>
+    <string name="dialog_forgot_password_success">Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.</string>
+    <string name="login_lockout_error">Acceso bloqueado por seguridad debido a demasiados intentos fallidos. Inténtalo de nuevo en 15 minutos.</string>
+    <string name="register_account_exists_title">Ya tienes una cuenta con este correo</string>
+    <string name="register_account_exists_body">El correo %1$s ya está registrado en ModaViva. Puedes iniciar sesión con tu cuenta o recuperar tu contraseña.</string>
+    <string name="register_account_exists_login">Iniciar sesión</string>
+    <string name="register_account_exists_recover">Recuperar contraseña</string>
     <string name="login_register_cta">¿No tienes cuenta? Crear cuenta</string>
     <string name="register_login_cta">¿Ya tienes cuenta? Iniciar sesión</string>
     <string name="nav_back">Volver</string>

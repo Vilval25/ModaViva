@@ -38,6 +38,13 @@ class LoginViewModel @Inject constructor(
 
     fun onSubmit(onSuccess: (LoginResult.Success) -> Unit) {
         val current = _uiState.value
+        if (current.isLockedOut) {
+            _uiState.update {
+                it.copy(globalError = "Acceso bloqueado por demasiados intentos fallidos. Inténtalo de nuevo en 15 minutos.")
+            }
+            return
+        }
+
         val errors = validate(current)
         _uiState.update {
             it.copy(
@@ -56,6 +63,8 @@ class LoginViewModel @Inject constructor(
                         it.copy(
                             isSubmitting = false,
                             password = "",
+                            failedAttempts = 0,
+                            lockoutUntilMillis = 0L,
                         )
                     }
                     if (profile.consentimientoAceptado) {
@@ -66,17 +75,60 @@ class LoginViewModel @Inject constructor(
                     }
                 }
                 .onFailure { error ->
-                    val message = (error as? AuthException)
+                    val attempts = current.failedAttempts + 1
+                    val isLockout = attempts >= 5
+                    val lockoutTime = if (isLockout) System.currentTimeMillis() + 15 * 60 * 1000L else 0L
+
+                    val baseMessage = (error as? AuthException)
                         ?.error
                         ?.toUserMessage()
                         ?: "No se pudo iniciar sesión"
+
+                    val message = if (isLockout) {
+                        "Acceso bloqueado temporalmente por seguridad (5 intentos fallidos). Inténtalo de nuevo en 15 minutos."
+                    } else {
+                        baseMessage
+                    }
+
                     _uiState.update {
                         it.copy(
                             isSubmitting = false,
+                            failedAttempts = attempts,
+                            lockoutUntilMillis = lockoutTime,
                             globalError = message,
                         )
                     }
                 }
+        }
+    }
+
+    fun sendPasswordReset(email: String) {
+        val cleanEmail = email.trim()
+        if (cleanEmail.isBlank() || !cleanEmail.contains("@")) {
+            _uiState.update { it.copy(resetError = "Ingresa un correo electrónico válido") }
+            return
+        }
+        _uiState.update { it.copy(isSendingReset = true, resetError = null) }
+        viewModelScope.launch {
+            authRepository.sendPasswordResetEmail(cleanEmail)
+            // CA-08: Exista o no la cuenta, se muestra confirmación de envío
+            _uiState.update {
+                it.copy(
+                    isSendingReset = false,
+                    resetSent = true,
+                    resetError = null,
+                )
+            }
+        }
+    }
+
+    fun onDismissResetDialog() {
+        _uiState.update {
+            it.copy(
+                isSendingReset = false,
+                resetSent = false,
+                resetError = null,
+            )
         }
     }
 

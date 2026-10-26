@@ -13,13 +13,21 @@ data class LoginUiState(
     val isGoogleSubmitting: Boolean = false,
     val pendingConsentProfile: UserProfile? = null,
     val isAcceptingTerms: Boolean = false,
+    val isSendingReset: Boolean = false,
+    val resetSent: Boolean = false,
+    val resetError: String? = null,
+    val failedAttempts: Int = 0,
+    val lockoutUntilMillis: Long = 0L,
     val globalError: String? = null,
 ) {
     fun errorFor(field: AuthFormField): String? =
         if (field in touched) errors[field] else null
 
+    val isLockedOut: Boolean
+        get() = lockoutUntilMillis > System.currentTimeMillis()
+
     val canSubmit: Boolean
-        get() = errors.isEmpty() && !isSubmitting && !isGoogleSubmitting
+        get() = errors.isEmpty() && !isSubmitting && !isGoogleSubmitting && !isLockedOut
 }
 
 sealed interface LoginResult {
