@@ -12,6 +12,7 @@ object Routes {
     const val FAVORITES = "favorites"
     const val NOTIFICATIONS = "notifications"
     const val CART = "cart"
+    const val CHECKOUT_SUMMARY = "checkout_summary"
     const val PRENDA = "prenda/{codigo}"
 
     fun prenda(codigo: String) = "prenda/$codigo"

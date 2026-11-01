@@ -42,6 +42,7 @@ import pe.modaviva.app.ui.auth.register.RegisterScreen
 import pe.modaviva.app.ui.auth.verify.EmailVerifyScreen
 import pe.modaviva.app.ui.cart.CartScreen
 import pe.modaviva.app.ui.categories.CategoriesScreen
+import pe.modaviva.app.ui.checkout.CheckoutSummaryScreen
 import pe.modaviva.app.ui.components.MvAuthPromptBottomSheet
 import pe.modaviva.app.ui.favorites.Favoritos
 import pe.modaviva.app.ui.favorites.FavoritesScreen
@@ -310,8 +311,16 @@ private fun NavGraphBuilder.overlayGraph(
             },
             onCheckout = {
                 requireAuth(cartPrompt) {
-                    // Acción al pagar
+                    navController.navigate(Routes.CHECKOUT_SUMMARY)
                 }
+            },
+        )
+    }
+    composable(Routes.CHECKOUT_SUMMARY) {
+        CheckoutSummaryScreen(
+            onBack = { navController.popBackStack() },
+            onContinueToDelivery = {
+                // Siguiente paso del checkout (HU-20: Entrega y direcciones)
             },
         )
     }
