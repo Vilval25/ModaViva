@@ -16,3 +16,4 @@ setGlobalOptions({
 export { budgetGuard } from "./budgetGuard.js";
 export { ping } from "./ping.js";
 export { probarPrenda } from "./probarPrenda.js";
+export { calcularPedido } from "./calcularPedido.js";
