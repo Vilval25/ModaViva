@@ -67,7 +67,7 @@ estos archivos al cerrar cada hito; entre hitos no se edita.
 
 | Historia | Épica | Encargado | Semanas | Criterios |
 | :--- | :--- | :--- | :--- | :---: |
-| [HU-19 — Cálculo del pedido antes de pagar](HU-19-calculo-del-pedido-antes-de-pagar.md) | E5 | Perez | SEM 12 | 0/6 |
+| [HU-19 — Cálculo del pedido antes de pagar](HU-19-calculo-del-pedido-antes-de-pagar.md) | E5 | Perez | SEM 12 | 6/6 |
 | [HU-20 — Selección de la modalidad de entrega y Mis direcciones](HU-20-seleccion-de-la-modalidad-de-entrega-y-mis-direcciones.md) | E5 | Vila | SEM 12 – SEM 13 | 0/10 |
 | [HU-21 — Pago, métodos de pago guardados y confirmación del pedido](HU-21-pago-metodos-de-pago-guardados-y-confirmacion-del-pedido.md) | E5 | Rojas | SEM 12 – SEM 13 | 0/10 |
 | [HU-22 — Vigencia del pedido pendiente de pago](HU-22-vigencia-del-pedido-pendiente-de-pago.md) | E5 | Perez | SEM 13 | 0/5 |
