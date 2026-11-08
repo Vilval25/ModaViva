@@ -37,6 +37,7 @@ import androidx.navigation.navArgument
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import pe.modaviva.app.R
+import pe.modaviva.app.ui.addresses.AddressesScreen
 import pe.modaviva.app.ui.auth.login.LoginScreen
 import pe.modaviva.app.ui.auth.register.RegisterScreen
 import pe.modaviva.app.ui.auth.verify.EmailVerifyScreen
@@ -237,6 +238,7 @@ private fun NavGraphBuilder.topLevelGraph(
             onLoginClick = { navController.navigate(Routes.LOGIN) },
             onRegisterClick = { navController.navigate(Routes.REGISTER) },
             onNavigateToFitting = { navController.navigate(TopLevelDestination.FITTING.route) },
+            onNavigateToAddresses = { navController.navigate(Routes.ADDRESSES) },
         )
     }
     composable(TopLevelDestination.FITTING.route) {
@@ -277,6 +279,11 @@ private fun NavGraphBuilder.overlayGraph(
             onGoToHome = {
                 navController.popBackStack(TopLevelDestination.HOME.route, inclusive = false)
             },
+        )
+    }
+    composable(Routes.ADDRESSES) {
+        AddressesScreen(
+            onBack = { navController.popBackStack() },
         )
     }
     composable(Routes.NOTIFICATIONS) {

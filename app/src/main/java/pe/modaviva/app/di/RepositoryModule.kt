@@ -10,6 +10,7 @@ import pe.modaviva.app.data.repository.FirebaseAuthRepository
 import pe.modaviva.app.data.repository.FirebaseBackendRepository
 import pe.modaviva.app.data.repository.FirestoreCatalogoRepository
 import pe.modaviva.app.data.repository.FirebaseFittingConfigRepository
+import pe.modaviva.app.data.repository.FirestoreDireccionRepository
 import pe.modaviva.app.data.repository.FirestoreFavoritosRepository
 import pe.modaviva.app.data.repository.FirestorePortadaRepository
 import pe.modaviva.app.data.repository.FirestoreStockRepository
@@ -20,6 +21,7 @@ import pe.modaviva.app.domain.repository.AuthRepository
 import pe.modaviva.app.domain.repository.BackendRepository
 import pe.modaviva.app.domain.repository.CartRepository
 import pe.modaviva.app.domain.repository.CatalogoRepository
+import pe.modaviva.app.domain.repository.DireccionRepository
 import pe.modaviva.app.domain.repository.FavoritosRepository
 import pe.modaviva.app.domain.repository.FittingConfigRepository
 import pe.modaviva.app.domain.repository.PortadaRepository
@@ -67,6 +69,12 @@ abstract class RepositoryModule {
     abstract fun bindStockRepository(
         impl: FirestoreStockRepository,
     ): StockRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindDireccionRepository(
+        impl: FirestoreDireccionRepository,
+    ): DireccionRepository
 
     @Binds
     @Singleton

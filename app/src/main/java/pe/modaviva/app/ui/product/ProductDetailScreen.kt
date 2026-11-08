@@ -47,6 +47,9 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -67,7 +70,9 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import kotlinx.coroutines.launch
 import pe.modaviva.app.R
+import pe.modaviva.app.domain.model.TipoDestino
 import pe.modaviva.app.ui.favorites.LocalFavoritos
+import pe.modaviva.app.ui.product.components.DestinationSelectorBottomSheet
 import pe.modaviva.app.ui.stock.StockAvailability
 import pe.modaviva.app.ui.stock.StockViewModel
 import java.time.Instant
@@ -106,6 +111,24 @@ fun ProductDetailScreen(
 
     var mostrarGaleria by remember { mutableStateOf(false) }
     var fotoSeleccionada by remember { mutableIntStateOf(0) }
+
+    val destinoEntrega by viewModel.destinoEntrega.collectAsStateWithLifecycle()
+    val ubicacionEstado by viewModel.ubicacionEstado.collectAsStateWithLifecycle()
+    val estimacionEntrega by viewModel.estimacionEntrega.collectAsStateWithLifecycle()
+    val resultadoTiendaCercana by viewModel.resultadoTiendaCercana.collectAsStateWithLifecycle()
+    val tarifasDisponibles by viewModel.tarifasDisponibles.collectAsStateWithLifecycle()
+    val cargandoTarifas by viewModel.cargandoTarifas.collectAsStateWithLifecycle()
+    val errorTarifas by viewModel.errorTarifas.collectAsStateWithLifecycle()
+    val direccionesGuardadas by viewModel.direccionesGuardadas.collectAsStateWithLifecycle()
+    var mostrarSelectorDestino by remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.obtenerUbicacionGps()
+        }
+    }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -299,6 +322,7 @@ fun ProductDetailScreen(
                         selected = tallaSeleccionada == talla,
                         onClick = {
                             tallaSeleccionada = talla
+                            viewModel.seleccionarTalla(codigo, talla)
                         },
                         enabled = !esAgotada,
                         label = {
@@ -319,11 +343,197 @@ fun ProductDetailScreen(
                 Text("Ver tabla de medidas")
             }
 
+            resultadoTiendaCercana.tiendaRecomendada?.let { recomendada ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    ),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Text(
+                            text = "Tienda más cercana con stock",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                        Text(
+                            text = recomendada.tienda.nombre,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                        if (recomendada.tienda.direccion.isNotBlank()) {
+                            Text(
+                                text = "${recomendada.tienda.direccion}, ${recomendada.tienda.distrito}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            )
+                        }
+                        recomendada.distanciaKm?.let { km ->
+                            Text(
+                                text = "Distancia: ${"%.1f".format(km)} km",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        Text(
+                            text = "Stock disponible: ${recomendada.stockCantidad} unidad(es)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
+                }
+            }
+
+            if (resultadoTiendaCercana.requiereCoordenadasParaDistancia && resultadoTiendaCercana.tiendasConStock.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    ),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Text(
+                            text = "Disponibilidad en tiendas",
+                            style = MaterialTheme.typography.titleSmall,
+                        )
+                        Text(
+                            text = "Usa tu ubicación GPS para calcular cuál tienda con stock está más cerca.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+
             stock?.let {
                 StockAvailability(
                     stockByStore = it.porTienda,
                     tiendas = tiendas,
                 )
+            }
+
+            Card(
+                onClick = { mostrarSelectorDestino = true },
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = "Destino de entrega",
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    val textoDestino = if (destinoEntrega != null && destinoEntrega!!.estaCompleto) {
+                        val tipoStr = when (destinoEntrega!!.tipo) {
+                            TipoDestino.DIRECCION_REGISTRADA -> "Dirección registrada"
+                            TipoDestino.UBICACION_ACTUAL_GPS -> "Ubicación GPS"
+                            TipoDestino.OTRA_DIRECCION -> "Ingreso manual"
+                        }
+                        val dir = if (destinoEntrega!!.direccion.isNotBlank()) "${destinoEntrega!!.direccion}, " else ""
+                        "$tipoStr: $dir${destinoEntrega!!.distrito}"
+                    } else {
+                        "Selecciona tu distrito o dirección de entrega"
+                    }
+                    Text(
+                        text = textoDestino,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (destinoEntrega != null && destinoEntrega!!.estaCompleto)
+                            MaterialTheme.colorScheme.onSurface
+                        else
+                            MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+
+            if (mostrarSelectorDestino) {
+                DestinationSelectorBottomSheet(
+                    currentUser = currentUser,
+                    destinoActual = destinoEntrega,
+                    ubicacionEstado = ubicacionEstado,
+                    tarifas = tarifasDisponibles,
+                    direcciones = direccionesGuardadas,
+                    cargandoTarifas = cargandoTarifas,
+                    errorTarifas = errorTarifas,
+                    onRetryTarifas = { viewModel.cargarTarifas() },
+                    onDismiss = { mostrarSelectorDestino = false },
+                    onConfirm = { destino ->
+                        viewModel.actualizarDestino(destino)
+                    },
+                    onGpsRequested = {
+                        if (viewModel.locationService.tienePermisoUbicacion()) {
+                            viewModel.obtenerUbicacionGps()
+                        } else {
+                            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                        }
+                    }
+                )
+            }
+
+            estimacionEntrega?.let { estimacion ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = when {
+                            estimacion.tieneCobertura && estimacion.tarifaRegistrada -> MaterialTheme.colorScheme.surfaceVariant
+                            else -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                        }
+                    ),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Text(
+                            text = "Estimación de entrega",
+                            style = MaterialTheme.typography.titleSmall,
+                        )
+                        when {
+                            !estimacion.tarifaRegistrada -> {
+                                Text(
+                                    text = estimacion.mensajeInformativo ?: "Sin tarifa registrada para este distrito",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.error,
+                                )
+                            }
+                            !estimacion.tieneCobertura -> {
+                                Text(
+                                    text = estimacion.mensajeInformativo ?: "Sin cobertura de entrega a domicilio",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.error,
+                                )
+                            }
+                            else -> {
+                                Text(
+                                    text = "Costo de envío: S/ ${"%.2f".format(estimacion.costoEnvio)}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                                Text(
+                                    text = "Plazo estimado: ${estimacion.rangoDiasTexto}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             val stockDoc = if (tallaSeleccionada != null) allStocks["${codigo}_${tallaSeleccionada}"] else null

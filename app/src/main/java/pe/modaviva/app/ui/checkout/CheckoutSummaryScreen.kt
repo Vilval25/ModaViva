@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -33,7 +31,6 @@ import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ConfirmationNumber
 import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -49,7 +46,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -77,7 +73,7 @@ import coil3.compose.AsyncImage
 import pe.modaviva.app.domain.model.CuponAplicado
 import pe.modaviva.app.domain.model.ItemPedidoCalculado
 import pe.modaviva.app.domain.model.TarifaEnvio
-import pe.modaviva.app.ui.components.MvPrimaryButton
+import pe.modaviva.app.domain.usecase.TiendaCartConDistancia
 import pe.modaviva.app.ui.format.formatearSoles
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -117,10 +113,13 @@ fun CheckoutSummaryScreen(
         },
         bottomBar = {
             if (!state.cargando && state.items.isNotEmpty()) {
+                val habilitado = state.totalPrendas > 0 && !state.calculando &&
+                        (state.tipoEntrega == TipoEntregaUi.DELIVERY || (state.tipoEntrega == TipoEntregaUi.RECOJO && state.tiendaRecojoSeleccionada != null && state.hayStockSuficienteRecojo))
+
                 CheckoutBottomBar(
                     total = state.total,
                     totalPrendas = state.totalPrendas,
-                    habilitado = state.totalPrendas > 0 && !state.calculando,
+                    habilitado = habilitado,
                     calculando = state.calculando,
                     onContinue = onContinueToDelivery,
                 )
@@ -171,8 +170,12 @@ fun CheckoutSummaryScreen(
                                 tipoEntrega = state.tipoEntrega,
                                 distritoSeleccionado = state.distritoSeleccionado,
                                 distritosDisponibles = state.distritosDisponibles,
+                                tiendasElegibles = state.tiendasRecojoElegibles,
+                                tiendaSeleccionada = state.tiendaRecojoSeleccionada,
+                                hayStockSuficienteRecojo = state.hayStockSuficienteRecojo,
                                 onTipoChanged = viewModel::onTipoEntregaChanged,
                                 onDistritoChanged = viewModel::onDistritoChanged,
+                                onTiendaChanged = viewModel::onTiendaRecojoChanged,
                             )
                         }
 
@@ -323,8 +326,12 @@ private fun ModalidadEntregaSection(
     tipoEntrega: TipoEntregaUi,
     distritoSeleccionado: TarifaEnvio?,
     distritosDisponibles: List<TarifaEnvio>,
+    tiendasElegibles: List<TiendaCartConDistancia>,
+    tiendaSeleccionada: TiendaCartConDistancia?,
+    hayStockSuficienteRecojo: Boolean,
     onTipoChanged: (TipoEntregaUi) -> Unit,
     onDistritoChanged: (TarifaEnvio) -> Unit,
+    onTiendaChanged: (TiendaCartConDistancia) -> Unit,
 ) {
     var expandedDropdown by remember { mutableStateOf(false) }
 
@@ -475,6 +482,101 @@ private fun ModalidadEntregaSection(
                                     expandedDropdown = false
                                 },
                             )
+                        }
+                    }
+                }
+            }
+
+            // Si es recojo en tienda, mostrar selector de tienda
+            if (tipoEntrega == TipoEntregaUi.RECOJO) {
+                Spacer(modifier = Modifier.height(12.dp))
+                if (!hayStockSuficienteRecojo || tiendasElegibles.isEmpty()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+                        ),
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = "Sin stock suficiente",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Lo sentimos, ninguna de nuestras tiendas cuenta con stock suficiente para todos los productos de tu carrito.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = "Selecciona la tienda para el recojo:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        tiendasElegibles.forEach { tiendaCart ->
+                            val esElegida = tiendaSeleccionada?.tienda?.id == tiendaCart.tienda.id
+                            Card(
+                                onClick = { onTiendaChanged(tiendaCart) },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (esElegida) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                                ),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    width = if (esElegida) 2.dp else 1.dp,
+                                    color = if (esElegida) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                                ),
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(
+                                            text = tiendaCart.tienda.nombre,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                        if (tiendaCart.esRecomendada) {
+                                            Surface(
+                                                shape = RoundedCornerShape(4.dp),
+                                                color = MaterialTheme.colorScheme.primary,
+                                            ) {
+                                                Text(
+                                                    text = "Recomendada",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onPrimary,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                )
+                                            }
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    if (tiendaCart.tienda.direccion.isNotBlank()) {
+                                        Text(
+                                            text = "${tiendaCart.tienda.direccion}, ${tiendaCart.tienda.distrito}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                    tiendaCart.distanciaKm?.let { km ->
+                                        Text(
+                                            text = "Distancia aproximada: ${"%.1f".format(km)} km",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }

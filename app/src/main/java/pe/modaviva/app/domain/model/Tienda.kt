@@ -7,4 +7,6 @@ data class Tienda(
     val distrito: String = "",
     val horario: String = "",
     val telefono: String = "",
+    val lat: Double? = null,
+    val lng: Double? = null,
 )

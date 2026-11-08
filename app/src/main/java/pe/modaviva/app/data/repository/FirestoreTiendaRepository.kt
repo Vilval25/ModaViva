@@ -26,6 +26,14 @@ class FirestoreTiendaRepository @Inject constructor(
                 }
 
                 val tiendas = snapshot.documents.mapNotNull { doc ->
+                    val geoPoint = doc.getGeoPoint("ubicacion")
+                    val lat = geoPoint?.latitude
+                        ?: (doc["lat"] as? Number)?.toDouble()
+                        ?: doc.getDouble("latitude")
+                    val lng = geoPoint?.longitude
+                        ?: (doc["lng"] as? Number)?.toDouble()
+                        ?: doc.getDouble("longitude")
+
                     Tienda(
                         id = doc.id,
                         nombre = doc.getString("nombre").orEmpty(),
@@ -33,6 +41,8 @@ class FirestoreTiendaRepository @Inject constructor(
                         distrito = doc.getString("distrito").orEmpty(),
                         horario = doc.getString("horario").orEmpty(),
                         telefono = doc.getString("telefono").orEmpty(),
+                        lat = lat,
+                        lng = lng,
                     )
                 }
 

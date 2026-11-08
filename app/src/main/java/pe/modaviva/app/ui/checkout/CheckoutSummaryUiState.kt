@@ -3,6 +3,7 @@ package pe.modaviva.app.ui.checkout
 import pe.modaviva.app.domain.model.CuponAplicado
 import pe.modaviva.app.domain.model.ItemPedidoCalculado
 import pe.modaviva.app.domain.model.TarifaEnvio
+import pe.modaviva.app.domain.usecase.TiendaCartConDistancia
 
 enum class TipoEntregaUi {
     RECOJO,
@@ -16,6 +17,9 @@ data class CheckoutSummaryUiState(
     val tipoEntrega: TipoEntregaUi = TipoEntregaUi.DELIVERY,
     val distritoSeleccionado: TarifaEnvio? = null,
     val distritosDisponibles: List<TarifaEnvio> = emptyList(),
+    val tiendasRecojoElegibles: List<TiendaCartConDistancia> = emptyList(),
+    val tiendaRecojoSeleccionada: TiendaCartConDistancia? = null,
+    val hayStockSuficienteRecojo: Boolean = true,
     val cuponInput: String = "",
     val cuponesAplicados: List<CuponAplicado> = emptyList(),
     val mensajeErrorCupon: String? = null,

@@ -70,6 +70,7 @@ fun SessionScreen(
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier,
     onNavigateToFitting: () -> Unit = {},
+    onNavigateToAddresses: () -> Unit = {},
     viewModel: SessionViewModel = hiltViewModel(),
 ) {
     val user by viewModel.currentUser.collectAsStateWithLifecycle()
@@ -170,7 +171,7 @@ fun SessionScreen(
                         title = addressesTitle,
                         subtitle = stringResource(R.string.profile_item_addresses_desc),
                         onClick = {
-                            soonDialogInfo = Pair(addressesTitle, addressesDesc)
+                            onNavigateToAddresses()
                         },
                     )
                     ProfileItemRow(

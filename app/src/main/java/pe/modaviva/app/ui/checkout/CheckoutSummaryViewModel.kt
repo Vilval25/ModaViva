@@ -9,16 +9,22 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pe.modaviva.app.data.repository.CheckoutSessionRepository
 import pe.modaviva.app.domain.model.CuponAplicado
+import pe.modaviva.app.domain.model.DestinoEntrega
 import pe.modaviva.app.domain.model.ItemCalculoRequest
 import pe.modaviva.app.domain.model.ItemPedidoCalculado
 import pe.modaviva.app.domain.model.ResultadoCalculoPedido
 import pe.modaviva.app.domain.model.SolicitudCalculoPedido
 import pe.modaviva.app.domain.model.TarifaEnvio
+import pe.modaviva.app.domain.model.TipoDestino
 import pe.modaviva.app.domain.repository.BackendRepository
 import pe.modaviva.app.domain.repository.CartRepository
 import pe.modaviva.app.domain.repository.CatalogoRepository
 import pe.modaviva.app.domain.repository.StockRepository
+import pe.modaviva.app.domain.repository.TiendaRepository
+import pe.modaviva.app.domain.usecase.CalculateNearestStoreForCartUseCase
+import pe.modaviva.app.domain.usecase.TiendaCartConDistancia
 import java.time.Clock
 import java.time.Instant
 import javax.inject.Inject
@@ -32,6 +38,9 @@ class CheckoutSummaryViewModel @Inject constructor(
     private val catalogoRepository: CatalogoRepository,
     private val stockRepository: StockRepository,
     private val backendRepository: BackendRepository,
+    private val checkoutSessionRepository: CheckoutSessionRepository,
+    private val tiendaRepository: TiendaRepository,
+    private val calculateNearestStoreForCartUseCase: CalculateNearestStoreForCartUseCase,
     private val reloj: Clock,
 ) : ViewModel() {
 
@@ -48,16 +57,43 @@ class CheckoutSummaryViewModel @Inject constructor(
 
             // 1. Obtener tarifas de distritos disponibles
             val tarifas = backendRepository.obtenerTarifasEnvio().getOrDefault(emptyList())
-            val distritoPorDefecto = tarifas.firstOrNull { it.cobertura } ?: tarifas.firstOrNull()
+
+            // 2. Recuperar destino de CheckoutSessionRepository si existe
+            val destinoSesion = checkoutSessionRepository.destinoActual.value
+            val distritoInicial = if (destinoSesion != null && destinoSesion.distrito.isNotBlank()) {
+                tarifas.firstOrNull {
+                    it.id.equals(destinoSesion.distritoSlug, ignoreCase = true) ||
+                            it.distrito.equals(destinoSesion.distrito, ignoreCase = true)
+                } ?: tarifas.firstOrNull { it.cobertura } ?: tarifas.firstOrNull()
+            } else {
+                tarifas.firstOrNull { it.cobertura } ?: tarifas.firstOrNull()
+            }
+
+            val cartItems = cartRepository.items.first()
+            val stocks = stockRepository.observeStocks().first()
+            val tiendas = tiendaRepository.observarTiendas().first()
+
+            val resultadoRecojo = calculateNearestStoreForCartUseCase(cartItems, stocks, tiendas, destinoSesion)
+            val tiendaIdGuardada = checkoutSessionRepository.tiendaRecojoId.value
+            val tiendaSeleccionada = resultadoRecojo.tiendasElegibles.firstOrNull { it.tienda.id == tiendaIdGuardada }
+                ?: resultadoRecojo.tiendaRecomendada
+                ?: resultadoRecojo.tiendasElegibles.firstOrNull()
+
+            if (tiendaSeleccionada != null) {
+                checkoutSessionRepository.actualizarTiendaRecojo(tiendaSeleccionada.tienda.id)
+            }
 
             _uiState.update {
                 it.copy(
                     distritosDisponibles = tarifas,
-                    distritoSeleccionado = distritoPorDefecto,
+                    distritoSeleccionado = distritoInicial,
+                    tiendasRecojoElegibles = resultadoRecojo.tiendasElegibles,
+                    tiendaRecojoSeleccionada = tiendaSeleccionada,
+                    hayStockSuficienteRecojo = resultadoRecojo.hayStockSuficiente,
                 )
             }
 
-            // 2. Revalidar y calcular pedido
+            // 3. Revalidar y calcular pedido
             recalcular()
             _uiState.update { it.copy(cargando = false) }
         }
@@ -66,15 +102,58 @@ class CheckoutSummaryViewModel @Inject constructor(
     fun onTipoEntregaChanged(tipo: TipoEntregaUi) {
         if (_uiState.value.tipoEntrega == tipo) return
         _uiState.update { it.copy(tipoEntrega = tipo) }
-        recalcular()
+        if (tipo == TipoEntregaUi.RECOJO) {
+            viewModelScope.launch {
+                val cartItems = cartRepository.items.first()
+                val stocks = stockRepository.observeStocks().first()
+                val tiendas = tiendaRepository.observarTiendas().first()
+                val destinoSesion = checkoutSessionRepository.destinoActual.value
+                val resultadoRecojo = calculateNearestStoreForCartUseCase(cartItems, stocks, tiendas, destinoSesion)
+                val tiendaIdGuardada = checkoutSessionRepository.tiendaRecojoId.value
+                val tiendaSeleccionada = resultadoRecojo.tiendasElegibles.firstOrNull { it.tienda.id == tiendaIdGuardada }
+                    ?: resultadoRecojo.tiendaRecomendada
+                    ?: resultadoRecojo.tiendasElegibles.firstOrNull()
+
+                if (tiendaSeleccionada != null) {
+                    checkoutSessionRepository.actualizarTiendaRecojo(tiendaSeleccionada.tienda.id)
+                }
+
+                _uiState.update {
+                    it.copy(
+                        tiendasRecojoElegibles = resultadoRecojo.tiendasElegibles,
+                        tiendaRecojoSeleccionada = tiendaSeleccionada,
+                        hayStockSuficienteRecojo = resultadoRecojo.hayStockSuficiente,
+                    )
+                }
+                recalcular()
+            }
+        } else {
+            recalcular()
+        }
     }
 
     fun onDistritoChanged(tarifa: TarifaEnvio) {
         if (_uiState.value.distritoSeleccionado?.id == tarifa.id) return
         _uiState.update { it.copy(distritoSeleccionado = tarifa) }
+
+        // Actualizar también CheckoutSessionRepository con el nuevo distrito seleccionado
+        val destinoActual = checkoutSessionRepository.destinoActual.value ?: DestinoEntrega()
+        val nuevoDestino = destinoActual.copy(
+            tipo = TipoDestino.OTRA_DIRECCION,
+            distrito = tarifa.distrito,
+            distritoSlug = tarifa.id,
+        )
+        checkoutSessionRepository.actualizarDestino(nuevoDestino)
+
         if (_uiState.value.tipoEntrega == TipoEntregaUi.DELIVERY) {
             recalcular()
         }
+    }
+
+    fun onTiendaRecojoChanged(tienda: TiendaCartConDistancia) {
+        if (_uiState.value.tiendaRecojoSeleccionada?.tienda?.id == tienda.tienda.id) return
+        _uiState.update { it.copy(tiendaRecojoSeleccionada = tienda) }
+        checkoutSessionRepository.actualizarTiendaRecojo(tienda.tienda.id)
     }
 
     fun onCuponInputChanged(input: String) {
