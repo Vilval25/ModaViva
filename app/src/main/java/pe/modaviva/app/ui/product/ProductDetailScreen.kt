@@ -340,7 +340,7 @@ fun ProductDetailScreen(
                                 Icon(
                                     imageVector = Icons.Outlined.Straighten,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
                                     modifier = Modifier.size(20.dp),
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -425,7 +425,7 @@ fun ProductDetailScreen(
                                     imageVector = Icons.Outlined.Straighten,
                                     contentDescription = "Talla recomendada",
                                     modifier = Modifier.size(16.dp),
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    tint = if (tallaSeleccionada == talla) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.primary,
                                 )
                             }
                         } else null,
@@ -485,7 +485,8 @@ fun ProductDetailScreen(
                             Text(
                                 text = "Distancia: ${"%.1f".format(km)} km",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
                             )
                         }
                         Text(

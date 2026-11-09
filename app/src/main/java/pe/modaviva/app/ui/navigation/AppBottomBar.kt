@@ -80,7 +80,7 @@ private fun RowScope.Pestana(
     val color = if (selected) {
         MaterialTheme.colorScheme.onSurface
     } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
+        MaterialTheme.colorScheme.outline
     }
     Column(
         modifier = Modifier

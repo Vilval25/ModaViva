@@ -146,10 +146,11 @@ fun DestinationSelectorBottomSheet(
             )
 
             // Opción 1: Direcciones guardadas del perfil
+            val esDirRegistrada = tipoSeleccionado == TipoDestino.DIRECCION_REGISTRADA
             Card(
                 onClick = { tipoSeleccionado = TipoDestino.DIRECCION_REGISTRADA },
                 colors = CardDefaults.cardColors(
-                    containerColor = if (tipoSeleccionado == TipoDestino.DIRECCION_REGISTRADA)
+                    containerColor = if (esDirRegistrada)
                         MaterialTheme.colorScheme.primaryContainer
                     else
                         MaterialTheme.colorScheme.surfaceVariant
@@ -158,11 +159,16 @@ fun DestinationSelectorBottomSheet(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Outlined.Home, contentDescription = null)
+                        Icon(
+                            imageVector = Icons.Outlined.Home,
+                            contentDescription = null,
+                            tint = if (esDirRegistrada) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Direcciones guardadas",
                             style = MaterialTheme.typography.titleMedium,
+                            color = if (esDirRegistrada) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
@@ -170,7 +176,7 @@ fun DestinationSelectorBottomSheet(
                         Text(
                             text = "No hay direcciones registradas en tu perfil. Puedes agregarlas en Perfil > Mis direcciones.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (esDirRegistrada) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     } else {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -204,13 +210,14 @@ fun DestinationSelectorBottomSheet(
             }
 
             // Opción 2: Ubicación GPS
+            val esGps = tipoSeleccionado == TipoDestino.UBICACION_ACTUAL_GPS
             Card(
                 onClick = {
                     tipoSeleccionado = TipoDestino.UBICACION_ACTUAL_GPS
                     onGpsRequested()
                 },
                 colors = CardDefaults.cardColors(
-                    containerColor = if (tipoSeleccionado == TipoDestino.UBICACION_ACTUAL_GPS)
+                    containerColor = if (esGps)
                         MaterialTheme.colorScheme.primaryContainer
                     else
                         MaterialTheme.colorScheme.surfaceVariant
@@ -219,11 +226,16 @@ fun DestinationSelectorBottomSheet(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Outlined.MyLocation, contentDescription = null)
+                        Icon(
+                            imageVector = Icons.Outlined.MyLocation,
+                            contentDescription = null,
+                            tint = if (esGps) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Usar mi ubicación actual (GPS)",
                             style = MaterialTheme.typography.titleMedium,
+                            color = if (esGps) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
@@ -274,10 +286,11 @@ fun DestinationSelectorBottomSheet(
             }
 
             // Opción 3: Selección manual / Ingreso
+            val esOtraDir = tipoSeleccionado == TipoDestino.OTRA_DIRECCION
             Card(
                 onClick = { tipoSeleccionado = TipoDestino.OTRA_DIRECCION },
                 colors = CardDefaults.cardColors(
-                    containerColor = if (tipoSeleccionado == TipoDestino.OTRA_DIRECCION)
+                    containerColor = if (esOtraDir)
                         MaterialTheme.colorScheme.primaryContainer
                     else
                         MaterialTheme.colorScheme.surfaceVariant
@@ -286,18 +299,23 @@ fun DestinationSelectorBottomSheet(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Outlined.LocationOn, contentDescription = null)
+                        Icon(
+                            imageVector = Icons.Outlined.LocationOn,
+                            contentDescription = null,
+                            tint = if (esOtraDir) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Selección manual de distrito",
                             style = MaterialTheme.typography.titleMedium,
+                            color = if (esOtraDir) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Selecciona tu distrito de la lista oficial de tarifas.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (esOtraDir) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }

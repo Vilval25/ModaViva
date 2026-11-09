@@ -270,7 +270,7 @@ private fun BannerOferta() {
                 text = "Sale",
                 style = MaterialTheme.typography.headlineLarge,
                 fontStyle = FontStyle.Italic,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
             Text(
                 text = "Hasta 50% de descuento en prendas seleccionadas",

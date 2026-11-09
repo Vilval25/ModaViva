@@ -376,7 +376,7 @@ private fun ModalidadEntregaSection(
                         Icon(
                             imageVector = Icons.Default.LocalShipping,
                             contentDescription = null,
-                            tint = if (esDelivery) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (esDelivery) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp),
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -385,11 +385,12 @@ private fun ModalidadEntregaSection(
                                 text = "Envío",
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold,
+                                color = if (esDelivery) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
                                 text = if (distritoSeleccionado != null) formatearSoles(distritoSeleccionado.costo) else "Tarifa según zona",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = if (esDelivery) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
@@ -413,7 +414,7 @@ private fun ModalidadEntregaSection(
                         Icon(
                             imageVector = Icons.Default.Storefront,
                             contentDescription = null,
-                            tint = if (esRecojo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (esRecojo) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp),
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -422,11 +423,12 @@ private fun ModalidadEntregaSection(
                                 text = "Recojo en tienda",
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold,
+                                color = if (esRecojo) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
                                 text = "Gratis (S/ 0.00)",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = if (esRecojo) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary,
                             )
                         }
                     }
@@ -544,6 +546,7 @@ private fun ModalidadEntregaSection(
                                             text = tiendaCart.tienda.nombre,
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.Bold,
+                                            color = if (esElegida) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
                                         )
                                         if (tiendaCart.esRecomendada) {
                                             Surface(
@@ -564,14 +567,14 @@ private fun ModalidadEntregaSection(
                                         Text(
                                             text = "${tiendaCart.tienda.direccion}, ${tiendaCart.tienda.distrito}",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            color = if (esElegida) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
                                     }
                                     tiendaCart.distanciaKm?.let { km ->
                                         Text(
                                             text = "Distancia aproximada: ${"%.1f".format(km)} km",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.primary,
+                                            color = if (esElegida) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.SemiBold,
                                         )
                                     }

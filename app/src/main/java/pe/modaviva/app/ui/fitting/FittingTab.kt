@@ -291,7 +291,7 @@ private fun FittingPhotoGuideScreen(
             Icon(
                 imageVector = Icons.Outlined.PhotoCamera,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier.size(32.dp),
             )
         }
@@ -702,7 +702,7 @@ private fun FittingConsentScreen(
             Icon(
                 imageVector = Icons.Outlined.Shield,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier.size(32.dp),
             )
         }
