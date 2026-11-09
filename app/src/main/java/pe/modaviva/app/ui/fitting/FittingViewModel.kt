@@ -12,8 +12,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import pe.modaviva.app.data.network.MonitorDeConexion
 import pe.modaviva.app.domain.model.UserProfile
 import pe.modaviva.app.domain.repository.AuthRepository
 import pe.modaviva.app.domain.repository.FittingRepository
@@ -26,6 +28,7 @@ class FittingViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val authRepository: AuthRepository,
     private val fittingRepository: FittingRepository,
+    private val monitorDeConexion: MonitorDeConexion,
 ) : ViewModel() {
 
     val currentUser: StateFlow<UserProfile?> = sessionRepository.currentUser
@@ -248,11 +251,12 @@ class FittingViewModel @Inject constructor(
         _showHeightDialog.value = true
     }
 
-    fun deletePhoto() {
-        viewModelScope.launch {
-            fittingRepository.deleteFittingPhoto()
-        }
-    }
+    // HU-17: Eliminación de la fotografía
+    val eliminacion = EliminacionDeFoto(
+        repositorio = fittingRepository,
+        hayConexion = { monitorDeConexion.conectado.first() },
+        scope = viewModelScope,
+    )
 
     override fun onCleared() {
         super.onCleared()

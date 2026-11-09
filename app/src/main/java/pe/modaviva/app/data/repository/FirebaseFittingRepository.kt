@@ -11,7 +11,9 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageException
 import com.google.firebase.storage.StorageMetadata
+import com.google.firebase.storage.StorageReference
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.pose.PoseDetection
 import com.google.mlkit.vision.pose.defaults.PoseDetectorOptions
@@ -20,11 +22,14 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import pe.modaviva.app.domain.model.ConstanciaEliminacionFoto
 import pe.modaviva.app.domain.model.FittingPhotoError
 import pe.modaviva.app.domain.model.FittingPhotoException
+import pe.modaviva.app.domain.model.sinFotoProbador
 import pe.modaviva.app.domain.repository.FittingRepository
 import pe.modaviva.app.domain.repository.SessionRepository
 import java.io.ByteArrayOutputStream
+import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -222,28 +227,46 @@ class FirebaseFittingRepository @Inject constructor(
         }
     }
 
-    override suspend fun deleteFittingPhoto(): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching {
-            val user = auth.currentUser ?: return@runCatching
+    /**
+     * HU-17: borra la foto de Storage y luego la quita del perfil.
+     *
+     * Storage va primero: si falla (por ejemplo, sin conexión), la foto sigue
+     * registrada y el cliente puede reintentar, en lugar de quedar un archivo
+     * huérfano que ya no se ve en la app. Un archivo que ya no existe no es un
+     * error. El perfil guarda en `probador.fotoEliminadaEn` el registro de la
+     * eliminación.
+     */
+    override suspend fun deleteFittingPhoto(): Result<ConstanciaEliminacionFoto> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val user = auth.currentUser
+                    ?: throw IllegalStateException("Debes iniciar sesión para eliminar tu foto")
 
-            val photoRefWebp = storage.reference.child("clientes/${user.uid}/probador/foto_cuerpo_completo.webp")
-            val photoRefJpg = storage.reference.child("clientes/${user.uid}/probador/foto_cuerpo_completo.jpg")
-            runCatching { photoRefWebp.delete().await() }
-            runCatching { photoRefJpg.delete().await() }
+                EliminacionFotoFirestore.ARCHIVOS_FOTO.forEach { archivo ->
+                    borrarSiExiste(storage.reference.child("clientes/${user.uid}/probador/$archivo"))
+                }
 
-            val updates = mapOf(
-                "fotoProbadorUrl" to FieldValue.delete(),
-                "probador.fotoUrl" to FieldValue.delete(),
-                "actualizadoEn" to FieldValue.serverTimestamp(),
-            )
-            firestore.collection("clientes").document(user.uid)
-                .update(updates)
-                .await()
+                val cambios = buildMap<String, Any> {
+                    EliminacionFotoFirestore.CAMPOS_BORRADOS.forEach { put(it, FieldValue.delete()) }
+                    put(EliminacionFotoFirestore.CAMPO_REGISTRO, FieldValue.serverTimestamp())
+                    put("actualizadoEn", FieldValue.serverTimestamp())
+                }
+                firestore.collection("clientes").document(user.uid)
+                    .update(cambios)
+                    .await()
 
-            val currentProfile = sessionRepository.currentUser.value
-            if (currentProfile != null) {
-                sessionRepository.signIn(currentProfile.copy(fotoProbadorUrl = null))
+                sessionRepository.currentUser.value?.let { perfil ->
+                    sessionRepository.signIn(perfil.sinFotoProbador())
+                }
+                ConstanciaEliminacionFoto(eliminadaEn = Instant.now())
             }
+        }
+
+    private suspend fun borrarSiExiste(archivo: StorageReference) {
+        try {
+            archivo.delete().await()
+        } catch (e: StorageException) {
+            if (e.errorCode != StorageException.ERROR_OBJECT_NOT_FOUND) throw e
         }
     }
 
