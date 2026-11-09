@@ -60,7 +60,7 @@ estos archivos al cerrar cada hito; entre hitos no se edita.
 | [HU-14 — Registro de altura para la recomendación de talla](HU-14-registro-de-altura-para-la-recomendacion-de-talla.md) | E4 | Vila | SEM 10 | 5/5 |
 | [HU-15 — Recomendación de talla según altura y fotografía](HU-15-recomendacion-de-talla-segun-altura-y-fotografia.md) | E4 | Rojas | SEM 10 – SEM 11 | 6/6 |
 | [HU-16 — Prendas no habilitadas para el probador](HU-16-prendas-no-habilitadas-para-el-probador.md) | E4 | Perez | SEM 9 | 5/5 |
-| [HU-17 — Eliminación de la fotografía](HU-17-eliminacion-de-la-fotografia.md) | E4 | Vila | SEM 11 | 0/6 |
+| [HU-17 — Eliminación de la fotografía](HU-17-eliminacion-de-la-fotografia.md) | E4 | Vila | SEM 11 | 4/6 |
 | [HU-18 — Centro de notificaciones](HU-18-centro-de-notificaciones.md) | E6 | Rojas | SEM 11 | 0/8 |
 
 ### Sprint 3 (SEM 12 – SEM 15) — _borrador, se revisa al cerrar el Hito 1_
