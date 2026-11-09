@@ -179,15 +179,62 @@ class FirebaseFittingRepository @Inject constructor(
 
             val downloadUrl = photoRef.downloadUrl.await().toString()
 
+            // Extraer proporciones anatómicas (ratios hombro y cadera) de la pose
+            val (rHombro, rCadera) = try {
+                val poseOptions = PoseDetectorOptions.Builder()
+                    .setDetectorMode(PoseDetectorOptions.SINGLE_IMAGE_MODE)
+                    .build()
+                val detector = PoseDetection.getClient(poseOptions)
+                val inputImage = InputImage.fromBitmap(bitmap, 0)
+                val pose = detector.process(inputImage).await()
+
+                val lShoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER)
+                val rShoulder = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER)
+                val lHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP)
+                val rHip = pose.getPoseLandmark(PoseLandmark.RIGHT_HIP)
+                val lAnkle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE)
+                val rAnkle = pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE)
+                val nose = pose.getPoseLandmark(PoseLandmark.NOSE)
+
+                if (lShoulder != null && rShoulder != null && lHip != null && rHip != null && nose != null) {
+                    val shoulderWidth = kotlin.math.abs(lShoulder.position.x - rShoulder.position.x)
+                    val hipWidth = kotlin.math.abs(lHip.position.x - rHip.position.x)
+                    val ankleY = if (lAnkle != null && rAnkle != null) {
+                        (lAnkle.position.y + rAnkle.position.y) / 2f
+                    } else {
+                        (lAnkle ?: rAnkle)?.position?.y ?: 0f
+                    }
+                    val bodyHeight = if (ankleY > nose.position.y) {
+                        kotlin.math.abs(ankleY - nose.position.y) * 1.15f
+                    } else {
+                        1f
+                    }
+                    val rH = (shoulderWidth / bodyHeight).toDouble().coerceIn(0.18, 0.32)
+                    val rC = (hipWidth / bodyHeight).toDouble().coerceIn(0.16, 0.30)
+                    rH to rC
+                } else {
+                    null to null
+                }
+            } catch (_: Exception) {
+                null to null
+            }
+
             // Actualizar documento de Firestore
-            val updates = mapOf(
+            val probadorMap = mutableMapOf<String, Any>(
+                "fotoUrl" to downloadUrl,
+                "fotoActualizadaEn" to FieldValue.serverTimestamp(),
+            )
+            if (rHombro != null) probadorMap["ratioHombro"] = rHombro
+            if (rCadera != null) probadorMap["ratioCadera"] = rCadera
+
+            val updates = mutableMapOf<String, Any>(
                 "fotoProbadorUrl" to downloadUrl,
-                "probador" to mapOf(
-                    "fotoUrl" to downloadUrl,
-                    "fotoActualizadaEn" to FieldValue.serverTimestamp(),
-                ),
+                "probador" to probadorMap,
                 "actualizadoEn" to FieldValue.serverTimestamp(),
             )
+            if (rHombro != null) updates["ratioHombro"] = rHombro
+            if (rCadera != null) updates["ratioCadera"] = rCadera
+
             firestore.collection("clientes").document(user.uid)
                 .set(updates, SetOptions.merge())
                 .await()
@@ -195,7 +242,13 @@ class FirebaseFittingRepository @Inject constructor(
             // Actualizar sesión local
             val currentProfile = sessionRepository.currentUser.value
             if (currentProfile != null) {
-                sessionRepository.signIn(currentProfile.copy(fotoProbadorUrl = downloadUrl))
+                sessionRepository.signIn(
+                    currentProfile.copy(
+                        fotoProbadorUrl = downloadUrl,
+                        ratioHombro = rHombro ?: currentProfile.ratioHombro,
+                        ratioCadera = rCadera ?: currentProfile.ratioCadera,
+                    )
+                )
             }
 
             downloadUrl
