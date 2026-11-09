@@ -207,6 +207,21 @@
     <string name="fitting_photo_registered_desc">Tu fotografía ha sido registrada exitosamente. Ya puedes probarte prendas en el catálogo.</string>
     <string name="fitting_camera_permission_required">Se requiere permiso de cámara para tomar tu fotografía.</string>
 
+    <!-- HU-17: Eliminación de la fotografía -->
+    <string name="fitting_delete_photo_btn">Eliminar mi foto</string>
+    <string name="fitting_delete_dialog_title">¿Eliminar tu foto?</string>
+    <string name="fitting_delete_dialog_body">Se borrarán tu foto y todas las imágenes que el probador generó con ella. Tu cuenta, tus pedidos y tu carrito se mantienen.\n\nPara volver a usar el probador tendrás que registrar una foto nueva.</string>
+    <string name="fitting_delete_dialog_confirm">Eliminar</string>
+    <string name="fitting_delete_error_offline">Necesitas conexión a internet para eliminar tu foto. No se eliminó nada.</string>
+    <string name="fitting_delete_error">No pudimos completar la eliminación de tu foto. Inténtalo de nuevo.</string>
+    <string name="fitting_delete_receipt_label">Constancia de eliminación</string>
+    <string name="fitting_delete_receipt_title">Eliminamos tu foto</string>
+    <string name="fitting_delete_receipt_removed">Se borraron tu foto y las imágenes generadas con ella.</string>
+    <string name="fitting_delete_receipt_kept">Tu cuenta, tus pedidos y tu carrito se mantienen.</string>
+    <string name="fitting_delete_receipt_disabled">El probador queda desactivado hasta que registres una foto nueva.</string>
+    <string name="fitting_delete_receipt_new_photo">Registrar una foto nueva</string>
+    <string name="fitting_delete_receipt_catalog">Ir al catálogo</string>
+
     <!-- HU-14: Registro de altura -->
     <string name="height_dialog_title">Tu altura para la talla</string>
     <string name="height_dialog_body">Usamos tu altura exclusivamente para recomendarte una talla aproximada según nuestras tablas de medidas.</string>

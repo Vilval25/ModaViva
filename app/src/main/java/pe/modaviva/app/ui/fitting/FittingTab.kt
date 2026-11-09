@@ -70,6 +70,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import pe.modaviva.app.R
 import pe.modaviva.app.domain.model.UserProfile
+import pe.modaviva.app.ui.components.MvConfirmDialog
+import pe.modaviva.app.ui.components.MvDestructiveButton
 import pe.modaviva.app.ui.components.MvEmptyState
 import pe.modaviva.app.ui.components.MvPrimaryButton
 import pe.modaviva.app.ui.components.MvScreen
@@ -83,6 +85,7 @@ import pe.modaviva.app.ui.components.MvSecondaryButton
  * 2. Guía, captura (CameraX) y selección de galería con validación de pose (HU-11).
  * 3. Modal de registro de altura para estimación de talla (HU-14).
  * 4. Estado activo con foto registrada, altura editable y acceso a pruebas.
+ * 5. Eliminación de la foto con confirmación y constancia (HU-17).
  */
 @Composable
 fun FittingTab(
@@ -108,6 +111,8 @@ fun FittingTab(
 
     val showHeightDialog by viewModel.showHeightDialog.collectAsStateWithLifecycle()
     val isSavingHeight by viewModel.isSavingHeight.collectAsStateWithLifecycle()
+
+    val estadoEliminacion by viewModel.eliminacion.estado.collectAsStateWithLifecycle()
 
     // Launcher para selector de galería (Photo Picker / MediaStore)
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -151,6 +156,18 @@ fun FittingTab(
         )
     }
 
+    // HU-17 CA-02: explica qué se borra; cancelar no elimina nada
+    if (estadoEliminacion is EstadoEliminacion.Confirmando) {
+        MvConfirmDialog(
+            title = stringResource(R.string.fitting_delete_dialog_title),
+            message = stringResource(R.string.fitting_delete_dialog_body),
+            confirmLabel = stringResource(R.string.fitting_delete_dialog_confirm),
+            onConfirm = viewModel.eliminacion::confirmar,
+            onDismiss = viewModel.eliminacion::cancelar,
+            destructive = true,
+        )
+    }
+
     // Cámara en pantalla completa
     if (showCamera) {
         FittingCameraView(
@@ -165,6 +182,7 @@ fun FittingTab(
         modifier = modifier,
     ) { padding ->
         val currentUser = user
+        val eliminacionActual = estadoEliminacion
         when {
             // CA-01: Sin sesión activa
             currentUser == null -> {
@@ -185,6 +203,19 @@ fun FittingTab(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
+            }
+
+            // HU-17 CA-03: constancia tras eliminar la foto
+            eliminacionActual is EstadoEliminacion.Hecha -> {
+                ConstanciaEliminacionScreen(
+                    constancia = eliminacionActual.constancia,
+                    onNuevaFotoClick = viewModel.eliminacion::cerrar,
+                    onCatalogoClick = {
+                        viewModel.eliminacion.cerrar()
+                        onExploreClick()
+                    },
+                    modifier = Modifier.padding(padding),
+                )
             }
 
             // CA-05: El cliente eligió 'Ahora no'
@@ -256,6 +287,9 @@ fun FittingTab(
                     onEditHeightClick = viewModel::openHeightDialog,
                     onChangePhotoClick = requestCamera,
                     onExploreClick = onExploreClick,
+                    isDeleting = eliminacionActual is EstadoEliminacion.Eliminando,
+                    deleteError = (eliminacionActual as? EstadoEliminacion.Fallida)?.motivo,
+                    onDeletePhotoClick = viewModel.eliminacion::solicitar,
                     modifier = Modifier.padding(padding),
                 )
             }
@@ -556,6 +590,9 @@ private fun FittingActivePhotoScreen(
     onEditHeightClick: () -> Unit,
     onChangePhotoClick: () -> Unit,
     onExploreClick: () -> Unit,
+    isDeleting: Boolean,
+    deleteError: MotivoFallo?,
+    onDeletePhotoClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -649,6 +686,7 @@ private fun FittingActivePhotoScreen(
         // Botón para cambiar fotografía (CA-05)
         OutlinedButton(
             onClick = onChangePhotoClick,
+            enabled = !isDeleting,
             modifier = Modifier.fillMaxWidth(),
         ) {
             Icon(
@@ -666,6 +704,46 @@ private fun FittingActivePhotoScreen(
         MvPrimaryButton(
             text = "Explorar prendas para probar",
             onClick = onExploreClick,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // HU-17: si falló, la foto sigue registrada y el botón permite reintentar
+        if (deleteError != null) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.ErrorOutline,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(
+                            when (deleteError) {
+                                MotivoFallo.SIN_CONEXION -> R.string.fitting_delete_error_offline
+                                MotivoFallo.ERROR -> R.string.fitting_delete_error
+                            },
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
+            }
+        }
+
+        // HU-17 CA-01: opción para eliminar la foto registrada
+        MvDestructiveButton(
+            text = stringResource(R.string.fitting_delete_photo_btn),
+            onClick = onDeletePhotoClick,
+            loading = isDeleting,
             modifier = Modifier.fillMaxWidth(),
         )
     }
