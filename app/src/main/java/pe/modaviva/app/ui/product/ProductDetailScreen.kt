@@ -20,11 +20,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.ui.text.font.FontWeight
 import pe.modaviva.app.domain.model.RecomendacionTalla
@@ -338,7 +338,7 @@ fun ProductDetailScreen(
                         Column(modifier = Modifier.padding(14.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
-                                    imageVector = Icons.Outlined.AutoAwesome,
+                                    imageVector = Icons.Outlined.Straighten,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(20.dp),
@@ -422,7 +422,7 @@ fun ProductDetailScreen(
                         leadingIcon = if (esRecomendada && !esAgotada) {
                             {
                                 Icon(
-                                    imageVector = Icons.Outlined.AutoAwesome,
+                                    imageVector = Icons.Outlined.Straighten,
                                     contentDescription = "Talla recomendada",
                                     modifier = Modifier.size(16.dp),
                                     tint = MaterialTheme.colorScheme.primary,
@@ -433,7 +433,7 @@ fun ProductDetailScreen(
                             Text(
                                 text = when {
                                     esAgotada -> "$talla (Agotado)"
-                                    esRecomendada -> "$talla (Sugerida)"
+                                    esRecomendada -> "$talla (Recomendada)"
                                     else -> talla
                                 },
                                 maxLines = 1,
