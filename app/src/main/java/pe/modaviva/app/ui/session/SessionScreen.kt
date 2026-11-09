@@ -59,6 +59,7 @@ import pe.modaviva.app.ui.session.components.ProfileSectionTitle
 import pe.modaviva.app.ui.session.dialogs.AboutModaVivaDialog
 import pe.modaviva.app.ui.session.dialogs.PersonalDataDialog
 import pe.modaviva.app.ui.session.dialogs.ResetPasswordDialog
+import pe.modaviva.app.ui.fitting.HeightDialog
 
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -80,11 +81,13 @@ fun SessionScreen(
     val isUpdatingProfile by viewModel.isUpdatingProfile.collectAsStateWithLifecycle()
     val updateProfileError by viewModel.updateProfileError.collectAsStateWithLifecycle()
     val isRevokingConsent by viewModel.isRevokingConsent.collectAsStateWithLifecycle()
+    val isUpdatingHeight by viewModel.isUpdatingHeight.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val updateSuccessMessage = stringResource(R.string.profile_edit_success)
     val revokedConsentSuccessMessage = stringResource(R.string.fitting_consent_revoked_success)
+    val heightSavedSuccessMessage = stringResource(R.string.profile_height_saved_success)
 
     var showSignOutConfirm by remember { mutableStateOf(false) }
     var showPersonalDataDialog by remember { mutableStateOf(false) }
@@ -92,6 +95,7 @@ fun SessionScreen(
     var showTermsDialog by remember { mutableStateOf(false) }
     var showRevokeConsentConfirm by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showHeightDialog by remember { mutableStateOf(false) }
     var soonDialogInfo by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     val profile = user
@@ -177,9 +181,14 @@ fun SessionScreen(
                     ProfileItemRow(
                         icon = Icons.Outlined.Straighten,
                         title = measurementsTitle,
-                        subtitle = stringResource(R.string.profile_item_measurements_desc),
+                        subtitle = profile.alturaCm?.let { "Altura registrada: $it cm" }
+                            ?: stringResource(R.string.profile_item_measurements_desc),
                         onClick = {
-                            soonDialogInfo = Pair(measurementsTitle, measurementsDesc)
+                            if (profile.tieneConsentimientoProbador) {
+                                showHeightDialog = true
+                            } else {
+                                soonDialogInfo = Pair(measurementsTitle, measurementsDesc)
+                            }
                         },
                     )
                     ProfileItemRow(
@@ -404,6 +413,24 @@ fun SessionScreen(
     // Diálogo Acerca de ModaViva
     if (showAboutDialog) {
         AboutModaVivaDialog(onDismiss = { showAboutDialog = false })
+    }
+
+    // Modal de Altura (HU-14 CA-05)
+    if (showHeightDialog) {
+        HeightDialog(
+            initialHeightCm = profile?.alturaCm,
+            allowSkip = false,
+            isLoading = isUpdatingHeight,
+            onDismiss = { showHeightDialog = false },
+            onSave = { newHeight ->
+                viewModel.updateHeight(newHeight) {
+                    showHeightDialog = false
+                    scope.launch {
+                        snackbarHostState.showSnackbar(heightSavedSuccessMessage)
+                    }
+                }
+            },
+        )
     }
 
     // Diálogo de Confirmación para Revocar Consentimiento del Probador (HU-10 CA-06)

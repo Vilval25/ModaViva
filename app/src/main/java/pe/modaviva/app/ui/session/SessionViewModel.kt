@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import pe.modaviva.app.domain.model.UserProfile
 import pe.modaviva.app.domain.repository.AuthRepository
+import pe.modaviva.app.domain.repository.FittingRepository
 import pe.modaviva.app.domain.repository.SessionRepository
 import javax.inject.Inject
 
@@ -16,6 +17,7 @@ import javax.inject.Inject
 class SessionViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val authRepository: AuthRepository,
+    private val fittingRepository: FittingRepository,
 ) : ViewModel() {
 
     val currentUser: StateFlow<UserProfile?> = sessionRepository.currentUser
@@ -96,6 +98,30 @@ class SessionViewModel @Inject constructor(
                 onSuccess()
             }
         }
+    }
+
+    private val _isUpdatingHeight = MutableStateFlow(false)
+    val isUpdatingHeight: StateFlow<Boolean> = _isUpdatingHeight.asStateFlow()
+
+    private val _updateHeightError = MutableStateFlow<String?>(null)
+    val updateHeightError: StateFlow<String?> = _updateHeightError.asStateFlow()
+
+    fun updateHeight(heightCm: Int, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _isUpdatingHeight.value = true
+            _updateHeightError.value = null
+            val result = fittingRepository.updateHeight(heightCm)
+            _isUpdatingHeight.value = false
+            result.onSuccess {
+                onSuccess()
+            }.onFailure { e ->
+                _updateHeightError.value = e.localizedMessage ?: "No se pudo guardar la altura."
+            }
+        }
+    }
+
+    fun dismissHeightError() {
+        _updateHeightError.value = null
     }
 
     fun signOut() {

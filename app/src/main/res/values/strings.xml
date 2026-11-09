@@ -186,6 +186,38 @@
     <string name="fitting_view_measurements_table">Ver tabla de medidas</string>
     <string name="fitting_disabled_badge">No disponible para probar</string>
 
+    <!-- HU-11: Registro de la fotografía del cliente -->
+    <string name="fitting_photo_guide_title">Registra tu fotografía</string>
+    <string name="fitting_photo_guide_subtitle">Sigue estos consejos para un mejor resultado con IA</string>
+    <string name="fitting_photo_tip_body_title">Cuerpo completo</string>
+    <string name="fitting_photo_tip_body_desc">De pies a cabeza, de pie y con postura natural.</string>
+    <string name="fitting_photo_tip_light_title">Buena iluminación</string>
+    <string name="fitting_photo_tip_light_desc">Luz frontal uniforme, evita sombras o contraluces.</string>
+    <string name="fitting_photo_tip_bg_title">Fondo despejado</string>
+    <string name="fitting_photo_tip_bg_desc">De preferencia una pared de color claro y sin objetos detrás.</string>
+    <string name="fitting_take_photo_btn">Tomar foto con cámara</string>
+    <string name="fitting_choose_gallery_btn">Elegir de la galería</string>
+    <string name="fitting_change_photo_btn">Cambiar fotografía</string>
+    <string name="fitting_photo_preview_title">Confirma tu fotografía</string>
+    <string name="fitting_photo_validating">Analizando imagen y detectando cuerpo completo…</string>
+    <string name="fitting_photo_use_btn">Confirmar y usar foto</string>
+    <string name="fitting_photo_retake_btn">Tomar / Elegir otra</string>
+    <string name="fitting_photo_uploading">Optimizando y subiendo fotografía…</string>
+    <string name="fitting_photo_registered_title">Tu foto está lista</string>
+    <string name="fitting_photo_registered_desc">Tu fotografía ha sido registrada exitosamente. Ya puedes probarte prendas en el catálogo.</string>
+    <string name="fitting_camera_permission_required">Se requiere permiso de cámara para tomar tu fotografía.</string>
+
+    <!-- HU-14: Registro de altura -->
+    <string name="height_dialog_title">Tu altura para la talla</string>
+    <string name="height_dialog_body">Usamos tu altura exclusivamente para recomendarte una talla aproximada según nuestras tablas de medidas.</string>
+    <string name="height_input_label">Altura (cm)</string>
+    <string name="height_input_error">Ingresa una altura válida entre 100 y 230 cm</string>
+    <string name="height_skip_button">Omitir</string>
+    <string name="height_save_button">Guardar</string>
+    <string name="profile_my_height_title">Mi altura</string>
+    <string name="profile_my_height_desc">Configura tu altura para recomendaciones de talla precisas</string>
+    <string name="profile_height_saved_success">Altura guardada correctamente</string>
+
     <string name="coming_soon_title">Próximamente</string>
     <string name="coming_soon_body">Estamos trabajando en esta sección.</string>
 
