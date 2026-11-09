@@ -43,6 +43,25 @@ describe("storage", () => {
     await assertFails(uploadBytes(ref(storage, "categorias/blusas.jpg"), bytes));
   });
 
+  test("cliente puede subir, leer y borrar su propia foto de probador (HU-11 CA-06)", async () => {
+    const anaStorage = env.authenticatedContext("cli-ana").storage();
+    const bobStorage = env.authenticatedContext("cli-bob").storage();
+    const guestStorage = env.unauthenticatedContext().storage();
+    const anaFotoRef = ref(anaStorage, "clientes/cli-ana/probador/foto.jpg");
+
+    // Ana puede subir y leer su foto
+    await assertSucceeds(uploadBytes(anaFotoRef, bytes));
+    await assertSucceeds(getBytes(anaFotoRef));
+
+    // Bob o un invitado no pueden leer la foto de Ana
+    await assertFails(getBytes(ref(bobStorage, "clientes/cli-ana/probador/foto.jpg")));
+    await assertFails(getBytes(ref(guestStorage, "clientes/cli-ana/probador/foto.jpg")));
+
+    // Bob o un invitado no pueden escribir en la carpeta de Ana
+    await assertFails(uploadBytes(ref(bobStorage, "clientes/cli-ana/probador/foto.jpg"), bytes));
+    await assertFails(uploadBytes(ref(guestStorage, "clientes/cli-ana/probador/foto.jpg"), bytes));
+  });
+
   test("se rechaza cualquier ruta que no esté en las reglas", async () => {
     const storage = env.authenticatedContext("cli-ana").storage();
     await assertFails(getBytes(ref(storage, "privado/x.jpg")));
