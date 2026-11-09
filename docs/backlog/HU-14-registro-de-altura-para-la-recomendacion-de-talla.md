@@ -31,11 +31,11 @@ La primera vez que el cliente usa el probador (después de registrar su foto y a
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que registré mi foto y nunca ingresé mi altura, cuando toco 'Probarme' por primera vez, entonces aparece el modal de altura antes de generar la imagen.
-- [ ] **CA-02** Dado que veo el modal, cuando lo leo, entonces se explica que la altura se usa solo para recomendar una talla aproximada.
-- [ ] **CA-03** Dado que ingreso un valor fuera del rango 100–230 cm o no numérico, cuando intento guardar, entonces veo el rango permitido y el dato no se guarda.
-- [ ] **CA-04** Dado que elijo 'Omitir', cuando continúo, entonces la generación sigue normalmente y en lugar de talla recomendada veo la tabla de tallas genérica.
-- [ ] **CA-05** Dado que ya registré mi altura, cuando la edito en Perfil > Mis medidas, entonces el nuevo valor se usa en las siguientes recomendaciones.
+- [x] **CA-01** Dado que registré mi foto y nunca ingresé mi altura, cuando toco 'Probarme' por primera vez, entonces aparece el modal de altura antes de generar la imagen.
+- [x] **CA-02** Dado que veo el modal, cuando lo leo, entonces se explica que la altura se usa solo para recomendar una talla aproximada.
+- [x] **CA-03** Dado que ingreso un valor fuera del rango 100–230 cm o no numérico, cuando intento guardar, entonces veo el rango permitido y el dato no se guarda.
+- [x] **CA-04** Dado que elijo 'Omitir', cuando continúo, entonces la generación sigue normalmente y en lugar de talla recomendada veo la tabla de tallas genérica.
+- [x] **CA-05** Dado que ya registré mi altura, cuando la edito en Perfil > Mis medidas, entonces el nuevo valor se usa en las siguientes recomendaciones.
 
 ## Tecnologías
 

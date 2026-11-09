@@ -54,12 +54,12 @@ estos archivos al cerrar cada hito; entre hitos no se edita.
 | Historia | Épica | Encargado | Semanas | Criterios |
 | :--- | :--- | :--- | :--- | :---: |
 | [HU-10 — Consentimiento para el uso de la fotografía](HU-10-consentimiento-para-el-uso-de-la-fotografia.md) | E4 | Perez | SEM 8 | 7/7 |
-| [HU-11 — Registro de la fotografía del cliente](HU-11-registro-de-la-fotografia-del-cliente.md) | E4 | Vila | SEM 8 – SEM 9 | 0/6 |
+| [HU-11 — Registro de la fotografía del cliente](HU-11-registro-de-la-fotografia-del-cliente.md) | E4 | Vila | SEM 8 – SEM 9 | 6/6 |
 | [HU-12 — Generación de la imagen con la prenda puesta](HU-12-generacion-de-la-imagen-con-la-prenda-puesta.md) | E4 | Rojas | SEM 8 – SEM 9 | 0/7 |
 | [HU-13 — Historial y límite de pruebas virtuales](HU-13-historial-y-limite-de-pruebas-virtuales.md) | E4 | Perez | SEM 10 – SEM 11 | 0/6 |
-| [HU-14 — Registro de altura para la recomendación de talla](HU-14-registro-de-altura-para-la-recomendacion-de-talla.md) | E4 | Vila | SEM 10 | 0/5 |
+| [HU-14 — Registro de altura para la recomendación de talla](HU-14-registro-de-altura-para-la-recomendacion-de-talla.md) | E4 | Vila | SEM 10 | 5/5 |
 | [HU-15 — Recomendación de talla según altura y fotografía](HU-15-recomendacion-de-talla-segun-altura-y-fotografia.md) | E4 | Rojas | SEM 10 – SEM 11 | 0/6 |
-| [HU-16 — Prendas no habilitadas para el probador](HU-16-prendas-no-habilitadas-para-el-probador.md) | E4 | Perez | SEM 9 | 0/5 |
+| [HU-16 — Prendas no habilitadas para el probador](HU-16-prendas-no-habilitadas-para-el-probador.md) | E4 | Perez | SEM 9 | 5/5 |
 | [HU-17 — Eliminación de la fotografía](HU-17-eliminacion-de-la-fotografia.md) | E4 | Vila | SEM 11 | 0/6 |
 | [HU-18 — Centro de notificaciones](HU-18-centro-de-notificaciones.md) | E6 | Rojas | SEM 11 | 0/8 |
 
