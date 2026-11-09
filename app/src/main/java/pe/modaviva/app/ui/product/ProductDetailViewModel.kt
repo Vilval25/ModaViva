@@ -34,6 +34,8 @@ import pe.modaviva.app.domain.model.DireccionEntrega
 import pe.modaviva.app.domain.usecase.CalculateDeliveryEstimateUseCase
 import pe.modaviva.app.domain.usecase.CalculateNearestStoreUseCase
 import pe.modaviva.app.domain.usecase.ResultadoTiendaCercana
+import pe.modaviva.app.domain.model.RecomendacionTalla
+import pe.modaviva.app.domain.usecase.RecommendSizeUseCase
 import java.time.Instant
 import java.text.Normalizer
 import javax.inject.Inject
@@ -52,6 +54,7 @@ class ProductDetailViewModel @Inject constructor(
     private val calculateNearestStoreUseCase: CalculateNearestStoreUseCase,
     private val checkoutSessionRepository: CheckoutSessionRepository,
     private val direccionRepository: DireccionRepository,
+    private val recommendSizeUseCase: RecommendSizeUseCase,
 ) : ViewModel() {
 
     val currentUser: StateFlow<UserProfile?> = sessionRepository.currentUser
@@ -110,6 +113,10 @@ class ProductDetailViewModel @Inject constructor(
                 recalcularTiendaCercana()
             }
         }
+    }
+
+    fun calcularRecomendacionTalla(prenda: Prenda): RecomendacionTalla {
+        return recommendSizeUseCase(prenda, currentUser.value)
     }
 
     fun cargarTarifas() {

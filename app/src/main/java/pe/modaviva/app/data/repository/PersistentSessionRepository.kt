@@ -123,6 +123,8 @@ class PersistentSessionRepository @Inject constructor(
             val fotoProbadorUrl = (probadorData?.get("fotoUrl") as? String)
                 ?: (data["fotoProbadorUrl"] as? String)
             val alturaCm = ((probadorData?.get("alturaCm") ?: data["alturaCm"]) as? Number)?.toInt()
+            val ratioHombro = ((probadorData?.get("ratioHombro") ?: data["ratioHombro"]) as? Number)?.toDouble()
+            val ratioCadera = ((probadorData?.get("ratioCadera") ?: data["ratioCadera"]) as? Number)?.toDouble()
 
             val remoteProfile = UserProfile(
                 uid = uid,
@@ -138,6 +140,8 @@ class PersistentSessionRepository @Inject constructor(
                 consentimientoProbadorVersion = probadorVersion,
                 fotoProbadorUrl = fotoProbadorUrl,
                 alturaCm = alturaCm,
+                ratioHombro = ratioHombro,
+                ratioCadera = ratioCadera,
             )
 
             saveCachedProfile(remoteProfile)
@@ -201,6 +205,16 @@ class PersistentSessionRepository @Inject constructor(
             } else {
                 json.put("alturaCm", JSONObject.NULL)
             }
+            if (ratioHombro != null) {
+                json.put("ratioHombro", ratioHombro)
+            } else {
+                json.put("ratioHombro", JSONObject.NULL)
+            }
+            if (ratioCadera != null) {
+                json.put("ratioCadera", ratioCadera)
+            } else {
+                json.put("ratioCadera", JSONObject.NULL)
+            }
             return json.toString()
         }
 
@@ -221,6 +235,8 @@ class PersistentSessionRepository @Inject constructor(
                     consentimientoProbadorVersion = if (json.isNull("consentimientoProbadorVersion")) null else json.optString("consentimientoProbadorVersion").ifBlank { null },
                     fotoProbadorUrl = if (json.isNull("fotoProbadorUrl")) null else json.optString("fotoProbadorUrl").ifBlank { null },
                     alturaCm = if (json.isNull("alturaCm")) null else json.optInt("alturaCm").takeIf { it > 0 },
+                    ratioHombro = if (json.isNull("ratioHombro")) null else json.optDouble("ratioHombro"),
+                    ratioCadera = if (json.isNull("ratioCadera")) null else json.optDouble("ratioCadera"),
                 )
             } catch (_: Exception) {
                 null

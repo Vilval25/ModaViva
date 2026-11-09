@@ -20,10 +20,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.ui.text.font.FontWeight
+import pe.modaviva.app.domain.model.RecomendacionTalla
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
@@ -105,6 +109,10 @@ fun ProductDetailScreen(
     val allStocks by stockViewModel.stocksMap.collectAsStateWithLifecycle()
     val tiendas by stockViewModel.tiendas.collectAsStateWithLifecycle()
 
+    val recomendacionTalla = remember(prenda, currentUser) {
+        prenda?.let { viewModel.calcularRecomendacionTalla(it) } ?: RecomendacionTalla.SinDatosSuficientes
+    }
+
     var tallaSeleccionada by remember { mutableStateOf<String?>(null) }
     var cantidad by remember { mutableIntStateOf(1) }
     var mostrarMedidas by remember { mutableStateOf(false) }
@@ -140,6 +148,20 @@ fun ProductDetailScreen(
                 prendaId = codigo,
                 talla = talla,
             )
+        }
+    }
+
+    LaunchedEffect(recomendacionTalla) {
+        if (tallaSeleccionada == null && prenda != null) {
+            val sugerida = when (recomendacionTalla) {
+                is RecomendacionTalla.TallaExacta -> recomendacionTalla.talla
+                is RecomendacionTalla.EntreDosTallas -> recomendacionTalla.tallaMenor
+                else -> null
+            }
+            if (sugerida != null && prenda!!.tallas.contains(sugerida)) {
+                tallaSeleccionada = sugerida
+                viewModel.seleccionarTalla(codigo, sugerida)
+            }
         }
     }
 
@@ -304,6 +326,72 @@ fun ProductDetailScreen(
                 )
             }
 
+            // Recomendación de talla con IA (HU-15 CA-01, CA-03, CA-04)
+            when (recomendacionTalla) {
+                is RecomendacionTalla.TallaExacta, is RecomendacionTalla.EntreDosTallas -> {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
+                        ),
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Outlined.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = when (recomendacionTalla) {
+                                        is RecomendacionTalla.TallaExacta -> "Tu talla recomendada: ${recomendacionTalla.talla}"
+                                        is RecomendacionTalla.EntreDosTallas -> "Tu talla recomendada: Entre ${recomendacionTalla.tallaMenor} y ${recomendacionTalla.tallaMayor}"
+                                        else -> ""
+                                    },
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Recomendación aproximada, no garantiza el ajuste exacto",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
+                            )
+                        }
+                    }
+                }
+                is RecomendacionTalla.FotoInvalidaParaMedidas -> {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Warning,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "No se pudieron calcular tus medidas con exactitud. Puedes registrar una nueva foto en el Probador.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                            )
+                        }
+                    }
+                }
+                RecomendacionTalla.SinDatosSuficientes -> {
+                    // No se muestra banner intrusivo, se mantiene la tabla genérica
+                }
+            }
+
             Text(
                 text = "Tallas disponibles",
                 style = MaterialTheme.typography.titleMedium,
@@ -318,6 +406,12 @@ fun ProductDetailScreen(
                     val stockTalla = allStocks[claveStock]
                     val esAgotada = (stockTalla != null && stockTalla.total <= 0) || (stockTalla == null && prenda!!.stockTotal <= 0)
 
+                    val esRecomendada = when (recomendacionTalla) {
+                        is RecomendacionTalla.TallaExacta -> talla.equals(recomendacionTalla.talla, ignoreCase = true)
+                        is RecomendacionTalla.EntreDosTallas -> talla.equals(recomendacionTalla.tallaMenor, ignoreCase = true) || talla.equals(recomendacionTalla.tallaMayor, ignoreCase = true)
+                        else -> false
+                    }
+
                     FilterChip(
                         selected = tallaSeleccionada == talla,
                         onClick = {
@@ -325,9 +419,23 @@ fun ProductDetailScreen(
                             viewModel.seleccionarTalla(codigo, talla)
                         },
                         enabled = !esAgotada,
+                        leadingIcon = if (esRecomendada && !esAgotada) {
+                            {
+                                Icon(
+                                    imageVector = Icons.Outlined.AutoAwesome,
+                                    contentDescription = "Talla recomendada",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        } else null,
                         label = {
                             Text(
-                                text = if (esAgotada) "$talla (Agotado)" else talla,
+                                text = when {
+                                    esAgotada -> "$talla (Agotado)"
+                                    esRecomendada -> "$talla (Sugerida)"
+                                    else -> talla
+                                },
                                 maxLines = 1,
                             )
                         },

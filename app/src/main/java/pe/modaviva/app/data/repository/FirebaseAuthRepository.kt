@@ -290,6 +290,8 @@ class FirebaseAuthRepository @Inject constructor(
         val fotoProbadorUrl = (probadorData?.get("fotoUrl") as? String)
             ?: (data["fotoProbadorUrl"] as? String)
         val alturaCm = ((probadorData?.get("alturaCm") ?: data["alturaCm"]) as? Number)?.toInt()
+        val ratioHombro = ((probadorData?.get("ratioHombro") ?: data["ratioHombro"]) as? Number)?.toDouble()
+        val ratioCadera = ((probadorData?.get("ratioCadera") ?: data["ratioCadera"]) as? Number)?.toDouble()
 
         return Result.success(
             UserProfile(
@@ -306,6 +308,8 @@ class FirebaseAuthRepository @Inject constructor(
                 consentimientoProbadorVersion = probadorVersion,
                 fotoProbadorUrl = fotoProbadorUrl,
                 alturaCm = alturaCm,
+                ratioHombro = ratioHombro,
+                ratioCadera = ratioCadera,
             )
         )
     }

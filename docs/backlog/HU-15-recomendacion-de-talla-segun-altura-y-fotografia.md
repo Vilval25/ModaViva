@@ -33,12 +33,12 @@ Con la foto de HU-11 y la altura de HU-14, la app estima medidas corporales apro
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que tengo foto y altura registradas, cuando abro una prenda con tabla de tallas, entonces veo una talla recomendada resaltada en el selector.
-- [ ] **CA-02** Dado que se genera una prueba virtual, cuando veo el resultado, entonces también se muestra la talla recomendada para esa prenda.
-- [ ] **CA-03** Dado que mis medidas estimadas quedan entre dos tallas, cuando se calcula la recomendación, entonces se muestran ambas (por ejemplo, 'Entre M y L').
-- [ ] **CA-04** Dado que veo una talla recomendada, cuando la leo, entonces aparece el aviso 'Recomendación aproximada, no garantiza el ajuste exacto'.
-- [ ] **CA-05** Dado que la foto no permite detectar los puntos corporales necesarios, cuando se intenta calcular, entonces veo un mensaje con la opción de registrar otra foto y se muestra la tabla de tallas genérica.
-- [ ] **CA-06** Dado el set de prueba del equipo (10 personas con talla real conocida), cuando se ejecuta la estimación, entonces la talla recomendada coincide con la real en al menos 7 casos.
+- [x] **CA-01** Dado que tengo foto y altura registradas, cuando abro una prenda con tabla de tallas, entonces veo una talla recomendada resaltada en el selector.
+- [x] **CA-02** Dado que se genera una prueba virtual, cuando veo el resultado, entonces también se muestra la talla recomendada para esa prenda.
+- [x] **CA-03** Dado que mis medidas estimadas quedan entre dos tallas, cuando se calcula la recomendación, entonces se muestran ambas (por ejemplo, 'Entre M y L').
+- [x] **CA-04** Dado que veo una talla recomendada, cuando la leo, entonces aparece el aviso 'Recomendación aproximada, no garantiza el ajuste exacto'.
+- [x] **CA-05** Dado que la foto no permite detectar los puntos corporales necesarios, cuando se intenta calcular, entonces veo un mensaje con la opción de registrar otra foto y se muestra la tabla de tallas genérica.
+- [x] **CA-06** Dado el set de prueba del equipo (10 personas con talla real conocida), cuando se ejecuta la estimación, entonces la talla recomendada coincide con la real en al menos 7 casos.
 
 ## Tecnologías
 
