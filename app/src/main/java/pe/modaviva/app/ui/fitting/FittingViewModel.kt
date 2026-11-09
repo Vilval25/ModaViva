@@ -50,6 +50,9 @@ class FittingViewModel @Inject constructor(
     private val _photoError = MutableStateFlow<String?>(null)
     val photoError: StateFlow<String?> = _photoError.asStateFlow()
 
+    private val _isUploadError = MutableStateFlow(false)
+    val isUploadError: StateFlow<Boolean> = _isUploadError.asStateFlow()
+
     private val _isUploadingPhoto = MutableStateFlow(false)
     val isUploadingPhoto: StateFlow<Boolean> = _isUploadingPhoto.asStateFlow()
 
@@ -118,6 +121,7 @@ class FittingViewModel @Inject constructor(
         _previewBitmap.value?.recycle()
         _previewBitmap.value = bitmap
         _photoError.value = null
+        _isUploadError.value = false
 
         // Validar que la foto capturada detecte cuerpo completo (HU-11 CA-03)
         viewModelScope.launch {
@@ -134,6 +138,7 @@ class FittingViewModel @Inject constructor(
         viewModelScope.launch {
             _isValidatingPhoto.value = true
             _photoError.value = null
+            _isUploadError.value = false
 
             // 1. Validar metadata: formato, tamaño, dimensiones (HU-11 CA-02)
             val metaResult = fittingRepository.validateImageMetadata(uri)
@@ -177,17 +182,19 @@ class FittingViewModel @Inject constructor(
         _previewBitmap.value?.recycle()
         _previewBitmap.value = null
         _photoError.value = null
+        _isUploadError.value = false
         _uploadProgress.value = 0f
     }
 
     fun confirmAndUploadPhoto() {
         val bitmap = _previewBitmap.value ?: return
-        if (_photoError.value != null || _isValidatingPhoto.value) return
+        if ((_photoError.value != null && !_isUploadError.value) || _isValidatingPhoto.value) return
 
         viewModelScope.launch {
             _isUploadingPhoto.value = true
             _uploadProgress.value = 0f
             _photoError.value = null
+            _isUploadError.value = false
 
             val result = fittingRepository.uploadFittingPhoto(bitmap) { progress ->
                 _uploadProgress.value = progress
@@ -204,7 +211,15 @@ class FittingViewModel @Inject constructor(
                     _showHeightDialog.value = true
                 }
             }.onFailure { error ->
-                _photoError.value = error.localizedMessage ?: "No se pudo subir la fotografía."
+                _isUploadError.value = true
+                val rawMsg = error.localizedMessage.orEmpty()
+                _photoError.value = if (rawMsg.contains("permission", ignoreCase = true)) {
+                    "No se pudo acceder al almacenamiento. Asegúrate de tener tu sesión activa."
+                } else if (rawMsg.contains("network", ignoreCase = true) || rawMsg.contains("connection", ignoreCase = true)) {
+                    "Error de conexión. Verifica tu conexión a internet e inténtalo de nuevo."
+                } else {
+                    rawMsg.ifBlank { "No se pudo subir la fotografía. Inténtalo de nuevo." }
+                }
             }
         }
     }

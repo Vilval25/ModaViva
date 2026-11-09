@@ -104,6 +104,7 @@ fun FittingTab(
     val isUploadingPhoto by viewModel.isUploadingPhoto.collectAsStateWithLifecycle()
     val uploadProgress by viewModel.uploadProgress.collectAsStateWithLifecycle()
     val photoError by viewModel.photoError.collectAsStateWithLifecycle()
+    val isUploadError by viewModel.isUploadError.collectAsStateWithLifecycle()
 
     val showHeightDialog by viewModel.showHeightDialog.collectAsStateWithLifecycle()
     val isSavingHeight by viewModel.isSavingHeight.collectAsStateWithLifecycle()
@@ -226,6 +227,7 @@ fun FittingTab(
                     isUploading = isUploadingPhoto,
                     uploadProgress = uploadProgress,
                     errorMessage = photoError,
+                    isUploadError = isUploadError,
                     onConfirm = viewModel::confirmAndUploadPhoto,
                     onRetake = viewModel::retakePhoto,
                     modifier = Modifier.padding(padding),
@@ -416,6 +418,7 @@ private fun FittingPhotoPreviewScreen(
     isUploading: Boolean,
     uploadProgress: Float,
     errorMessage: String?,
+    isUploadError: Boolean = false,
     onConfirm: () -> Unit,
     onRetake: () -> Unit,
     modifier: Modifier = Modifier,
@@ -523,11 +526,12 @@ private fun FittingPhotoPreviewScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Botón Confirmar y usar foto
+        // Botón Confirmar y usar foto / Reintentar subida
+        val canConfirm = (errorMessage == null || isUploadError) && !isValidating && !isUploading
         MvPrimaryButton(
-            text = stringResource(R.string.fitting_photo_use_btn),
+            text = if (isUploadError) "Reintentar subida" else stringResource(R.string.fitting_photo_use_btn),
             onClick = onConfirm,
-            enabled = errorMessage == null && !isValidating && !isUploading,
+            enabled = canConfirm,
             loading = isUploading,
             modifier = Modifier.fillMaxWidth(),
         )
