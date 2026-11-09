@@ -1,0 +1,268 @@
+package pe.modaviva.app.data.repository
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.os.Build
+import android.provider.OpenableColumns
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageMetadata
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.pose.PoseDetection
+import com.google.mlkit.vision.pose.defaults.PoseDetectorOptions
+import com.google.mlkit.vision.pose.PoseLandmark
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import pe.modaviva.app.domain.model.FittingPhotoError
+import pe.modaviva.app.domain.model.FittingPhotoException
+import pe.modaviva.app.domain.repository.FittingRepository
+import pe.modaviva.app.domain.repository.SessionRepository
+import java.io.ByteArrayOutputStream
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class FirebaseFittingRepository @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val auth: FirebaseAuth,
+    private val firestore: FirebaseFirestore,
+    private val storage: FirebaseStorage,
+    private val sessionRepository: SessionRepository,
+) : FittingRepository {
+
+    override suspend fun validateImageMetadata(uri: Uri): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val contentResolver = context.contentResolver
+
+            // 1. Validar formato (JPG o PNG)
+            val mimeType = contentResolver.getType(uri)?.lowercase()
+            val isJpeg = mimeType == "image/jpeg" || mimeType == "image/jpg"
+            val isPng = mimeType == "image/png"
+            if (!isJpeg && !isPng) {
+                // Verificar por extensión si el mimeType es genérico
+                val path = uri.path?.lowercase().orEmpty()
+                val hasValidExt = path.endsWith(".jpg") || path.endsWith(".jpeg") || path.endsWith(".png")
+                if (!hasValidExt) {
+                    throw FittingPhotoException(FittingPhotoError.InvalidFormat)
+                }
+            }
+
+            // 2. Validar tamaño (máximo 10 MB)
+            var fileSize: Long = -1
+            contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+                if (sizeIndex != -1 && cursor.moveToFirst()) {
+                    fileSize = cursor.getLong(sizeIndex)
+                }
+            }
+            if (fileSize <= 0) {
+                fileSize = contentResolver.openFileDescriptor(uri, "r")?.use { it.statSize } ?: -1
+            }
+            val maxBytes = 10L * 1024 * 1024
+            if (fileSize > maxBytes) {
+                throw FittingPhotoException(FittingPhotoError.FileTooLarge(10))
+            }
+
+            // 3. Validar dimensiones (mínimo 720 × 1280 px)
+            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            contentResolver.openInputStream(uri)?.use { stream ->
+                BitmapFactory.decodeStream(stream, null, options)
+            }
+            val width = options.outWidth
+            val height = options.outHeight
+
+            val meetsPortrait = width >= 720 && height >= 1280
+            val meetsLandscape = width >= 1280 && height >= 720
+            if (!meetsPortrait && !meetsLandscape) {
+                throw FittingPhotoException(FittingPhotoError.ResolutionTooLow(720, 1280))
+            }
+        }
+    }
+
+    override suspend fun validatePose(bitmap: Bitmap): Result<Boolean> = withContext(Dispatchers.Default) {
+        runCatching {
+            val options = PoseDetectorOptions.Builder()
+                .setDetectorMode(PoseDetectorOptions.SINGLE_IMAGE_MODE)
+                .build()
+            val detector = PoseDetection.getClient(options)
+            val inputImage = InputImage.fromBitmap(bitmap, 0)
+            val pose = detector.process(inputImage).await()
+
+            val nose = pose.getPoseLandmark(PoseLandmark.NOSE)
+            val leftEye = pose.getPoseLandmark(PoseLandmark.LEFT_EYE)
+            val rightEye = pose.getPoseLandmark(PoseLandmark.RIGHT_EYE)
+            val hasHead = (nose?.inFrameLikelihood ?: 0f) > 0.35f ||
+                    (leftEye?.inFrameLikelihood ?: 0f) > 0.35f ||
+                    (rightEye?.inFrameLikelihood ?: 0f) > 0.35f
+
+            val leftShoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER)
+            val rightShoulder = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER)
+            val hasShoulders = (leftShoulder?.inFrameLikelihood ?: 0f) > 0.35f &&
+                    (rightShoulder?.inFrameLikelihood ?: 0f) > 0.35f
+
+            val leftHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP)
+            val rightHip = pose.getPoseLandmark(PoseLandmark.RIGHT_HIP)
+            val hasHips = (leftHip?.inFrameLikelihood ?: 0f) > 0.35f &&
+                    (rightHip?.inFrameLikelihood ?: 0f) > 0.35f
+
+            val leftKnee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE)
+            val rightKnee = pose.getPoseLandmark(PoseLandmark.RIGHT_KNEE)
+            val hasKnees = (leftKnee?.inFrameLikelihood ?: 0f) > 0.35f ||
+                    (rightKnee?.inFrameLikelihood ?: 0f) > 0.35f
+
+            val leftAnkle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE)
+            val rightAnkle = pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE)
+            val hasAnkles = (leftAnkle?.inFrameLikelihood ?: 0f) > 0.35f ||
+                    (rightAnkle?.inFrameLikelihood ?: 0f) > 0.35f
+
+            val isFullBody = hasHead && hasShoulders && hasHips && hasKnees && hasAnkles
+            if (!isFullBody) {
+                throw FittingPhotoException(FittingPhotoError.NotFullBody)
+            }
+            true
+        }
+    }
+
+    override suspend fun uploadFittingPhoto(
+        bitmap: Bitmap,
+        onProgress: (Float) -> Unit,
+    ): Result<String> = withContext(Dispatchers.IO) {
+        runCatching {
+            val user = auth.currentUser
+                ?: throw IllegalStateException("Debes iniciar sesión para registrar tu foto")
+
+            // Comprimir y optimizar la imagen convirtiéndola a WebP (CA-04)
+            val scaledBitmap = scaleBitmapIfNeeded(bitmap, maxDimension = 1920)
+            val outputStream = ByteArrayOutputStream()
+
+            val compressFormat = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                Bitmap.CompressFormat.WEBP_LOSSY
+            } else {
+                @Suppress("DEPRECATION")
+                Bitmap.CompressFormat.WEBP
+            }
+            scaledBitmap.compress(compressFormat, 80, outputStream)
+            val bytes = outputStream.toByteArray()
+
+            // Liberar memoria del bitmap escalado si es diferente del original
+            if (scaledBitmap !== bitmap) {
+                scaledBitmap.recycle()
+            }
+
+            val photoRef = storage.reference.child("clientes/${user.uid}/probador/foto_cuerpo_completo.webp")
+            val metadata = StorageMetadata.Builder()
+                .setContentType("image/webp")
+                .setCustomMetadata("subidoPor", user.uid)
+                .build()
+
+            // Subir con seguimiento de progreso (CA-04)
+            val uploadTask = photoRef.putBytes(bytes, metadata)
+            uploadTask.addOnProgressListener { taskSnapshot ->
+                val total = taskSnapshot.totalByteCount
+                if (total > 0) {
+                    val progress = taskSnapshot.bytesTransferred.toFloat() / total.toFloat()
+                    onProgress(progress.coerceIn(0f, 1f))
+                }
+            }.await()
+
+            val downloadUrl = photoRef.downloadUrl.await().toString()
+
+            // Actualizar documento de Firestore
+            val updates = mapOf(
+                "fotoProbadorUrl" to downloadUrl,
+                "probador" to mapOf(
+                    "fotoUrl" to downloadUrl,
+                    "fotoActualizadaEn" to FieldValue.serverTimestamp(),
+                ),
+                "actualizadoEn" to FieldValue.serverTimestamp(),
+            )
+            firestore.collection("clientes").document(user.uid)
+                .set(updates, SetOptions.merge())
+                .await()
+
+            // Actualizar sesión local
+            val currentProfile = sessionRepository.currentUser.value
+            if (currentProfile != null) {
+                sessionRepository.signIn(currentProfile.copy(fotoProbadorUrl = downloadUrl))
+            }
+
+            downloadUrl
+        }
+    }
+
+    override suspend fun updateHeight(heightCm: Int): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            if (heightCm !in 100..230) {
+                throw IllegalArgumentException("Ingresa una altura válida entre 100 y 230 cm")
+            }
+
+            val user = auth.currentUser
+                ?: throw IllegalStateException("Debes iniciar sesión para guardar tu altura")
+
+            val updates = mapOf(
+                "alturaCm" to heightCm,
+                "probador.alturaCm" to heightCm,
+                "actualizadoEn" to FieldValue.serverTimestamp(),
+            )
+            firestore.collection("clientes").document(user.uid)
+                .set(updates, SetOptions.merge())
+                .await()
+
+            val currentProfile = sessionRepository.currentUser.value
+            if (currentProfile != null) {
+                sessionRepository.signIn(currentProfile.copy(alturaCm = heightCm))
+            }
+        }
+    }
+
+    override suspend fun deleteFittingPhoto(): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val user = auth.currentUser ?: return@runCatching
+
+            val photoRefWebp = storage.reference.child("clientes/${user.uid}/probador/foto_cuerpo_completo.webp")
+            val photoRefJpg = storage.reference.child("clientes/${user.uid}/probador/foto_cuerpo_completo.jpg")
+            runCatching { photoRefWebp.delete().await() }
+            runCatching { photoRefJpg.delete().await() }
+
+            val updates = mapOf(
+                "fotoProbadorUrl" to FieldValue.delete(),
+                "probador.fotoUrl" to FieldValue.delete(),
+                "actualizadoEn" to FieldValue.serverTimestamp(),
+            )
+            firestore.collection("clientes").document(user.uid)
+                .update(updates)
+                .await()
+
+            val currentProfile = sessionRepository.currentUser.value
+            if (currentProfile != null) {
+                sessionRepository.signIn(currentProfile.copy(fotoProbadorUrl = null))
+            }
+        }
+    }
+
+    private fun scaleBitmapIfNeeded(bitmap: Bitmap, maxDimension: Int): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
+        if (width <= maxDimension && height <= maxDimension) return bitmap
+
+        val ratio = width.toFloat() / height.toFloat()
+        val newWidth: Int
+        val newHeight: Int
+        if (width > height) {
+            newWidth = maxDimension
+            newHeight = (maxDimension / ratio).toInt()
+        } else {
+            newHeight = maxDimension
+            newWidth = (maxDimension * ratio).toInt()
+        }
+        return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+    }
+}
+

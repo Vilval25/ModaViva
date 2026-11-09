@@ -12,6 +12,8 @@ data class UserProfile(
     val isGoogleUser: Boolean = false,
     val consentimientoProbadorAceptado: Boolean = false,
     val consentimientoProbadorVersion: String? = null,
+    val fotoProbadorUrl: String? = null,
+    val alturaCm: Int? = null,
 ) {
     val tieneConsentimientoProbador: Boolean
         get() = consentimientoProbadorAceptado && consentimientoProbadorVersion == PROBADOR_AVISO_VERSION_ACTUAL

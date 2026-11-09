@@ -286,6 +286,11 @@ class FirebaseAuthRepository @Inject constructor(
         val probadorAceptado = consentimientoProbador?.get("aceptado") as? Boolean ?: false
         val probadorVersion = consentimientoProbador?.get("version") as? String
 
+        val probadorData = data["probador"] as? Map<*, *>
+        val fotoProbadorUrl = (probadorData?.get("fotoUrl") as? String)
+            ?: (data["fotoProbadorUrl"] as? String)
+        val alturaCm = ((probadorData?.get("alturaCm") ?: data["alturaCm"]) as? Number)?.toInt()
+
         return Result.success(
             UserProfile(
                 uid = uid,
@@ -299,6 +304,8 @@ class FirebaseAuthRepository @Inject constructor(
                 isGoogleUser = isGoogleUser,
                 consentimientoProbadorAceptado = probadorAceptado,
                 consentimientoProbadorVersion = probadorVersion,
+                fotoProbadorUrl = fotoProbadorUrl,
+                alturaCm = alturaCm,
             )
         )
     }

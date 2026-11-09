@@ -119,6 +119,11 @@ class PersistentSessionRepository @Inject constructor(
             val probadorAceptado = consentimientoProbador?.get("aceptado") as? Boolean ?: false
             val probadorVersion = consentimientoProbador?.get("version") as? String
 
+            val probadorData = data["probador"] as? Map<*, *>
+            val fotoProbadorUrl = (probadorData?.get("fotoUrl") as? String)
+                ?: (data["fotoProbadorUrl"] as? String)
+            val alturaCm = ((probadorData?.get("alturaCm") ?: data["alturaCm"]) as? Number)?.toInt()
+
             val remoteProfile = UserProfile(
                 uid = uid,
                 nombres = data["nombres"] as? String ?: "",
@@ -131,6 +136,8 @@ class PersistentSessionRepository @Inject constructor(
                 isGoogleUser = isGoogleUser,
                 consentimientoProbadorAceptado = probadorAceptado,
                 consentimientoProbadorVersion = probadorVersion,
+                fotoProbadorUrl = fotoProbadorUrl,
+                alturaCm = alturaCm,
             )
 
             saveCachedProfile(remoteProfile)
@@ -184,6 +191,16 @@ class PersistentSessionRepository @Inject constructor(
             } else {
                 json.put("consentimientoProbadorVersion", JSONObject.NULL)
             }
+            if (fotoProbadorUrl != null) {
+                json.put("fotoProbadorUrl", fotoProbadorUrl)
+            } else {
+                json.put("fotoProbadorUrl", JSONObject.NULL)
+            }
+            if (alturaCm != null) {
+                json.put("alturaCm", alturaCm)
+            } else {
+                json.put("alturaCm", JSONObject.NULL)
+            }
             return json.toString()
         }
 
@@ -202,6 +219,8 @@ class PersistentSessionRepository @Inject constructor(
                     isGoogleUser = json.optBoolean("isGoogleUser", false),
                     consentimientoProbadorAceptado = json.optBoolean("consentimientoProbadorAceptado", false),
                     consentimientoProbadorVersion = if (json.isNull("consentimientoProbadorVersion")) null else json.optString("consentimientoProbadorVersion").ifBlank { null },
+                    fotoProbadorUrl = if (json.isNull("fotoProbadorUrl")) null else json.optString("fotoProbadorUrl").ifBlank { null },
+                    alturaCm = if (json.isNull("alturaCm")) null else json.optInt("alturaCm").takeIf { it > 0 },
                 )
             } catch (_: Exception) {
                 null
