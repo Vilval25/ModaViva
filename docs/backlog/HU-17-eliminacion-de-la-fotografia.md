@@ -32,12 +32,12 @@ Desde Probador > Mi foto el cliente elimina su fotografía. Se borran la foto y 
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que tengo una foto registrada, cuando entro a Probador > Mi foto, entonces veo la opción 'Eliminar mi foto'.
-- [ ] **CA-02** Dado que toco eliminar, cuando aparece el diálogo, entonces se explica que se borrarán la foto y las imágenes generadas; si cancelo, no se elimina nada.
+- [x] **CA-01** Dado que tengo una foto registrada, cuando entro a Probador > Mi foto, entonces veo la opción 'Eliminar mi foto'.
+- [x] **CA-02** Dado que toco eliminar, cuando aparece el diálogo, entonces se explica que se borrarán la foto y las imágenes generadas; si cancelo, no se elimina nada.
 - [ ] **CA-03** Dado que confirmo, cuando termina la solicitud, entonces la foto deja de mostrarse de inmediato, veo una constancia con fecha y hora y la recibo también por correo y en Notificaciones.
 - [ ] **CA-04** Dado que confirmé la eliminación, cuando pasan como máximo 24 h, entonces la foto y todas las imágenes generadas ya no existen en Storage ni en el historial, aunque no haya vuelto a abrir la app.
-- [ ] **CA-05** Dado que eliminé mi foto, cuando intento usar el probador, entonces está deshabilitado hasta que registre una nueva.
-- [ ] **CA-06** Dado que eliminé mi foto, cuando reviso mi cuenta, entonces mis datos, pedidos y carrito se mantienen.
+- [x] **CA-05** Dado que eliminé mi foto, cuando intento usar el probador, entonces está deshabilitado hasta que registre una nueva.
+- [x] **CA-06** Dado que eliminé mi foto, cuando reviso mi cuenta, entonces mis datos, pedidos y carrito se mantienen.
 
 ## Tecnologías
 
