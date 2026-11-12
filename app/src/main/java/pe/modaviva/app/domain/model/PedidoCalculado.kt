@@ -42,6 +42,8 @@ data class TarifaEnvio(
     val cobertura: Boolean,
     val costo: Double,
     val plazoDias: Int,
+    val lat: Double? = null,
+    val lng: Double? = null,
 )
 
 data class ResultadoCalculoPedido(

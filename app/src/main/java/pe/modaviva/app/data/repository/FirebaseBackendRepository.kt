@@ -106,12 +106,19 @@ class FirebaseBackendRepository @Inject constructor(
             distritosFallback()
         } else {
             snapshot.documents.map { doc ->
+                val id = doc.id
+                val distritoNombre = doc.getString("distrito") ?: id
+                val coords = pe.modaviva.app.domain.model.DistritoResolver.coordenadasParaDistrito(distritoNombre)
+                val lat = doc.getDouble("lat") ?: doc.getGeoPoint("ubicacion")?.latitude ?: coords?.first
+                val lng = doc.getDouble("lng") ?: doc.getGeoPoint("ubicacion")?.longitude ?: coords?.second
                 TarifaEnvio(
-                    id = doc.id,
-                    distrito = doc.getString("distrito") ?: doc.id,
+                    id = id,
+                    distrito = distritoNombre,
                     cobertura = doc.getBoolean("cobertura") ?: true,
                     costo = doc.getDouble("costo") ?: 10.0,
                     plazoDias = doc.getLong("plazoDias")?.toInt() ?: 3,
+                    lat = lat,
+                    lng = lng,
                 )
             }.sortedBy { it.distrito }
         }
@@ -120,18 +127,18 @@ class FirebaseBackendRepository @Inject constructor(
     }
 
     private fun distritosFallback(): List<TarifaEnvio> = listOf(
-        TarifaEnvio("miraflores", "Miraflores", true, 8.0, 2),
-        TarifaEnvio("san-isidro", "San Isidro", true, 8.0, 2),
-        TarifaEnvio("surco", "Santiago de Surco", true, 10.0, 3),
-        TarifaEnvio("san-borja", "San Borja", true, 9.0, 2),
-        TarifaEnvio("barranco", "Barranco", true, 8.0, 2),
-        TarifaEnvio("la-molina", "La Molina", true, 12.0, 3),
-        TarifaEnvio("jesus-maria", "Jesús María", true, 9.0, 2),
-        TarifaEnvio("magdalena", "Magdalena del Mar", true, 9.0, 2),
-        TarifaEnvio("san-miguel", "San Miguel", true, 10.0, 3),
-        TarifaEnvio("lince", "Lince", true, 9.0, 2),
-        TarifaEnvio("pueblo-libre", "Pueblo Libre", true, 9.0, 2),
-        TarifaEnvio("lima-cercado", "Lima Cercado", true, 10.0, 3),
+        TarifaEnvio("miraflores", "Miraflores", true, 8.0, 2, lat = -12.1219, lng = -77.0305),
+        TarifaEnvio("san-isidro", "San Isidro", true, 8.0, 2, lat = -12.0975, lng = -77.0365),
+        TarifaEnvio("surco", "Santiago de Surco", true, 10.0, 3, lat = -12.1350, lng = -76.9920),
+        TarifaEnvio("san-borja", "San Borja", true, 9.0, 2, lat = -12.0950, lng = -77.0010),
+        TarifaEnvio("barranco", "Barranco", true, 8.0, 2, lat = -12.1480, lng = -77.0210),
+        TarifaEnvio("la-molina", "La Molina", true, 12.0, 3, lat = -12.0850, lng = -76.9380),
+        TarifaEnvio("jesus-maria", "Jesús María", true, 9.0, 2, lat = -12.0730, lng = -77.0480),
+        TarifaEnvio("magdalena", "Magdalena del Mar", true, 9.0, 2, lat = -12.0910, lng = -77.0690),
+        TarifaEnvio("san-miguel", "San Miguel", true, 10.0, 3, lat = -12.0780, lng = -77.0870),
+        TarifaEnvio("lince", "Lince", true, 9.0, 2, lat = -12.0830, lng = -77.0340),
+        TarifaEnvio("pueblo-libre", "Pueblo Libre", true, 9.0, 2, lat = -12.0760, lng = -77.0630),
+        TarifaEnvio("lima-cercado", "Lima Cercado", true, 10.0, 3, lat = -12.0460, lng = -77.0310),
     )
 
     private companion object {

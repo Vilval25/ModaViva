@@ -138,10 +138,14 @@ class CheckoutSummaryViewModel @Inject constructor(
 
         // Actualizar también CheckoutSessionRepository con el nuevo distrito seleccionado
         val destinoActual = checkoutSessionRepository.destinoActual.value ?: DestinoEntrega()
+        val coords = tarifa.lat?.let { lat -> tarifa.lng?.let { lng -> lat to lng } }
+            ?: pe.modaviva.app.domain.model.DistritoResolver.coordenadasParaDistrito(tarifa.distrito)
         val nuevoDestino = destinoActual.copy(
             tipo = TipoDestino.OTRA_DIRECCION,
             distrito = tarifa.distrito,
             distritoSlug = tarifa.id,
+            lat = coords?.first,
+            lng = coords?.second,
         )
         checkoutSessionRepository.actualizarDestino(nuevoDestino)
 

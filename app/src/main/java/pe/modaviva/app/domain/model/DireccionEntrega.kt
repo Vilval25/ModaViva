@@ -18,13 +18,18 @@ data class DireccionEntrega(
 }
 
 fun DireccionEntrega.aDestinoEntrega(): DestinoEntrega {
+    val coords = if (lat != null && lng != null) {
+        lat to lng
+    } else {
+        DistritoResolver.coordenadasParaDistrito(distrito.ifBlank { distritoSlug })
+    }
     return DestinoEntrega(
         tipo = TipoDestino.DIRECCION_REGISTRADA,
         direccion = direccion,
         referencia = referencia,
         distrito = distrito,
         distritoSlug = distritoSlug,
-        lat = lat,
-        lng = lng,
+        lat = coords?.first,
+        lng = coords?.second,
     )
 }

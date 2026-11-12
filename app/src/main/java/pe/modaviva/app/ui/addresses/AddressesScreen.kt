@@ -424,6 +424,7 @@ private fun DireccionFormDialog(
                         errorValidacion = "Completa todos los campos obligatorios (*)"
                         return@Button
                     }
+                    val coordsDistrito = pe.modaviva.app.domain.model.DistritoResolver.coordenadasParaDistrito(tarifaSeleccionada!!.distrito)
                     val nuevaDir = DireccionEntrega(
                         id = direccionInicial?.id.orEmpty(),
                         alias = alias.trim(),
@@ -433,8 +434,8 @@ private fun DireccionFormDialog(
                         referencia = referencia.trim().ifBlank { null },
                         distrito = tarifaSeleccionada!!.distrito,
                         distritoSlug = tarifaSeleccionada!!.id,
-                        lat = direccionInicial?.lat,
-                        lng = direccionInicial?.lng,
+                        lat = direccionInicial?.lat ?: tarifaSeleccionada?.lat ?: coordsDistrito?.first,
+                        lng = direccionInicial?.lng ?: tarifaSeleccionada?.lng ?: coordsDistrito?.second,
                         esPrincipal = esPrincipal,
                     )
                     onSave(nuevaDir)

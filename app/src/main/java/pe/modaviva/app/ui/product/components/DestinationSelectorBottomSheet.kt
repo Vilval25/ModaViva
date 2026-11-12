@@ -95,28 +95,31 @@ fun DestinationSelectorBottomSheet(
         val resultado = ubicacionEstado as? ResultadoUbicacion.Exito
             ?: return@LaunchedEffect
 
-        if (gpsAplicado || tarifas.isEmpty()) {
+        if (gpsAplicado) {
             return@LaunchedEffect
         }
 
-        // Buscar coincidencia exacta entre los componentes GPS
-        // y los distritos oficiales de las tarifas.
-        val tarifaDetectada = tarifas.firstOrNull { tarifa ->
-            resultado.componentesDistrito.any { componente ->
-                normalizarTexto(componente) == normalizarTexto(tarifa.distrito)
-            }
-        }
+        // Resolver distrito automáticamente por Geocoder o proximidad GPS
+        val tarifaDetectada = pe.modaviva.app.domain.model.DistritoResolver.resolverTarifa(
+            componentes = resultado.componentesDistrito,
+            direccionCompleta = resultado.direccionDetectada,
+            lat = resultado.lat,
+            lng = resultado.lng,
+            tarifasDisponibles = tarifas,
+        )
 
         if (tarifaDetectada != null) {
             distritoSeleccionado = tarifaDetectada
         }
 
-        // Solo completar si el GPS obtuvo una dirección.
+        // Completar dirección si el GPS o Geocoder la obtuvo
         if (!resultado.direccionDetectada.isNullOrBlank()) {
             direccionManual = resultado.direccionDetectada
+        } else if (distritoSeleccionado != null && direccionManual.isBlank()) {
+            direccionManual = "Ubicación GPS (${distritoSeleccionado?.distrito})"
         }
 
-        // La referencia es opcional.
+        // La referencia es opcional
         if (!resultado.referenciaDetectada.isNullOrBlank()) {
             referenciaManual = resultado.referenciaDetectada
         }
@@ -426,14 +429,27 @@ fun DestinationSelectorBottomSheet(
                     val tarifa = distritoSeleccionado
                     val distritoFinal = tarifa?.distrito.orEmpty()
                     val slug = tarifa?.id ?: ""
+                    val coordsDistrito = pe.modaviva.app.domain.model.DistritoResolver.coordenadasParaDistrito(distritoFinal)
 
-                    val latFinal = if (tipoSeleccionado == TipoDestino.UBICACION_ACTUAL_GPS) {
-                        (ubicacionEstado as? ResultadoUbicacion.Exito)?.lat ?: destinoActual?.lat
-                    } else null
-
-                    val lngFinal = if (tipoSeleccionado == TipoDestino.UBICACION_ACTUAL_GPS) {
-                        (ubicacionEstado as? ResultadoUbicacion.Exito)?.lng ?: destinoActual?.lng
-                    } else null
+                    val (latFinal, lngFinal) = when (tipoSeleccionado) {
+                        TipoDestino.UBICACION_ACTUAL_GPS -> {
+                            val exito = ubicacionEstado as? ResultadoUbicacion.Exito
+                            val lat = exito?.lat ?: destinoActual?.lat ?: tarifa?.lat ?: coordsDistrito?.first
+                            val lng = exito?.lng ?: destinoActual?.lng ?: tarifa?.lng ?: coordsDistrito?.second
+                            lat to lng
+                        }
+                        TipoDestino.DIRECCION_REGISTRADA -> {
+                            val dirSel = direcciones.firstOrNull { it.direccion == direccionManual }
+                            val lat = dirSel?.lat ?: tarifa?.lat ?: coordsDistrito?.first ?: destinoActual?.lat
+                            val lng = dirSel?.lng ?: tarifa?.lng ?: coordsDistrito?.second ?: destinoActual?.lng
+                            lat to lng
+                        }
+                        TipoDestino.OTRA_DIRECCION -> {
+                            val lat = tarifa?.lat ?: coordsDistrito?.first ?: destinoActual?.lat
+                            val lng = tarifa?.lng ?: coordsDistrito?.second ?: destinoActual?.lng
+                            lat to lng
+                        }
+                    }
 
                     val destino = DestinoEntrega(
                         tipo = tipoSeleccionado,

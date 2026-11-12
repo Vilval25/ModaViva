@@ -178,11 +178,27 @@ class ProductDetailViewModel @Inject constructor(
             val resultado = locationService.obtenerUbicacionActual()
             _ubicacionEstado.value = resultado
             if (resultado is ResultadoUbicacion.Exito) {
+                var tarifas = _tarifas.value
+                if (tarifas.isEmpty()) {
+                    tarifas = backendRepository.obtenerTarifasEnvio().getOrDefault(emptyList())
+                    _tarifas.value = tarifas
+                }
+                val tarifaDetectada = pe.modaviva.app.domain.model.DistritoResolver.resolverTarifa(
+                    componentes = resultado.componentesDistrito,
+                    direccionCompleta = resultado.direccionDetectada,
+                    lat = resultado.lat,
+                    lng = resultado.lng,
+                    tarifasDisponibles = tarifas,
+                )
+
                 val destinoActual = _destinoEntrega.value ?: DestinoEntrega()
                 val nuevoDestino = destinoActual.copy(
                     tipo = TipoDestino.UBICACION_ACTUAL_GPS,
                     lat = resultado.lat,
                     lng = resultado.lng,
+                    distrito = tarifaDetectada?.distrito ?: resultado.distritoDetectado ?: destinoActual.distrito,
+                    distritoSlug = tarifaDetectada?.id ?: destinoActual.distritoSlug,
+                    direccion = resultado.direccionDetectada ?: destinoActual.direccion.ifBlank { "Ubicación GPS" },
                 )
                 actualizarDestino(nuevoDestino)
             } else if (resultado is ResultadoUbicacion.GpsDesactivado || resultado is ResultadoUbicacion.PermisoDenegado || resultado is ResultadoUbicacion.NoDisponible) {

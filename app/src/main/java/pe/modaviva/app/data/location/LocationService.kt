@@ -104,7 +104,7 @@ class LocationService @Inject constructor(
                 ResultadoUbicacion.Exito(
                     lat = lat,
                     lng = lng,
-                    distritoDetectado = datos.referencia,
+                    distritoDetectado = datos.distritoDetectado ?: datos.referencia,
                     direccionDetectada = datos.direccion,
                     referenciaDetectada = datos.referencia,
                     componentesDistrito = datos.componentesDistrito,
@@ -117,6 +117,7 @@ class LocationService @Inject constructor(
     private data class DatosDireccion(
         val direccion: String?,
         val referencia: String?,
+        val distritoDetectado: String?,
         val componentesDistrito: List<String>,
     )
 
@@ -129,32 +130,50 @@ class LocationService @Inject constructor(
             val addresses = geocoder.getFromLocation(lat, lng, 1)
 
             val addr = addresses?.firstOrNull()
-                ?: return DatosDireccion(null, null, emptyList())
 
-            // Son candidatos, no distritos confirmados.
-            // El distrito real se resolverá comparándolos con TarifaEnvio.
-            val componentes = listOfNotNull(
-                addr.subAdminArea,
-                addr.locality,
-                addr.subLocality,
-                addr.adminArea,
-            ).distinct()
+            val line0 = addr?.getAddressLine(0).orEmpty()
+            val lineParts = line0.split(",").map { it.trim() }.filter { it.isNotBlank() }
+
+            val componentes = mutableListOf<String>()
+            addr?.subLocality?.takeIf { it.isNotBlank() }?.let { componentes.add(it) }
+            addr?.locality?.takeIf { it.isNotBlank() }?.let { componentes.add(it) }
+            addr?.subAdminArea?.takeIf { it.isNotBlank() }?.let { componentes.add(it) }
+            addr?.adminArea?.takeIf { it.isNotBlank() }?.let { componentes.add(it) }
+            addr?.featureName?.takeIf { it.isNotBlank() }?.let { componentes.add(it) }
+            addr?.thoroughfare?.takeIf { it.isNotBlank() }?.let { componentes.add(it) }
+            componentes.addAll(lineParts)
+            if (line0.isNotBlank()) componentes.add(line0)
 
             val direccionCalle = listOfNotNull(
-                addr.subThoroughfare,
-                addr.thoroughfare,
+                addr?.thoroughfare,
+                addr?.subThoroughfare,
             ).joinToString(" ").ifBlank { null }
+                ?: lineParts.firstOrNull()
+                ?: line0.takeIf { it.isNotBlank() }
 
-            val direccion = direccionCalle
-                ?: addr.getAddressLine(0)?.takeIf { it.isNotBlank() }
+            // Resolver distrito: primero por texto, y si no coincide, por proximidad geográfica GPS
+            val distritoPorTexto = pe.modaviva.app.domain.model.DistritoResolver.resolverPorTexto(componentes)
+            val distritoPorCoord = pe.modaviva.app.domain.model.DistritoResolver.resolverPorCoordenadas(lat, lng)
+            val distritoFinal = distritoPorTexto?.distrito ?: distritoPorCoord.distrito
+
+            if (!componentes.contains(distritoFinal)) {
+                componentes.add(distritoFinal)
+            }
 
             DatosDireccion(
-                direccion = direccion,
-                referencia = addr.subLocality?.takeIf { it.isNotBlank() },
-                componentesDistrito = componentes,
+                direccion = direccionCalle,
+                referencia = addr?.subLocality?.takeIf { it.isNotBlank() } ?: distritoFinal,
+                distritoDetectado = distritoFinal,
+                componentesDistrito = componentes.distinct(),
             )
         } catch (_: Exception) {
-            DatosDireccion(null, null, emptyList())
+            val distritoFallback = pe.modaviva.app.domain.model.DistritoResolver.resolverPorCoordenadas(lat, lng).distrito
+            DatosDireccion(
+                direccion = null,
+                referencia = distritoFallback,
+                distritoDetectado = distritoFallback,
+                componentesDistrito = listOf(distritoFallback),
+            )
         }
     }
 }
