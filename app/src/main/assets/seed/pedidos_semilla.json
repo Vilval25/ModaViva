@@ -1,0 +1,298 @@
+{
+  "tarjetasSemilla": [
+    {
+      "id": "card_visa_4242",
+      "marca": "Visa",
+      "ultimos4": "4242",
+      "vencimiento": "09/28",
+      "titular": "CLIENTE MODAVIVA",
+      "tipo": "CREDITO",
+      "tokenPasarela": "tok_sandbox_visa_4242_mv01",
+      "esPredeterminada": true
+    },
+    {
+      "id": "card_mastercard_8891",
+      "marca": "Mastercard",
+      "ultimos4": "8891",
+      "vencimiento": "11/27",
+      "titular": "CLIENTE MODAVIVA",
+      "tipo": "DEBITO",
+      "tokenPasarela": "tok_sandbox_mc_8891_mv02",
+      "esPredeterminada": false
+    }
+  ],
+  "pedidosSemilla": [
+    {
+      "id": "ped-mv-2026-0001",
+      "numeroPedido": "MV-2026-0001",
+      "estado": "ENTREGADO",
+      "tipoEntrega": "delivery",
+      "direccionEntrega": "Av. José Pardo 620, Dpto 402",
+      "referenciaEntrega": "Frente al supermercado Vivanda",
+      "distrito": "Miraflores",
+      "distritoSlug": "miraflores",
+      "destinatario": "Cliente ModaViva",
+      "telefonoContacto": "987654321",
+      "medioPago": "TARJETA_CREDITO",
+      "resumenMedioPago": "Visa •••• 4242",
+      "subtotal": 269.80,
+      "descuentoTotal": 26.98,
+      "costoEnvio": 10.00,
+      "total": 252.82,
+      "cuponAplicado": "MODA10",
+      "horasDesdeCreacion": 72,
+      "horasDesdeEntrega": 48,
+      "empresaTransporte": "Olva Courier",
+      "numeroSeguimiento": "OLVA-7741029-PE",
+      "listoParaRecoger": false,
+      "items": [
+        {
+          "prendaId": "BL-1002",
+          "codigo": "BL-1002",
+          "nombre": "Blusa Satinada Manga Larga",
+          "fotoUrl": "",
+          "talla": "M",
+          "cantidad": 1,
+          "precioUnitario": 89.90,
+          "subtotal": 89.90,
+          "usoProbadorVirtual": true
+        },
+        {
+          "prendaId": "JN-1001",
+          "codigo": "JN-1001",
+          "nombre": "Jean Skinny Tiro Alto",
+          "fotoUrl": "",
+          "talla": "28",
+          "cantidad": 1,
+          "precioUnitario": 179.90,
+          "subtotal": 179.90,
+          "usoProbadorVirtual": true
+        }
+      ],
+      "hitos": [
+        {
+          "estado": "APROBADO",
+          "titulo": "Pago aprobado",
+          "descripcion": "Pago confirmado con tarjeta Visa •••• 4242 y stock reservado.",
+          "horasAtras": 72
+        },
+        {
+          "estado": "EN_PREPARACION",
+          "titulo": "Pedido en preparación",
+          "descripcion": "Almacén central preparó y verificó el control de calidad de tus prendas.",
+          "horasAtras": 66
+        },
+        {
+          "estado": "DESPACHADO",
+          "titulo": "Pedido despachado",
+          "descripcion": "Entregado a Olva Courier con guía OLVA-7741029-PE.",
+          "horasAtras": 56
+        },
+        {
+          "estado": "ENTREGADO",
+          "titulo": "Pedido entregado",
+          "descripcion": "Recibido en Av. José Pardo 620, Miraflores.",
+          "horasAtras": 48
+        }
+      ]
+    },
+    {
+      "id": "ped-mv-2026-0002",
+      "numeroPedido": "MV-2026-0002",
+      "estado": "DESPACHADO",
+      "tipoEntrega": "delivery",
+      "direccionEntrega": "Calle Las Begonias 415",
+      "referenciaEntrega": "Centro Financiero",
+      "distrito": "San Isidro",
+      "distritoSlug": "san-isidro",
+      "destinatario": "Cliente ModaViva",
+      "telefonoContacto": "987654321",
+      "medioPago": "BILLETERA_ELECTRONICA",
+      "resumenMedioPago": "Yape / Plin",
+      "subtotal": 149.90,
+      "descuentoTotal": 0.00,
+      "costoEnvio": 10.00,
+      "total": 159.90,
+      "cuponAplicado": null,
+      "horasDesdeCreacion": 28,
+      "empresaTransporte": "Olva Courier",
+      "numeroSeguimiento": "OLVA-8849201-PE",
+      "listoParaRecoger": false,
+      "items": [
+        {
+          "prendaId": "BL-1001",
+          "codigo": "BL-1001",
+          "nombre": "Casaca Denim Oversize",
+          "fotoUrl": "",
+          "talla": "M",
+          "cantidad": 1,
+          "precioUnitario": 149.90,
+          "subtotal": 149.90,
+          "usoProbadorVirtual": true
+        }
+      ],
+      "hitos": [
+        {
+          "estado": "APROBADO",
+          "titulo": "Pago aprobado",
+          "descripcion": "Confirmado mediante Billetera Electrónica (Yape).",
+          "horasAtras": 28
+        },
+        {
+          "estado": "EN_PREPARACION",
+          "titulo": "En preparación",
+          "descripcion": "Empacado en almacén San Isidro.",
+          "horasAtras": 20
+        },
+        {
+          "estado": "DESPACHADO",
+          "titulo": "En ruta de reparto",
+          "descripcion": "Despachado con Olva Courier (Guía: OLVA-8849201-PE).",
+          "horasAtras": 6
+        }
+      ]
+    },
+    {
+      "id": "ped-mv-2026-0003",
+      "numeroPedido": "MV-2026-0003",
+      "estado": "EN_PREPARACION",
+      "tipoEntrega": "recojo",
+      "direccionEntrega": "Av. José Larco 745, Miraflores",
+      "distrito": "Miraflores",
+      "distritoSlug": "miraflores",
+      "tiendaRecojoId": "T01",
+      "tiendaRecojoNombre": "ModaViva Miraflores",
+      "tiendaRecojoDireccion": "Av. José Larco 745, Miraflores",
+      "tiendaRecojoHorario": "Lun–Dom 10:00 a.m. – 9:00 p.m.",
+      "destinatario": "Cliente ModaViva",
+      "telefonoContacto": "987654321",
+      "medioPago": "TARJETA_DEBITO",
+      "resumenMedioPago": "Mastercard •••• 8891",
+      "subtotal": 119.90,
+      "descuentoTotal": 15.00,
+      "costoEnvio": 0.00,
+      "total": 104.90,
+      "cuponAplicado": "BIENVENIDA",
+      "horasDesdeCreacion": 14,
+      "listoParaRecoger": true,
+      "items": [
+        {
+          "prendaId": "BL-1003",
+          "codigo": "BL-1003",
+          "nombre": "Polo Algodón Pima Premium",
+          "fotoUrl": "",
+          "talla": "L",
+          "cantidad": 1,
+          "precioUnitario": 119.90,
+          "subtotal": 119.90,
+          "usoProbadorVirtual": false
+        }
+      ],
+      "hitos": [
+        {
+          "estado": "APROBADO",
+          "titulo": "Pago aprobado",
+          "descripcion": "Pago confirmado con tarjeta Mastercard •••• 8891.",
+          "horasAtras": 14
+        },
+        {
+          "estado": "EN_PREPARACION",
+          "titulo": "¡Listo para recoger en tienda!",
+          "descripcion": "Tu pedido ya te espera en ModaViva Miraflores (Av. José Larco 745). Presenta tu DNI.",
+          "horasAtras": 2
+        }
+      ]
+    },
+    {
+      "id": "ped-mv-2026-0004",
+      "numeroPedido": "MV-2026-0004",
+      "estado": "PENDIENTE",
+      "tipoEntrega": "delivery",
+      "direccionEntrega": "Av. Primavera 1250",
+      "referenciaEntrega": "Cerca a UPC Monterrico",
+      "distrito": "Santiago de Surco",
+      "distritoSlug": "santiago-de-surco",
+      "destinatario": "Cliente ModaViva",
+      "telefonoContacto": "987654321",
+      "medioPago": "CONTRA_ENTREGA",
+      "resumenMedioPago": "Pendiente de confirmación (Reserva 30 min)",
+      "subtotal": 89.90,
+      "descuentoTotal": 0.00,
+      "costoEnvio": 12.00,
+      "total": 101.90,
+      "cuponAplicado": null,
+      "minutosDesdeCreacion": 4,
+      "minutosParaVencer": 26,
+      "listoParaRecoger": false,
+      "items": [
+        {
+          "prendaId": "BL-1002",
+          "codigo": "BL-1002",
+          "nombre": "Blusa Satinada Manga Larga",
+          "fotoUrl": "",
+          "talla": "S",
+          "cantidad": 1,
+          "precioUnitario": 89.90,
+          "subtotal": 89.90,
+          "usoProbadorVirtual": true
+        }
+      ],
+      "hitos": [
+        {
+          "estado": "PENDIENTE",
+          "titulo": "Reserva creada (30 min)",
+          "descripcion": "Tu stock está reservado por 30 minutos mientras completas el pago.",
+          "horasAtras": 0
+        }
+      ]
+    },
+    {
+      "id": "ped-mv-2026-0005",
+      "numeroPedido": "MV-2026-0005",
+      "estado": "ANULADO",
+      "tipoEntrega": "delivery",
+      "direccionEntrega": "Av. Brasil 2100",
+      "distrito": "Jesús María",
+      "distritoSlug": "jesus-maria",
+      "destinatario": "Cliente ModaViva",
+      "telefonoContacto": "987654321",
+      "medioPago": "TARJETA_CREDITO",
+      "resumenMedioPago": "Reserva vencida sin pago",
+      "subtotal": 179.90,
+      "descuentoTotal": 0.00,
+      "costoEnvio": 10.00,
+      "total": 189.90,
+      "cuponAplicado": null,
+      "horasDesdeCreacion": 120,
+      "listoParaRecoger": false,
+      "items": [
+        {
+          "prendaId": "JN-1004",
+          "codigo": "JN-1004",
+          "nombre": "Jean Recto Clásico",
+          "fotoUrl": "",
+          "talla": "30",
+          "cantidad": 1,
+          "precioUnitario": 179.90,
+          "subtotal": 179.90,
+          "usoProbadorVirtual": false
+        }
+      ],
+      "hitos": [
+        {
+          "estado": "PENDIENTE",
+          "titulo": "Pedido pendiente de pago",
+          "descripcion": "Stock reservado temporalmente por 30 minutos.",
+          "horasAtras": 120
+        },
+        {
+          "estado": "ANULADO",
+          "titulo": "Pedido anulado por vencimiento",
+          "descripcion": "Transcurrieron 30 minutos sin confirmación de pago. El stock fue liberado.",
+          "horasAtras": 119
+        }
+      ]
+    }
+  ]
+}
+
