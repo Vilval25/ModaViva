@@ -99,3 +99,4 @@ class DistritoResolverTest {
         assertTrue(resultado.tiendaRecomendada!!.distanciaKm!! < 1.0)
     }
 }
+

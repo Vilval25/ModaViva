@@ -274,3 +274,4 @@ object DistritoResolver {
         return radioTierraKm * c
     }
 }
+
