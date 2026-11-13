@@ -43,7 +43,10 @@ import pe.modaviva.app.ui.auth.register.RegisterScreen
 import pe.modaviva.app.ui.auth.verify.EmailVerifyScreen
 import pe.modaviva.app.ui.cart.CartScreen
 import pe.modaviva.app.ui.categories.CategoriesScreen
+import pe.modaviva.app.ui.checkout.CheckoutDeliveryScreen
+import pe.modaviva.app.ui.checkout.CheckoutPaymentScreen
 import pe.modaviva.app.ui.checkout.CheckoutSummaryScreen
+import pe.modaviva.app.ui.checkout.OrderConfirmedScreen
 import pe.modaviva.app.ui.components.MvAuthPromptBottomSheet
 import pe.modaviva.app.ui.favorites.Favoritos
 import pe.modaviva.app.ui.favorites.FavoritesScreen
@@ -327,7 +330,48 @@ private fun NavGraphBuilder.overlayGraph(
         CheckoutSummaryScreen(
             onBack = { navController.popBackStack() },
             onContinueToDelivery = {
-                // Siguiente paso del checkout (HU-20: Entrega y direcciones)
+                navController.navigate(Routes.CHECKOUT_DELIVERY)
+            },
+        )
+    }
+    composable(Routes.CHECKOUT_DELIVERY) {
+        CheckoutDeliveryScreen(
+            onBack = { navController.popBackStack() },
+            onContinueToPayment = {
+                navController.navigate(Routes.CHECKOUT_PAYMENT)
+            },
+        )
+    }
+    composable(Routes.CHECKOUT_PAYMENT) {
+        CheckoutPaymentScreen(
+            onBack = { navController.popBackStack() },
+            onPaymentSuccess = { pedidoId ->
+                navController.navigate(Routes.orderConfirmed(pedidoId)) {
+                    popUpTo(Routes.CHECKOUT_SUMMARY) { inclusive = true }
+                }
+            },
+        )
+    }
+    composable(
+        route = Routes.ORDER_CONFIRMED,
+        arguments = listOf(
+            navArgument("pedidoId") {
+                type = NavType.StringType
+            },
+        ),
+    ) { backStackEntry ->
+        val pedidoId = backStackEntry.arguments?.getString("pedidoId").orEmpty()
+        OrderConfirmedScreen(
+            pedidoId = pedidoId,
+            onGoToHome = {
+                navController.popBackStack(TopLevelDestination.HOME.route, inclusive = false)
+            },
+            onGoToOrders = {
+                navController.navigate(TopLevelDestination.ORDERS.route) {
+                    popUpTo(TopLevelDestination.HOME.route) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
             },
         )
     }
