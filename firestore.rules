@@ -45,6 +45,14 @@ service cloud.firestore {
           && request.resource.data.cantidad >= 1
           && request.resource.data.cantidad <= 99;
       }
+
+      match /pedidos/{pedidoId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      match /metodosPago/{tarjetaId} {
+        allow read, write: if isOwner(uid);
+      }
     }
 
     // --- Catálogo: lectura pública, escritura solo desde el back-office ---
