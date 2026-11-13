@@ -13,6 +13,8 @@ import pe.modaviva.app.data.repository.FirebaseFittingConfigRepository
 import pe.modaviva.app.data.repository.FirebaseFittingRepository
 import pe.modaviva.app.domain.repository.FittingRepository
 import pe.modaviva.app.data.repository.FirestoreDireccionRepository
+import pe.modaviva.app.data.repository.FirestoreOrderRepository
+import pe.modaviva.app.domain.repository.OrderRepository
 import pe.modaviva.app.data.repository.FirestoreFavoritosRepository
 import pe.modaviva.app.data.repository.FirestorePortadaRepository
 import pe.modaviva.app.data.repository.FirestoreStockRepository
@@ -109,4 +111,10 @@ abstract class RepositoryModule {
     abstract fun bindFittingRepository(
         impl: FirebaseFittingRepository,
     ): FittingRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindOrderRepository(
+        impl: FirestoreOrderRepository,
+    ): OrderRepository
 }
