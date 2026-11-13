@@ -40,6 +40,12 @@ class CheckoutSessionRepository @Inject constructor() {
     private val _itemsCalculados = MutableStateFlow<List<ItemPedidoCalculado>>(emptyList())
     val itemsCalculados: StateFlow<List<ItemPedidoCalculado>> = _itemsCalculados.asStateFlow()
 
+    private val _destinatario = MutableStateFlow("")
+    val destinatario: StateFlow<String> = _destinatario.asStateFlow()
+
+    private val _telefonoContacto = MutableStateFlow("")
+    val telefonoContacto: StateFlow<String> = _telefonoContacto.asStateFlow()
+
     private val _tarjetaSeleccionada = MutableStateFlow<TarjetaGuardada?>(null)
     val tarjetaSeleccionada: StateFlow<TarjetaGuardada?> = _tarjetaSeleccionada.asStateFlow()
 
@@ -75,6 +81,11 @@ class CheckoutSessionRepository @Inject constructor() {
     fun seleccionarMedioPago(medio: TipoMedioPago, tarjeta: TarjetaGuardada? = null) {
         _medioPagoSeleccionado.value = medio
         _tarjetaSeleccionada.value = tarjeta
+    }
+
+    fun actualizarDatosContacto(destinatario: String, telefono: String) {
+        _destinatario.value = destinatario
+        _telefonoContacto.value = telefono
     }
 
     fun limpiarDestino() {

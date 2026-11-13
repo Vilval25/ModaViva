@@ -261,6 +261,16 @@ class CheckoutSummaryViewModel @Inject constructor(
                     "¡Cupón $codigoRecienAgregado aplicado con éxito!"
                 } else null
 
+                checkoutSessionRepository.guardarResumenCalculo(
+                    tipoEntrega = tipoEntregaStr,
+                    subtotal = res.subtotal,
+                    descuentoTotal = res.descuentoTotal,
+                    costoEnvio = res.costoEnvio,
+                    total = res.total,
+                    cupon = res.cuponesAplicados.firstOrNull()?.codigo,
+                    items = res.items,
+                )
+
                 _uiState.update {
                     it.copy(
                         calculando = false,
@@ -399,6 +409,17 @@ class CheckoutSummaryViewModel @Inject constructor(
         // Total final (CA-02: total = subtotal - descuento + envio)
         val total = redondear2(max(0.0, subtotal - descuentoTotal + costoEnvio))
         val totalPrendas = itemsCalculados.sumOf { it.cantidadAprobada }
+
+        val tipoEntregaStr = if (_uiState.value.tipoEntrega == TipoEntregaUi.RECOJO) "recojo" else "delivery"
+        checkoutSessionRepository.guardarResumenCalculo(
+            tipoEntrega = tipoEntregaStr,
+            subtotal = subtotal,
+            descuentoTotal = descuentoTotal,
+            costoEnvio = costoEnvio,
+            total = total,
+            cupon = cuponesValidos.firstOrNull()?.codigo,
+            items = itemsCalculados,
+        )
 
         _uiState.update {
             it.copy(
