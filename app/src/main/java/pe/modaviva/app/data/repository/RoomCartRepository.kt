@@ -1,16 +1,18 @@
 package pe.modaviva.app.data.repository
 
+import android.content.Context
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ListenerRegistration
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import pe.modaviva.app.data.local.CartDao
 import pe.modaviva.app.data.local.CartEntity
 import pe.modaviva.app.data.local.aDominio
@@ -21,41 +23,77 @@ import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 
+internal data class CartRemoteItem(
+    val varianteId: String,
+    val prendaId: String,
+    val talla: String,
+    val cantidad: Int,
+    val agregadoEnMillis: Long,
+) {
+    fun aCartEntity(localExistente: CartEntity?): CartEntity = CartEntity(
+        varianteId = varianteId,
+        prendaId = prendaId,
+        talla = talla,
+        colorNombre = localExistente?.colorNombre.orEmpty(),
+        colorHex = localExistente?.colorHex.orEmpty(),
+        cantidad = cantidad,
+        agregadoEnMillis = agregadoEnMillis,
+        precioAlAgregar = localExistente?.precioAlAgregar ?: 0.0,
+    )
+}
+
+internal interface CartOwnerStore {
+    fun getOwnerUid(): String?
+    fun setOwnerUid(uid: String?)
+}
+
+internal interface CartRemoteDataSource {
+    suspend fun obtenerCarrito(uid: String): List<CartRemoteItem>
+    suspend fun guardarItem(uid: String, item: CartEntity)
+    suspend fun eliminarItem(uid: String, varianteId: String)
+    suspend fun vaciarCarrito(uid: String)
+    fun observarCambios(uid: String, onItems: (List<CartRemoteItem>) -> Unit): AutoCloseable?
+}
+
 @Singleton
-class RoomCartRepository @Inject constructor(
+class RoomCartRepository internal constructor(
     private val cartDao: CartDao,
-    private val firestore: FirebaseFirestore? = null,
-    private val firebaseAuth: FirebaseAuth? = null,
+    private val remoteDataSource: CartRemoteDataSource?,
+    private val ownerStore: CartOwnerStore,
+    private val currentUidProvider: () -> String?,
+    private val initialUid: String?,
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+    firebaseAuth: FirebaseAuth? = null,
 ) : CartRepository {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private var syncJob: Job? = null
-    private var remoteListener: ListenerRegistration? = null
+    @Inject
+    constructor(
+        cartDao: CartDao,
+        firestore: FirebaseFirestore? = null,
+        firebaseAuth: FirebaseAuth? = null,
+        @ApplicationContext context: Context? = null,
+    ) : this(
+        cartDao = cartDao,
+        remoteDataSource = firestore?.let(::FirestoreCartRemoteDataSource),
+        ownerStore = if (context != null) {
+            SharedPrefsCartOwnerStore(context)
+        } else {
+            InMemoryCartOwnerStore()
+        },
+        currentUidProvider = { firebaseAuth?.currentUser?.uid },
+        initialUid = firebaseAuth?.currentUser?.uid,
+        firebaseAuth = firebaseAuth,
+    )
+
+    private val syncMutex = Mutex()
+    private var remoteSubscription: AutoCloseable? = null
     private var lastSyncedUid: String? = null
 
     init {
         firebaseAuth?.addAuthStateListener { auth ->
-            val user = auth.currentUser
-            if (user != null) {
-                if (lastSyncedUid != user.uid) {
-                    lastSyncedUid = user.uid
-                    syncJob?.cancel()
-                    syncJob = scope.launch {
-                        sincronizarConCuenta(user.uid)
-                    }
-                }
-            } else {
-                if (lastSyncedUid != null) {
-                    // Al cerrar sesión: el carrito de la cuenta queda a salvo en Firestore,
-                    // y limpiamos el carrito local para proteger la privacidad del usuario.
-                    lastSyncedUid = null
-                    remoteListener?.remove()
-                    remoteListener = null
-                    syncJob?.cancel()
-                    syncJob = scope.launch {
-                        cartDao.vaciarCarrito()
-                    }
-                }
+            val uid = auth.currentUser?.uid
+            scope.launch {
+                onAuthStateChanged(uid)
             }
         }
     }
@@ -87,163 +125,208 @@ class RoomCartRepository @Inject constructor(
         )
         cartDao.agregarOIncrementar(entity)
 
-        val uid = firebaseAuth?.currentUser?.uid
-        if (uid != null) {
+        val uid = currentUidProvider()
+        val remote = remoteDataSource
+        if (uid != null && remote != null) {
             val itemActualizado = cartDao.obtenerPorVarianteId(varianteId) ?: entity
-            guardarEnFirestore(uid, itemActualizado)
+            remote.guardarItem(uid, itemActualizado)
         }
     }
 
     override suspend fun actualizarCantidad(varianteId: String, cantidad: Int) {
         if (cantidad <= 0) {
             eliminarItem(varianteId)
-        } else {
-            cartDao.actualizarCantidad(varianteId, cantidad)
-            val uid = firebaseAuth?.currentUser?.uid
-            if (uid != null) {
-                val item = cartDao.obtenerPorVarianteId(varianteId)
-                if (item != null) {
-                    guardarEnFirestore(uid, item)
-                }
+            return
+        }
+        cartDao.actualizarCantidad(varianteId, cantidad)
+        val uid = currentUidProvider()
+        val remote = remoteDataSource
+        if (uid != null && remote != null) {
+            val item = cartDao.obtenerPorVarianteId(varianteId)
+            if (item != null) {
+                remote.guardarItem(uid, item)
             }
         }
     }
 
     override suspend fun eliminarItem(varianteId: String) {
         cartDao.eliminarItem(varianteId)
-        val uid = firebaseAuth?.currentUser?.uid
-        val fs = firestore
-        if (uid != null && fs != null) {
-            runCatching {
-                fs.collection("clientes")
-                    .document(uid)
-                    .collection("carrito")
-                    .document(varianteId)
-                    .delete()
-                    .await()
-            }
+        val uid = currentUidProvider()
+        val remote = remoteDataSource
+        if (uid != null && remote != null) {
+            runCatching { remote.eliminarItem(uid, varianteId) }
         }
     }
 
     override suspend fun vaciarCarrito() {
         cartDao.vaciarCarrito()
-        val uid = firebaseAuth?.currentUser?.uid
-        val fs = firestore
-        if (uid != null && fs != null) {
-            runCatching {
-                val snapshot = fs.collection("clientes")
-                    .document(uid)
-                    .collection("carrito")
-                    .get()
-                    .await()
-                for (doc in snapshot.documents) {
-                    doc.reference.delete().await()
-                }
-            }
+        val uid = currentUidProvider()
+        val remote = remoteDataSource
+        if (uid != null && remote != null) {
+            runCatching { remote.vaciarCarrito(uid) }
         }
     }
 
     /**
-     * CA-05 y CA-07: Al iniciar sesión, fusiona los ítems locales del invitado con los de la cuenta
-     * en Firestore sin duplicar líneas (sumando cantidades).
+     * CA-05 y CA-07: Sincroniza el carrito local con el de Firestore.
+     * Solo fusiona sumando cantidades cuando el carrito local pertenece a un invitado que
+     * acaba de iniciar sesión; en reaperturas con la misma cuenta reconcilia sin duplicar.
      */
     override suspend fun sincronizarConCuenta(uid: String) {
-        val fs = firestore ?: return
-        try {
-            val localItems = cartDao.obtenerTodos().associateBy { it.varianteId }.toMutableMap()
-            val remoteSnapshot = fs.collection("clientes")
-                .document(uid)
-                .collection("carrito")
-                .get()
-                .await()
-
-            for (doc in remoteSnapshot.documents) {
-                val varianteId = doc.id
-                val prendaId = doc.getString("prendaId").orEmpty()
-                val talla = doc.getString("talla").orEmpty()
-                val cantidadRemota = doc.getLong("cantidad")?.toInt() ?: 1
-                val agregadoEnMillis = doc.getTimestamp("agregadoEn")?.toDate()?.time
-                    ?: System.currentTimeMillis()
-
-                val local = localItems[varianteId]
-                if (local != null) {
-                    // CA-07: Sumar la cantidad en lugar de crear otra línea
-                    val cantidadFusionada = (local.cantidad + cantidadRemota).coerceAtMost(99)
-                    val fusionado = local.copy(cantidad = cantidadFusionada)
-                    localItems[varianteId] = fusionado
-                    guardarEnFirestore(uid, fusionado)
-                } else {
-                    // En Firestore pero no en Room: descargarlo a Room
-                    val nuevoLocal = CartEntity(
-                        varianteId = varianteId,
-                        prendaId = prendaId,
-                        talla = talla,
-                        colorNombre = "",
-                        colorHex = "",
-                        cantidad = cantidadRemota,
-                        agregadoEnMillis = agregadoEnMillis,
-                        precioAlAgregar = 0.0,
-                    )
-                    localItems[varianteId] = nuevoLocal
-                }
-            }
-
-            // Los ítems que solo estaban en el dispositivo local se suben a Firestore
-            for ((_, localItem) in localItems) {
-                guardarEnFirestore(uid, localItem)
-            }
-
-            // Actualizar Room con el carrito unificado
-            if (localItems.isNotEmpty()) {
-                cartDao.insertarItems(localItems.values.toList())
-            }
-
-            // Escuchar cambios remotos en vivo para persistencia multi-dispositivo (CA-05)
-            escucharCambiosRemotos(uid)
-        } catch (e: Exception) {
-            android.util.Log.e("RoomCartRepository", "Error al sincronizar con cuenta: ${e.message}", e)
+        syncMutex.withLock {
+            lastSyncedUid = uid
+            sincronizarConCuentaLocked(uid)
         }
     }
 
-    private fun escucharCambiosRemotos(uid: String) {
-        val fs = firestore ?: return
-        remoteListener?.remove()
-        remoteListener = fs.collection("clientes")
-            .document(uid)
-            .collection("carrito")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null) {
-                    if (error != null) {
-                        android.util.Log.e("RoomCartRepository", "Error en listener remoto: ${error.message}", error)
-                    }
-                    return@addSnapshotListener
+    internal suspend fun onAuthStateChanged(uid: String?) {
+        syncMutex.withLock {
+            if (uid != null) {
+                if (lastSyncedUid != uid) {
+                    lastSyncedUid = uid
+                    sincronizarConCuentaLocked(uid)
                 }
-                scope.launch {
-                    val remotos = snapshot.documents.mapNotNull { doc ->
-                        val prendaId = doc.getString("prendaId") ?: return@mapNotNull null
-                        val talla = doc.getString("talla") ?: return@mapNotNull null
-                        val localExistente = cartDao.obtenerPorVarianteId(doc.id)
-                        CartEntity(
-                            varianteId = doc.id,
-                            prendaId = prendaId,
-                            talla = talla,
-                            colorNombre = localExistente?.colorNombre.orEmpty(),
-                            colorHex = localExistente?.colorHex.orEmpty(),
-                            cantidad = doc.getLong("cantidad")?.toInt() ?: 1,
-                            agregadoEnMillis = doc.getTimestamp("agregadoEn")?.toDate()?.time
-                                ?: System.currentTimeMillis(),
-                            precioAlAgregar = localExistente?.precioAlAgregar ?: 0.0,
-                        )
-                    }
-                    if (remotos.isNotEmpty()) {
-                        cartDao.insertarItems(remotos)
-                    }
+            } else {
+                // Al cerrar sesión: el carrito de la cuenta queda a salvo en Firestore,
+                // y limpiamos el carrito local para proteger la privacidad del usuario.
+                val hadSession = lastSyncedUid != null || ownerStore.getOwnerUid() != null
+                lastSyncedUid = null
+                remoteSubscription?.close()
+                remoteSubscription = null
+                if (hadSession) {
+                    ownerStore.setOwnerUid(null)
+                    cartDao.vaciarCarrito()
                 }
             }
+        }
     }
 
-    private suspend fun guardarEnFirestore(uid: String, item: CartEntity) {
-        val fs = firestore ?: return
+    private suspend fun sincronizarConCuentaLocked(uid: String) {
+        val remote = remoteDataSource ?: return
+        try {
+            val persistedOwner = ownerStore.getOwnerUid()
+            // Si la sesión ya estaba activa al abrir la app y no existía owner persistido
+            // (migración desde una versión previa), no se trata como invitado nuevo para evitar duplicar.
+            val legacySameUserAtStartup = (persistedOwner == null && initialUid == uid)
+            if (persistedOwner != null && persistedOwner != uid) {
+                ownerStore.setOwnerUid(null)
+                cartDao.vaciarCarrito()
+            }
+
+            val shouldMergeGuestItems = (persistedOwner == null && !legacySameUserAtStartup)
+            val remoteItems = remote.obtenerCarrito(uid)
+            val localByVariant = cartDao.obtenerTodos().associateBy { it.varianteId }
+
+            val unifiedItems = if (shouldMergeGuestItems) {
+                fusionarInvitadoConRemoto(uid, localByVariant, remoteItems, remote)
+            } else {
+                remoteItems.map { it.aCartEntity(localByVariant[it.varianteId]) }
+            }
+
+            cartDao.reemplazarCarrito(unifiedItems)
+            ownerStore.setOwnerUid(uid)
+
+            // Escuchar cambios remotos en vivo para persistencia multi-dispositivo (CA-05)
+            escucharCambiosRemotosLocked(uid)
+        } catch (e: Exception) {
+            logError("Error al sincronizar con cuenta: ${e.message}", e)
+        }
+    }
+
+    private suspend fun fusionarInvitadoConRemoto(
+        uid: String,
+        localByVariant: Map<String, CartEntity>,
+        remoteItems: List<CartRemoteItem>,
+        remote: CartRemoteDataSource,
+    ): List<CartEntity> {
+        val merged = localByVariant.toMutableMap()
+        val remoteVariants = remoteItems.mapTo(mutableSetOf()) { it.varianteId }
+
+        for (remoteItem in remoteItems) {
+            val local = merged[remoteItem.varianteId]
+            if (local != null) {
+                // CA-07: Sumar la cantidad en lugar de crear otra línea
+                val cantidadFusionada = (local.cantidad + remoteItem.cantidad).coerceAtMost(99)
+                val fusionado = local.copy(cantidad = cantidadFusionada)
+                merged[remoteItem.varianteId] = fusionado
+                remote.guardarItem(uid, fusionado)
+            } else {
+                merged[remoteItem.varianteId] = remoteItem.aCartEntity(localExistente = null)
+            }
+        }
+
+        // Los ítems que solo estaban en el dispositivo local del invitado se suben a Firestore
+        for ((varianteId, localItem) in merged) {
+            if (varianteId !in remoteVariants) {
+                remote.guardarItem(uid, localItem)
+            }
+        }
+
+        return merged.values.toList()
+    }
+
+    private fun escucharCambiosRemotosLocked(uid: String) {
+        val remote = remoteDataSource ?: return
+        remoteSubscription?.close()
+        remoteSubscription = remote.observarCambios(uid) { remotos ->
+            scope.launch {
+                syncMutex.withLock {
+                    if (lastSyncedUid != uid) return@withLock
+                    val localByVariant = cartDao.obtenerTodos().associateBy { it.varianteId }
+                    val entidades = remotos.map { it.aCartEntity(localByVariant[it.varianteId]) }
+                    cartDao.reemplazarCarrito(entidades)
+                }
+            }
+        }
+    }
+
+    private companion object {
+        const val TAG = "RoomCartRepository"
+
+        fun logError(message: String, error: Throwable? = null) {
+            runCatching { android.util.Log.e(TAG, message, error) }
+        }
+    }
+}
+
+private class InMemoryCartOwnerStore : CartOwnerStore {
+    private var ownerUid: String? = null
+    override fun getOwnerUid(): String? = ownerUid
+    override fun setOwnerUid(uid: String?) {
+        ownerUid = uid
+    }
+}
+
+private class SharedPrefsCartOwnerStore(context: Context) : CartOwnerStore {
+    private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    override fun getOwnerUid(): String? = prefs.getString(KEY_SYNCED_OWNER_UID, null)
+
+    override fun setOwnerUid(uid: String?) {
+        prefs.edit().apply {
+            if (uid == null) remove(KEY_SYNCED_OWNER_UID) else putString(KEY_SYNCED_OWNER_UID, uid)
+        }.apply()
+    }
+
+    private companion object {
+        const val PREFS_NAME = "modaviva_cart_sync"
+        const val KEY_SYNCED_OWNER_UID = "synced_owner_uid"
+    }
+}
+
+private class FirestoreCartRemoteDataSource(
+    private val firestore: FirebaseFirestore,
+) : CartRemoteDataSource {
+
+    private fun carritoCollection(uid: String) =
+        firestore.collection("clientes").document(uid).collection("carrito")
+
+    override suspend fun obtenerCarrito(uid: String): List<CartRemoteItem> {
+        val snapshot = carritoCollection(uid).get().await()
+        return snapshot.documents.mapNotNull { it.aCartRemoteItem() }
+    }
+
+    override suspend fun guardarItem(uid: String, item: CartEntity) {
         try {
             // firestore.rules solo permite: ['prendaId', 'talla', 'cantidad', 'agregadoEn']
             val datos = mapOf(
@@ -252,15 +335,57 @@ class RoomCartRepository @Inject constructor(
                 "cantidad" to item.cantidad.coerceIn(1, 99),
                 "agregadoEn" to Timestamp(Instant.ofEpochMilli(item.agregadoEnMillis)),
             )
-            fs.collection("clientes")
-                .document(uid)
-                .collection("carrito")
-                .document(item.varianteId)
-                .set(datos)
-                .await()
-            android.util.Log.d("RoomCartRepository", "Firestore guardó exitosamente ${item.varianteId} para $uid")
+            carritoCollection(uid).document(item.varianteId).set(datos).await()
+            runCatching {
+                android.util.Log.d(TAG, "Firestore guardó exitosamente ${item.varianteId} para $uid")
+            }
         } catch (e: Exception) {
-            android.util.Log.e("RoomCartRepository", "Error al guardar ${item.varianteId} en Firestore: ${e.message}", e)
+            runCatching {
+                android.util.Log.e(TAG, "Error al guardar ${item.varianteId} en Firestore: ${e.message}", e)
+            }
         }
+    }
+
+    override suspend fun eliminarItem(uid: String, varianteId: String) {
+        carritoCollection(uid).document(varianteId).delete().await()
+    }
+
+    override suspend fun vaciarCarrito(uid: String) {
+        val snapshot = carritoCollection(uid).get().await()
+        for (doc in snapshot.documents) {
+            doc.reference.delete().await()
+        }
+    }
+
+    override fun observarCambios(uid: String, onItems: (List<CartRemoteItem>) -> Unit): AutoCloseable {
+        val registration = carritoCollection(uid).addSnapshotListener { snapshot, error ->
+            if (error != null || snapshot == null) {
+                if (error != null) {
+                    runCatching {
+                        android.util.Log.e(TAG, "Error en listener remoto: ${error.message}", error)
+                    }
+                }
+                return@addSnapshotListener
+            }
+            onItems(snapshot.documents.mapNotNull { it.aCartRemoteItem() })
+        }
+        return AutoCloseable { registration.remove() }
+    }
+
+    private fun com.google.firebase.firestore.DocumentSnapshot.aCartRemoteItem(): CartRemoteItem? {
+        val prendaId = getString("prendaId") ?: return null
+        val talla = getString("talla") ?: return null
+        return CartRemoteItem(
+            varianteId = id,
+            prendaId = prendaId,
+            talla = talla,
+            cantidad = getLong("cantidad")?.toInt() ?: 1,
+            agregadoEnMillis = getTimestamp("agregadoEn")?.toDate()?.time
+                ?: System.currentTimeMillis(),
+        )
+    }
+
+    private companion object {
+        const val TAG = "RoomCartRepository"
     }
 }

@@ -1,18 +1,24 @@
 package pe.modaviva.app.cart
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import pe.modaviva.app.data.local.CartDao
 import pe.modaviva.app.data.local.CartEntity
+import pe.modaviva.app.data.repository.CartOwnerStore
+import pe.modaviva.app.data.repository.CartRemoteDataSource
+import pe.modaviva.app.data.repository.CartRemoteItem
 import pe.modaviva.app.data.repository.RoomCartRepository
 import pe.modaviva.app.domain.model.CartItem
 
@@ -349,6 +355,248 @@ class CartTest {
         assertEquals(3, cartRepository.totalItems.first())
         assertTrue(itemsRestaurados.any { it.varianteId == "BL-1002_M" && it.cantidad == 2 })
         assertTrue(itemsRestaurados.any { it.varianteId == "BL-1003_S" && it.cantidad == 1 })
+    }
+
+    @Test
+    fun `al cerrar y reabrir la app con sesion iniciada no duplica las cantidades del carrito`() = runBlocking {
+        val ownerStore = FakeCartOwnerStore(initialOwner = null)
+        val remoteStore = FakeCartRemoteDataSource()
+        var activeUid: String? = "uid-1"
+
+        // Sesión 1: usuario autenticado agrega 2 unidades
+        val repoSesion1 = crearRepoSincronizado(
+            dao = fakeDao,
+            remoteStore = remoteStore,
+            ownerStore = ownerStore,
+            currentUidProvider = { activeUid },
+            initialUid = "uid-1",
+        )
+        repoSesion1.onAuthStateChanged("uid-1")
+        repoSesion1.agregarAlCarrito("BL-1002", "M", "Negro", "#000000", 2, 79.9)
+        assertEquals(2, repoSesion1.totalItems.first())
+        assertEquals(2, remoteStore.obtenerCarrito("uid-1").first().cantidad)
+        assertEquals("uid-1", ownerStore.getOwnerUid())
+
+        // Simula cerrar y reabrir la app 3 veces consecutivas con la misma cuenta
+        repeat(3) {
+            val repoReapertura = crearRepoSincronizado(
+                dao = fakeDao,
+                remoteStore = remoteStore,
+                ownerStore = ownerStore,
+                currentUidProvider = { activeUid },
+                initialUid = "uid-1",
+            )
+            repoReapertura.onAuthStateChanged("uid-1")
+            assertEquals(2, repoReapertura.totalItems.first())
+            assertEquals(2, remoteStore.obtenerCarrito("uid-1").first().cantidad)
+        }
+    }
+
+    @Test
+    fun `al migrar desde version sin owner persistido tampoco duplica al abrir la app logueado`() = runBlocking {
+        val ownerStore = FakeCartOwnerStore(initialOwner = null)
+        val remoteStore = FakeCartRemoteDataSource().apply {
+            seed("uid-1", CartRemoteItem("BL-1002_M", "BL-1002", "M", 2, 100L))
+        }
+        fakeDao.insertarOActualizar(
+            CartEntity("BL-1002_M", "BL-1002", "M", "Negro", "#000000", 2, 100L, 50.0),
+        )
+
+        val repo = crearRepoSincronizado(
+            dao = fakeDao,
+            remoteStore = remoteStore,
+            ownerStore = ownerStore,
+            currentUidProvider = { "uid-1" },
+            initialUid = "uid-1",
+        )
+        repo.onAuthStateChanged("uid-1")
+
+        assertEquals(2, repo.totalItems.first())
+        assertEquals(2, remoteStore.obtenerCarrito("uid-1").first().cantidad)
+        assertEquals("uid-1", ownerStore.getOwnerUid())
+        // Conserva metadatos locales como color y precio al agregar
+        val item = repo.items.first().first()
+        assertEquals("Negro", item.colorNombre)
+        assertEquals(50.0, item.precioAlAgregar, 0.0)
+    }
+
+    @Test
+    fun `invitado con prendas al iniciar sesion fusiona cantidades una vez y no duplica al reiniciar`() = runBlocking {
+        val ownerStore = FakeCartOwnerStore(initialOwner = null)
+        val remoteStore = FakeCartRemoteDataSource().apply {
+            seed("uid-1", CartRemoteItem("BL-1002_M", "BL-1002", "M", 3, 100L))
+        }
+        var activeUid: String? = null
+
+        val repoSesion = crearRepoSincronizado(
+            dao = fakeDao,
+            remoteStore = remoteStore,
+            ownerStore = ownerStore,
+            currentUidProvider = { activeUid },
+            initialUid = null,
+        )
+        repoSesion.onAuthStateChanged(null)
+        repoSesion.agregarAlCarrito("BL-1002", "M", "Negro", "#000000", 2, 50.0)
+
+        // Usuario invitado inicia sesión -> fusiona 2 + 3 = 5
+        activeUid = "uid-1"
+        repoSesion.onAuthStateChanged("uid-1")
+        assertEquals(5, repoSesion.totalItems.first())
+        assertEquals(5, remoteStore.obtenerCarrito("uid-1").first().cantidad)
+        assertEquals("uid-1", ownerStore.getOwnerUid())
+
+        // Reapertura posterior mantiene 5 sin volver a sumar
+        val repoReapertura = crearRepoSincronizado(
+            dao = fakeDao,
+            remoteStore = remoteStore,
+            ownerStore = ownerStore,
+            currentUidProvider = { activeUid },
+            initialUid = "uid-1",
+        )
+        repoReapertura.onAuthStateChanged("uid-1")
+        assertEquals(5, repoReapertura.totalItems.first())
+    }
+
+    @Test
+    fun `cerrar sesion limpia room y reingresar o cambiar de cuenta no mezcla ni duplica`() = runBlocking {
+        val ownerStore = FakeCartOwnerStore(initialOwner = "uid-1")
+        val remoteStore = FakeCartRemoteDataSource().apply {
+            seed("uid-1", CartRemoteItem("BL-1002_M", "BL-1002", "M", 2, 100L))
+            seed("uid-2", CartRemoteItem("VT-2001_S", "VT-2001", "S", 1, 200L))
+        }
+        fakeDao.insertarOActualizar(
+            CartEntity("BL-1002_M", "BL-1002", "M", "Negro", "#000000", 2, 100L, 50.0),
+        )
+        var activeUid: String? = "uid-1"
+
+        val repo = crearRepoSincronizado(
+            dao = fakeDao,
+            remoteStore = remoteStore,
+            ownerStore = ownerStore,
+            currentUidProvider = { activeUid },
+            initialUid = "uid-1",
+        )
+        repo.onAuthStateChanged("uid-1")
+        assertEquals(2, repo.totalItems.first())
+
+        // Cierre de sesión limpia el almacenamiento local y el owner
+        activeUid = null
+        repo.onAuthStateChanged(null)
+        assertEquals(0, repo.totalItems.first())
+        assertNull(ownerStore.getOwnerUid())
+
+        // Ingreso con otra cuenta carga únicamente el carrito de uid-2
+        activeUid = "uid-2"
+        repo.onAuthStateChanged("uid-2")
+        val itemsUid2 = repo.items.first()
+        assertEquals(1, itemsUid2.size)
+        assertEquals("VT-2001_S", itemsUid2.first().varianteId)
+        assertEquals("uid-2", ownerStore.getOwnerUid())
+    }
+
+    @Test
+    fun `cambios remotos reflejan eliminaciones en room sin dejar items huerfanos`() = runBlocking {
+        val ownerStore = FakeCartOwnerStore(initialOwner = "uid-1")
+        val remoteStore = FakeCartRemoteDataSource().apply {
+            seed("uid-1", CartRemoteItem("BL-1002_M", "BL-1002", "M", 2, 100L))
+            seed("uid-1", CartRemoteItem("BL-1003_S", "BL-1003", "S", 1, 100L))
+        }
+        fakeDao.insertarItems(
+            listOf(
+                CartEntity("BL-1002_M", "BL-1002", "M", "Negro", "#000000", 2, 100L, 50.0),
+                CartEntity("BL-1003_S", "BL-1003", "S", "Blanco", "#FFFFFF", 1, 100L, 40.0),
+            ),
+        )
+
+        val repo = crearRepoSincronizado(
+            dao = fakeDao,
+            remoteStore = remoteStore,
+            ownerStore = ownerStore,
+            currentUidProvider = { "uid-1" },
+            initialUid = "uid-1",
+        )
+        repo.onAuthStateChanged("uid-1")
+        assertEquals(2, repo.items.first().size)
+
+        // Simula eliminación de una prenda desde otro dispositivo
+        remoteStore.eliminarItem("uid-1", "BL-1003_S")
+        remoteStore.emitirSnapshot("uid-1")
+        kotlinx.coroutines.delay(50)
+
+        val trasBorradoParcial = repo.items.first()
+        assertEquals(1, trasBorradoParcial.size)
+        assertEquals("BL-1002_M", trasBorradoParcial.first().varianteId)
+
+        // Simula vaciado remoto completo
+        remoteStore.vaciarCarrito("uid-1")
+        remoteStore.emitirSnapshot("uid-1")
+        kotlinx.coroutines.delay(50)
+
+        assertTrue(repo.items.first().isEmpty())
+    }
+
+    private fun crearRepoSincronizado(
+        dao: CartDao,
+        remoteStore: FakeCartRemoteDataSource,
+        ownerStore: FakeCartOwnerStore,
+        currentUidProvider: () -> String?,
+        initialUid: String?,
+    ): RoomCartRepository = RoomCartRepository(
+        cartDao = dao,
+        remoteDataSource = remoteStore,
+        ownerStore = ownerStore,
+        currentUidProvider = currentUidProvider,
+        initialUid = initialUid,
+        scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
+    )
+}
+
+private class FakeCartOwnerStore(initialOwner: String? = null) : CartOwnerStore {
+    private var ownerUid: String? = initialOwner
+    override fun getOwnerUid(): String? = ownerUid
+    override fun setOwnerUid(uid: String?) {
+        ownerUid = uid
+    }
+}
+
+private class FakeCartRemoteDataSource : CartRemoteDataSource {
+    private val buckets = mutableMapOf<String, MutableMap<String, CartRemoteItem>>()
+    private val listeners = mutableMapOf<String, MutableList<(List<CartRemoteItem>) -> Unit>>()
+
+    fun seed(uid: String, item: CartRemoteItem) {
+        buckets.getOrPut(uid) { linkedMapOf() }[item.varianteId] = item
+    }
+
+    fun emitirSnapshot(uid: String) {
+        val current = buckets[uid]?.values?.toList().orEmpty()
+        listeners[uid]?.forEach { it(current) }
+    }
+
+    override suspend fun obtenerCarrito(uid: String): List<CartRemoteItem> =
+        buckets[uid]?.values?.toList().orEmpty()
+
+    override suspend fun guardarItem(uid: String, item: CartEntity) {
+        buckets.getOrPut(uid) { linkedMapOf() }[item.varianteId] = CartRemoteItem(
+            varianteId = item.varianteId,
+            prendaId = item.prendaId,
+            talla = item.talla,
+            cantidad = item.cantidad.coerceIn(1, 99),
+            agregadoEnMillis = item.agregadoEnMillis,
+        )
+    }
+
+    override suspend fun eliminarItem(uid: String, varianteId: String) {
+        buckets[uid]?.remove(varianteId)
+    }
+
+    override suspend fun vaciarCarrito(uid: String) {
+        buckets.remove(uid)
+    }
+
+    override fun observarCambios(uid: String, onItems: (List<CartRemoteItem>) -> Unit): AutoCloseable {
+        val list = listeners.getOrPut(uid) { mutableListOf() }
+        list.add(onItems)
+        return AutoCloseable { list.remove(onItems) }
     }
 }
 

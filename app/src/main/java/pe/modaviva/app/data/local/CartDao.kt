@@ -58,4 +58,16 @@ interface CartDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertarItems(entities: List<CartEntity>)
+
+    /**
+     * Reemplaza el contenido local en una sola transacción para reflejar
+     * altas, cambios de cantidad y eliminaciones remotas sin parpadeos.
+     */
+    @Transaction
+    suspend fun reemplazarCarrito(entities: List<CartEntity>) {
+        vaciarCarrito()
+        if (entities.isNotEmpty()) {
+            insertarItems(entities)
+        }
+    }
 }
