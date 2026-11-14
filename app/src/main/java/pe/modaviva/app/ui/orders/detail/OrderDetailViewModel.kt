@@ -1,4 +1,4 @@
-package pe.modaviva.app.ui.orders
+package pe.modaviva.app.ui.orders.detail
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel

@@ -1,4 +1,4 @@
-package pe.modaviva.app.ui.orders
+package pe.modaviva.app.ui.orders.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

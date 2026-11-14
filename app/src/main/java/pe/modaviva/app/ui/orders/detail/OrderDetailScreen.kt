@@ -1,4 +1,4 @@
-package pe.modaviva.app.ui.orders
+package pe.modaviva.app.ui.orders.detail
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -79,6 +79,7 @@ import pe.modaviva.app.domain.model.ItemPedido
 import pe.modaviva.app.domain.model.Pedido
 import pe.modaviva.app.domain.model.TipoMedioPago
 import pe.modaviva.app.ui.format.formatearSoles
+import pe.modaviva.app.ui.orders.components.ChipEstadoPedido
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
