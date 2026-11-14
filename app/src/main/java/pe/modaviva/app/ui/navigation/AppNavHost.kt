@@ -43,10 +43,10 @@ import pe.modaviva.app.ui.auth.register.RegisterScreen
 import pe.modaviva.app.ui.auth.verify.EmailVerifyScreen
 import pe.modaviva.app.ui.cart.CartScreen
 import pe.modaviva.app.ui.categories.CategoriesScreen
-import pe.modaviva.app.ui.checkout.CheckoutDeliveryScreen
-import pe.modaviva.app.ui.checkout.CheckoutPaymentScreen
-import pe.modaviva.app.ui.checkout.CheckoutSummaryScreen
-import pe.modaviva.app.ui.checkout.OrderConfirmedScreen
+import pe.modaviva.app.ui.checkout.confirmed.OrderConfirmedScreen
+import pe.modaviva.app.ui.checkout.delivery.CheckoutDeliveryScreen
+import pe.modaviva.app.ui.checkout.payment.CheckoutPaymentScreen
+import pe.modaviva.app.ui.checkout.summary.CheckoutSummaryScreen
 import pe.modaviva.app.ui.components.MvAuthPromptBottomSheet
 import pe.modaviva.app.ui.favorites.Favoritos
 import pe.modaviva.app.ui.favorites.FavoritesScreen
@@ -54,8 +54,8 @@ import pe.modaviva.app.ui.favorites.LocalFavoritos
 import pe.modaviva.app.ui.favorites.MarcarFavoritoViewModel
 import pe.modaviva.app.ui.fitting.FittingTab
 import pe.modaviva.app.ui.home.HomeScreen
-import pe.modaviva.app.ui.orders.OrderDetailScreen
-import pe.modaviva.app.ui.orders.OrderHistoryScreen
+import pe.modaviva.app.ui.orders.detail.OrderDetailScreen
+import pe.modaviva.app.ui.orders.history.OrderHistoryScreen
 import pe.modaviva.app.ui.placeholder.ComingSoonScreen
 import pe.modaviva.app.ui.product.ProductDetailScreen
 import pe.modaviva.app.ui.profile.ProfileTab
