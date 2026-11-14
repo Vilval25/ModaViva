@@ -16,10 +16,12 @@ object Routes {
     const val CHECKOUT_DELIVERY = "checkout_delivery"
     const val CHECKOUT_PAYMENT = "checkout_payment"
     const val ORDER_CONFIRMED = "order_confirmed/{pedidoId}"
+    const val ORDER_DETAIL = "order_detail/{pedidoId}"
     const val ADDRESSES = "addresses"
     const val PAYMENT_METHODS = "payment_methods"
     const val PRENDA = "prenda/{codigo}"
 
     fun prenda(codigo: String) = "prenda/$codigo"
     fun orderConfirmed(pedidoId: String) = "order_confirmed/$pedidoId"
+    fun orderDetail(pedidoId: String) = "order_detail/$pedidoId"
 }

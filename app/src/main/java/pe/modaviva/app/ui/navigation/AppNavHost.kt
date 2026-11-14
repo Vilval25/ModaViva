@@ -54,6 +54,7 @@ import pe.modaviva.app.ui.favorites.LocalFavoritos
 import pe.modaviva.app.ui.favorites.MarcarFavoritoViewModel
 import pe.modaviva.app.ui.fitting.FittingTab
 import pe.modaviva.app.ui.home.HomeScreen
+import pe.modaviva.app.ui.orders.OrderDetailScreen
 import pe.modaviva.app.ui.orders.OrderHistoryScreen
 import pe.modaviva.app.ui.placeholder.ComingSoonScreen
 import pe.modaviva.app.ui.product.ProductDetailScreen
@@ -254,7 +255,14 @@ private fun NavGraphBuilder.topLevelGraph(
         )
     }
     composable(TopLevelDestination.ORDERS.route) {
-        OrderHistoryScreen()
+        OrderHistoryScreen(
+            onOrderClick = { pedidoId ->
+                navController.navigate(Routes.orderDetail(pedidoId))
+            },
+            onGoToHome = {
+                navController.popBackStack(TopLevelDestination.HOME.route, inclusive = false)
+            },
+        )
     }
 }
 
@@ -373,6 +381,18 @@ private fun NavGraphBuilder.overlayGraph(
                     restoreState = true
                 }
             },
+        )
+    }
+    composable(
+        route = Routes.ORDER_DETAIL,
+        arguments = listOf(
+            navArgument("pedidoId") {
+                type = NavType.StringType
+            },
+        ),
+    ) {
+        OrderDetailScreen(
+            onBack = { navController.popBackStack() },
         )
     }
     composable("stock-test") {
