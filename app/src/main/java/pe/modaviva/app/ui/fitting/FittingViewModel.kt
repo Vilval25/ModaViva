@@ -20,6 +20,7 @@ import pe.modaviva.app.domain.model.UserProfile
 import pe.modaviva.app.domain.repository.AuthRepository
 import pe.modaviva.app.domain.repository.FittingRepository
 import pe.modaviva.app.domain.repository.SessionRepository
+import pe.modaviva.app.ui.fitting.deletion.EliminacionDeFoto
 import javax.inject.Inject
 
 @HiltViewModel

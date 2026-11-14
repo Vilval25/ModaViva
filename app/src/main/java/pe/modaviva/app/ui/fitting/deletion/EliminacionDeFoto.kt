@@ -1,4 +1,4 @@
-package pe.modaviva.app.ui.fitting
+package pe.modaviva.app.ui.fitting.deletion
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -59,7 +59,7 @@ import pe.modaviva.app.ui.session.components.ProfileSectionTitle
 import pe.modaviva.app.ui.session.dialogs.AboutModaVivaDialog
 import pe.modaviva.app.ui.session.dialogs.PersonalDataDialog
 import pe.modaviva.app.ui.session.dialogs.ResetPasswordDialog
-import pe.modaviva.app.ui.fitting.HeightDialog
+import pe.modaviva.app.ui.fitting.components.HeightDialog
 
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState

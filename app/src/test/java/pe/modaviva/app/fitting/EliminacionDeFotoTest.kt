@@ -16,10 +16,10 @@ import pe.modaviva.app.domain.model.ConstanciaEliminacionFoto
 import pe.modaviva.app.domain.model.UserProfile
 import pe.modaviva.app.domain.model.sinFotoProbador
 import pe.modaviva.app.domain.repository.FittingRepository
-import pe.modaviva.app.ui.fitting.EliminacionDeFoto
-import pe.modaviva.app.ui.fitting.EstadoEliminacion
-import pe.modaviva.app.ui.fitting.MotivoFallo
-import pe.modaviva.app.ui.fitting.fechaConstancia
+import pe.modaviva.app.ui.fitting.deletion.EliminacionDeFoto
+import pe.modaviva.app.ui.fitting.deletion.EstadoEliminacion
+import pe.modaviva.app.ui.fitting.deletion.MotivoFallo
+import pe.modaviva.app.ui.fitting.deletion.fechaConstancia
 import java.time.Instant
 import java.time.ZoneId
 

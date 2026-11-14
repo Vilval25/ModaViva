@@ -76,6 +76,11 @@ import pe.modaviva.app.ui.components.MvEmptyState
 import pe.modaviva.app.ui.components.MvPrimaryButton
 import pe.modaviva.app.ui.components.MvScreen
 import pe.modaviva.app.ui.components.MvSecondaryButton
+import pe.modaviva.app.ui.fitting.components.FittingCameraView
+import pe.modaviva.app.ui.fitting.components.HeightDialog
+import pe.modaviva.app.ui.fitting.deletion.ConstanciaEliminacionScreen
+import pe.modaviva.app.ui.fitting.deletion.EstadoEliminacion
+import pe.modaviva.app.ui.fitting.deletion.MotivoFallo
 
 /**
  * Pestaña Probador Virtual (HU-10, HU-11 y HU-14).

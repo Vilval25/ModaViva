@@ -1,4 +1,4 @@
-package pe.modaviva.app.ui.fitting
+package pe.modaviva.app.ui.fitting.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer

@@ -1,4 +1,4 @@
-package pe.modaviva.app.ui.fitting
+package pe.modaviva.app.ui.fitting.deletion
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

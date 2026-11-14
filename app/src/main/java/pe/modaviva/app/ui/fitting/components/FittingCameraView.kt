@@ -1,4 +1,4 @@
-package pe.modaviva.app.ui.fitting
+package pe.modaviva.app.ui.fitting.components
 
 import android.graphics.Bitmap
 import android.graphics.Matrix
