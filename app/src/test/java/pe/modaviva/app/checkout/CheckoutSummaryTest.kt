@@ -30,8 +30,8 @@ import pe.modaviva.app.domain.repository.BackendRepository
 import pe.modaviva.app.domain.repository.CartRepository
 import pe.modaviva.app.domain.repository.CatalogoRepository
 import pe.modaviva.app.domain.repository.StockRepository
-import pe.modaviva.app.ui.checkout.CheckoutSummaryViewModel
-import pe.modaviva.app.ui.checkout.TipoEntregaUi
+import pe.modaviva.app.ui.checkout.summary.CheckoutSummaryViewModel
+import pe.modaviva.app.ui.checkout.summary.TipoEntregaUi
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId

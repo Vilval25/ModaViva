@@ -1,4 +1,4 @@
-package pe.modaviva.app.ui.checkout
+package pe.modaviva.app.ui.checkout.summary
 
 import pe.modaviva.app.domain.model.CuponAplicado
 import pe.modaviva.app.domain.model.ItemPedidoCalculado

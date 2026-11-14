@@ -1,4 +1,4 @@
-package pe.modaviva.app.ui.checkout
+package pe.modaviva.app.ui.checkout.delivery
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

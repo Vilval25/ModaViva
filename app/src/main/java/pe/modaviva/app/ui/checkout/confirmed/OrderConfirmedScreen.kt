@@ -1,4 +1,4 @@
-package pe.modaviva.app.ui.checkout
+package pe.modaviva.app.ui.checkout.confirmed
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

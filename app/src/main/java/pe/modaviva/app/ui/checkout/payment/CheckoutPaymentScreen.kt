@@ -1,4 +1,4 @@
-package pe.modaviva.app.ui.checkout
+package pe.modaviva.app.ui.checkout.payment
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable

@@ -1,4 +1,4 @@
-package pe.modaviva.app.ui.checkout
+package pe.modaviva.app.ui.checkout.summary
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
