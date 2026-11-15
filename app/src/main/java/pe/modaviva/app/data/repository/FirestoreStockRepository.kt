@@ -24,25 +24,17 @@ class FirestoreStockRepository @Inject constructor(
             .document(documentId)
             .addSnapshotListener { snapshot, error ->
 
-                println("STOCK CALLBACK EJECUTADO")
-
                 if (error != null) {
-                    println("ERROR STOCK FIRESTORE: ${error.message}")
                     close(error)
                     return@addSnapshotListener
                 }
 
-                println("STOCK SNAPSHOT: $snapshot")
-
                 if (snapshot == null || !snapshot.exists()) {
-                    println("STOCK DOCUMENTO NO EXISTE")
                     trySend(null)
                     return@addSnapshotListener
                 }
 
                 val stock = snapshot.toObject(Stock::class.java)
-
-                println("STOCK CONVERTIDO: $stock")
 
                 trySend(stock)
             }
