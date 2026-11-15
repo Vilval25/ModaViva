@@ -1,5 +1,6 @@
 package pe.modaviva.app.ui.product.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,15 +45,11 @@ import coil3.request.ImageRequest
 import pe.modaviva.app.R
 import pe.modaviva.app.ui.favorites.LocalFavoritos
 
-/** Galería hero de la prenda con indicadores de página y acciones flotantes. */
+/** Galería hero de la prenda con indicadores de página. */
 @Composable
 fun ProductHeroGallery(
     nombrePrenda: String,
-    codigoPrenda: String,
     fotos: List<String>,
-    cartItemCount: Int,
-    onBack: () -> Unit,
-    onCartClick: () -> Unit,
     onPhotoClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -134,68 +131,76 @@ fun ProductHeroGallery(
                 }
             }
         }
+    }
+}
 
-        // Botones flotantes superiores con inset de barra de estado
+/** Barra superior flotante y fija con las acciones de volver, favorito y carrito. */
+@Composable
+fun ProductHeroTopBar(
+    codigoPrenda: String,
+    cartItemCount: Int,
+    onBack: () -> Unit,
+    onCartClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val overlayBg = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.94f)
+        val overlayFg = MaterialTheme.colorScheme.onSurface
+
+        HeroCircleButton(onClick = onBack, backgroundColor = overlayBg) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.cd_back),
+                tint = overlayFg,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-                .align(Alignment.TopCenter),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val overlayBg = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.92f)
-            val overlayFg = MaterialTheme.colorScheme.onSurface
-
-            HeroCircleButton(onClick = onBack, backgroundColor = overlayBg) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.cd_back),
-                    tint = overlayFg,
-                    modifier = Modifier.size(20.dp),
-                )
+            val favoritos = LocalFavoritos.current
+            if (favoritos != null) {
+                val esFavorita = favoritos.contiene(codigoPrenda)
+                HeroCircleButton(
+                    onClick = { favoritos.alternar(codigoPrenda) },
+                    backgroundColor = overlayBg,
+                ) {
+                    Icon(
+                        imageVector = if (esFavorita) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = stringResource(
+                            if (esFavorita) R.string.cd_favorite_remove else R.string.cd_favorite_add,
+                        ),
+                        tint = if (esFavorita) MaterialTheme.colorScheme.error else overlayFg,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
             }
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                val favoritos = LocalFavoritos.current
-                if (favoritos != null) {
-                    val esFavorita = favoritos.contiene(codigoPrenda)
-                    HeroCircleButton(
-                        onClick = { favoritos.alternar(codigoPrenda) },
-                        backgroundColor = overlayBg,
-                    ) {
-                        Icon(
-                            imageVector = if (esFavorita) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                            contentDescription = stringResource(
-                                if (esFavorita) R.string.cd_favorite_remove else R.string.cd_favorite_add,
-                            ),
-                            tint = if (esFavorita) MaterialTheme.colorScheme.error else overlayFg,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    }
-                }
-
-                HeroCircleButton(onClick = onCartClick, backgroundColor = overlayBg) {
-                    BadgedBox(
-                        badge = {
-                            if (cartItemCount > 0) {
-                                Badge {
-                                    Text(text = if (cartItemCount > 99) "99+" else cartItemCount.toString())
-                                }
+            HeroCircleButton(onClick = onCartClick, backgroundColor = overlayBg) {
+                BadgedBox(
+                    badge = {
+                        if (cartItemCount > 0) {
+                            Badge {
+                                Text(text = if (cartItemCount > 99) "99+" else cartItemCount.toString())
                             }
-                        },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.ShoppingCart,
-                            contentDescription = stringResource(R.string.cd_cart),
-                            tint = overlayFg,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    }
+                        }
+                    },
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.ShoppingCart,
+                        contentDescription = stringResource(R.string.cd_cart),
+                        tint = overlayFg,
+                        modifier = Modifier.size(20.dp),
+                    )
                 }
             }
         }
@@ -212,7 +217,8 @@ private fun HeroCircleButton(
         onClick = onClick,
         shape = CircleShape,
         color = backgroundColor,
-        shadowElevation = 2.dp,
+        shadowElevation = 4.dp,
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
         modifier = Modifier.size(40.dp),
     ) {
         Box(contentAlignment = Alignment.Center, content = content)

@@ -1,6 +1,7 @@
 package pe.modaviva.app.ui.product
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,7 +25,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
@@ -51,10 +51,12 @@ import pe.modaviva.app.R
 import pe.modaviva.app.domain.model.Prenda
 import pe.modaviva.app.domain.model.RecomendacionTalla
 import pe.modaviva.app.ui.component.MvImageGalleryDialog
+import pe.modaviva.app.ui.components.MvSnackbarHost
 import pe.modaviva.app.ui.format.formatearSoles
 import pe.modaviva.app.ui.product.components.ProductAccordionSections
 import pe.modaviva.app.ui.product.components.ProductAddToBagBar
 import pe.modaviva.app.ui.product.components.ProductHeroGallery
+import pe.modaviva.app.ui.product.components.ProductHeroTopBar
 import pe.modaviva.app.ui.product.components.ProductSizeAndQuantitySection
 import pe.modaviva.app.ui.product.components.SizeGuideBottomSheet
 import pe.modaviva.app.ui.stock.StockViewModel
@@ -151,7 +153,7 @@ fun ProductDetailScreen(
     val buttonEnabled = tallaSeleccionada != null && !esCargaPendiente && !estaAgotado && cantidad in 1..maxStock
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { MvSnackbarHost(snackbarHostState) },
         bottomBar = {
             ProductAddToBagBar(
                 buttonText = textoBoton,
@@ -180,24 +182,24 @@ fun ProductDetailScreen(
             )
         },
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding())
-                .verticalScroll(rememberScrollState()),
+                .padding(bottom = paddingValues.calculateBottomPadding()),
         ) {
-            ProductHeroGallery(
-                nombrePrenda = item.nombre,
-                codigoPrenda = codigo,
-                fotos = item.fotos,
-                cartItemCount = cartItemCount,
-                onBack = onBack,
-                onCartClick = onCartClick,
-                onPhotoClick = { pagina ->
-                    fotoSeleccionada = pagina
-                    mostrarGaleria = true
-                },
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                ProductHeroGallery(
+                    nombrePrenda = item.nombre,
+                    fotos = item.fotos,
+                    onPhotoClick = { pagina ->
+                        fotoSeleccionada = pagina
+                        mostrarGaleria = true
+                    },
+                )
 
             Column(
                 modifier = Modifier
@@ -256,7 +258,16 @@ fun ProductDetailScreen(
                         }
                     },
                 )
+                }
             }
+
+            ProductHeroTopBar(
+                codigoPrenda = codigo,
+                cartItemCount = cartItemCount,
+                onBack = onBack,
+                onCartClick = onCartClick,
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
         }
     }
 
