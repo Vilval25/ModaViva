@@ -24,7 +24,6 @@ import pe.modaviva.app.domain.model.Pedido
 import pe.modaviva.app.domain.model.ResultadoPago
 import pe.modaviva.app.domain.model.ResultadoRegistroTarjeta
 import pe.modaviva.app.domain.model.SolicitudPago
-import pe.modaviva.app.domain.model.SolicitudPostventa
 import pe.modaviva.app.domain.model.TarjetaGuardada
 import pe.modaviva.app.domain.model.TipoMedioPago
 import pe.modaviva.app.domain.repository.CartRepository
@@ -327,34 +326,6 @@ class FirestoreOrderRepository @Inject constructor(
         pedidoActualizado
     }
 
-    override suspend fun registrarSolicitudPostventa(
-        pedidoId: String,
-        solicitud: SolicitudPostventa,
-    ): Result<SolicitudPostventa> = runCatching {
-        val uid = auth.currentUser?.uid ?: throw IllegalStateException("Usuario no autenticado")
-        val docRef = firestore.collection(CLIENTES).document(uid).collection(PEDIDOS).document(pedidoId)
-        val snapshot = docRef.get().await()
-        if (!snapshot.exists()) throw IllegalArgumentException("Pedido no encontrado")
-
-        val numSolicitud = "SOL-${(System.currentTimeMillis() % 900000) + 100000}"
-        val solicitudFinal = solicitud.copy(
-            id = "sol_${System.currentTimeMillis()}",
-            numeroSolicitud = numSolicitud,
-            pedidoId = pedidoId,
-            estado = "EN_EVALUACION",
-            creadaEnMillis = System.currentTimeMillis(),
-        )
-
-        docRef.update("solicitudPostventa", solicitudAMap(solicitudFinal)).await()
-        notificaciones.crear(
-            tipo = TipoNotificacion.SOLICITUD,
-            titulo = "Solicitud ${solicitudFinal.numeroSolicitud} registrada",
-            texto = "Tu solicitud de ${solicitudFinal.tipo.lowercase()} de ${solicitudFinal.prendaNombre} está En evaluación.",
-            refId = pedidoId,
-        )
-        solicitudFinal
-    }
-
     /** HU-18: aviso cuando un pedido cambia de estado (solo si el estado cambió). */
     private fun avisarCambioDeEstado(anterior: Pedido, actual: Pedido) {
         if (anterior.estado == actual.estado) return
@@ -501,26 +472,6 @@ class FirestoreOrderRepository @Inject constructor(
             )
         }
 
-        val rawPostventa = data["solicitudPostventa"] as? Map<String, Any?>
-        val postventa = rawPostventa?.let { m ->
-            SolicitudPostventa(
-                id = m["id"] as? String ?: "",
-                numeroSolicitud = m["numeroSolicitud"] as? String ?: "",
-                pedidoId = m["pedidoId"] as? String ?: id,
-                prendaCodigo = m["prendaCodigo"] as? String ?: "",
-                prendaNombre = m["prendaNombre"] as? String ?: "",
-                talla = m["talla"] as? String ?: "",
-                tipo = m["tipo"] as? String ?: "CAMBIO",
-                motivo = m["motivo"] as? String ?: "",
-                detalleOtro = m["detalleOtro"] as? String,
-                fotosUrls = (m["fotosUrls"] as? List<String>) ?: emptyList(),
-                tuvoPruebaVirtual = m["tuvoPruebaVirtual"] as? Boolean ?: false,
-                estado = m["estado"] as? String ?: "EN_EVALUACION",
-                resolucion = m["resolucion"] as? String,
-                creadaEnMillis = (m["creadaEnMillis"] as? Number)?.toLong() ?: 0L,
-            )
-        }
-
         return Pedido(
             id = id,
             numeroPedido = data["numeroPedido"] as? String ?: id,
@@ -553,7 +504,6 @@ class FirestoreOrderRepository @Inject constructor(
             numeroSeguimiento = data["numeroSeguimiento"] as? String,
             listoParaRecoger = data["listoParaRecoger"] as? Boolean ?: false,
             hitos = hitos,
-            solicitudPostventa = postventa,
         )
     }
 
@@ -609,26 +559,6 @@ class FirestoreOrderRepository @Inject constructor(
                     "fechaEpochMillis" to it.fechaEpochMillis,
                 )
             },
-            "solicitudPostventa" to pedido.solicitudPostventa?.let { solicitudAMap(it) },
-        )
-    }
-
-    private fun solicitudAMap(s: SolicitudPostventa): Map<String, Any?> {
-        return mapOf(
-            "id" to s.id,
-            "numeroSolicitud" to s.numeroSolicitud,
-            "pedidoId" to s.pedidoId,
-            "prendaCodigo" to s.prendaCodigo,
-            "prendaNombre" to s.prendaNombre,
-            "talla" to s.talla,
-            "tipo" to s.tipo,
-            "motivo" to s.motivo,
-            "detalleOtro" to s.detalleOtro,
-            "fotosUrls" to s.fotosUrls,
-            "tuvoPruebaVirtual" to s.tuvoPruebaVirtual,
-            "estado" to s.estado,
-            "resolucion" to s.resolucion,
-            "creadaEnMillis" to s.creadaEnMillis,
         )
     }
 

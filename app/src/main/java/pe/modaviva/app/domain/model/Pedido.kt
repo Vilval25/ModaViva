@@ -58,26 +58,6 @@ data class ItemPedido(
 )
 
 /**
- * Solicitud de cambio o devolución asociada a un pedido entregado (HU-24).
- */
-data class SolicitudPostventa(
-    val id: String,
-    val numeroSolicitud: String,
-    val pedidoId: String,
-    val prendaCodigo: String,
-    val prendaNombre: String,
-    val talla: String,
-    val tipo: String, // "CAMBIO" | "DEVOLUCION"
-    val motivo: String,
-    val detalleOtro: String? = null,
-    val fotosUrls: List<String> = emptyList(),
-    val tuvoPruebaVirtual: Boolean = false,
-    val estado: String = "EN_EVALUACION", // "EN_EVALUACION" | "APROBADA" | "RECHAZADA"
-    val resolucion: String? = null,
-    val creadaEnMillis: Long = System.currentTimeMillis(),
-)
-
-/**
  * Modelo principal de un Pedido de ModaViva (HU-21, HU-22, HU-23, HU-24, HU-25).
  */
 data class Pedido(
@@ -112,7 +92,6 @@ data class Pedido(
     val numeroSeguimiento: String? = null,
     val listoParaRecoger: Boolean = false,
     val hitos: List<HitoPedido> = emptyList(),
-    val solicitudPostventa: SolicitudPostventa? = null,
 ) {
     val totalPrendas: Int
         get() = items.sumOf { it.cantidad }

@@ -7,7 +7,6 @@ import pe.modaviva.app.domain.model.Pedido
 import pe.modaviva.app.domain.model.ResultadoPago
 import pe.modaviva.app.domain.model.ResultadoRegistroTarjeta
 import pe.modaviva.app.domain.model.SolicitudPago
-import pe.modaviva.app.domain.model.SolicitudPostventa
 import pe.modaviva.app.domain.model.TarjetaGuardada
 import pe.modaviva.app.domain.model.TipoMedioPago
 
@@ -34,11 +33,6 @@ interface OrderRepository {
         pedidoId: String,
         nuevoEstado: EstadoPedido,
     ): Result<Pedido>
-
-    suspend fun registrarSolicitudPostventa(
-        pedidoId: String,
-        solicitud: SolicitudPostventa,
-    ): Result<SolicitudPostventa>
 
     /**
      * HU-21 CA-04, CA-05: envía la tarjeta a la pasarela del servidor (Cloud Function

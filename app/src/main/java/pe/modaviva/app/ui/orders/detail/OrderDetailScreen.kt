@@ -31,7 +31,6 @@ import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.outlined.Checkroom
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -45,21 +44,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -73,9 +67,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
 import pe.modaviva.app.domain.model.EstadoPedido
+import pe.modaviva.app.domain.model.EstadoSolicitud
+import pe.modaviva.app.domain.model.SolicitudPostventa
 import pe.modaviva.app.domain.model.HitoPedido
 import pe.modaviva.app.domain.model.ItemPedido
-import pe.modaviva.app.domain.model.Pedido
 import pe.modaviva.app.domain.model.TipoMedioPago
 import pe.modaviva.app.ui.components.MvSnackbarHost
 import pe.modaviva.app.ui.format.formatearSoles
@@ -88,6 +83,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun OrderDetailScreen(
     onBack: () -> Unit,
+    onSolicitarCambio: (String) -> Unit = {},
     viewModel: OrderDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -388,10 +384,11 @@ fun OrderDetailScreen(
 
                     LineaDeTiempoVertical(hitos = p.hitos)
 
-                    // HU-23 CA-08 y HU-24: Botón Solicitar cambio o devolución
-                    // HU-24 CA-01: la opción solo aparece hasta 7 días después de 'Entregado';
-                    // si ya existe una solicitud, se sigue mostrando su estado.
-                    if (p.solicitudPostventa != null || p.puedeSolicitarCambioODevolucion()) {
+                    // HU-23 CA-08 y HU-24: solicitudes de cambio o devolución del pedido.
+                    // CA-01: la opción de crear una solo aparece hasta 7 días después de
+                    // 'Entregado'; las solicitudes ya registradas se siguen mostrando.
+                    val puedeSolicitar = p.puedeSolicitarCambioODevolucion()
+                    if (state.solicitudes.isNotEmpty() || puedeSolicitar) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -400,49 +397,24 @@ fun OrderDetailScreen(
                             ),
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                if (p.solicitudPostventa != null) {
-                                    val sol = p.solicitudPostventa
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                    ) {
-                                        Text(
-                                            text = "Solicitud ${sol.numeroSolicitud}",
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold,
-                                        )
-                                        Surface(
-                                            shape = RoundedCornerShape(12.dp),
-                                            color = MaterialTheme.colorScheme.secondaryContainer,
-                                        ) {
-                                            Text(
-                                                text = sol.estado,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Bold,
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                            )
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.height(4.dp))
+                            Column(
+                                modifier = Modifier.padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Text(
+                                    text = if (state.solicitudes.isEmpty()) "¿Tienes algún problema con tu pedido?" else "Cambios y devoluciones",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                state.solicitudes.forEach { sol -> FilaSolicitud(sol) }
+                                if (puedeSolicitar) {
                                     Text(
-                                        text = "${sol.tipo} por: ${sol.motivo} (Prenda: ${sol.prendaNombre})",
-                                        style = MaterialTheme.typography.bodySmall,
-                                    )
-                                } else {
-                                    Text(
-                                        text = "¿Tienes algún problema con tu pedido?",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold,
-                                    )
-                                    Text(
-                                        text = "Cuentas con hasta 7 días calendario tras la entrega para solicitar cambio de talla o devolución.",
+                                        text = "Tienes hasta 7 días calendario desde la entrega para solicitar un cambio o una devolución.",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
-                                    Spacer(modifier = Modifier.height(8.dp))
                                     OutlinedButton(
-                                        onClick = { viewModel.setMostrarDialogoPostventa(true) },
+                                        onClick = { onSolicitarCambio(p.id) },
                                         modifier = Modifier.fillMaxWidth(),
                                     ) {
                                         Icon(Icons.Default.AssignmentReturn, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -493,17 +465,6 @@ fun OrderDetailScreen(
                 }
             }
         }
-    }
-
-    // Diálogo HU-24: Registro de Cambio o Devolución
-    if (state.mostrarDialogoPostventa && state.pedido != null) {
-        DialogoSolicitudPostventa(
-            pedido = state.pedido!!,
-            onDismiss = { viewModel.setMostrarDialogoPostventa(false) },
-            onEnviar = { codigo, nombre, talla, tipo, motivo, otro ->
-                viewModel.registrarPostventa(codigo, nombre, talla, tipo, motivo, otro)
-            },
-        )
     }
 }
 
@@ -649,134 +610,41 @@ private fun FilaImporte(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** Una solicitud del pedido con su número y estado (HU-24 CA-05). */
 @Composable
-private fun DialogoSolicitudPostventa(
-    pedido: Pedido,
-    onDismiss: () -> Unit,
-    onEnviar: (codigo: String, nombre: String, talla: String, tipo: String, motivo: String, otro: String?) -> Unit,
-) {
-    var prendaSeleccionada by remember { mutableStateOf(pedido.items.firstOrNull()) }
-    var tipo by remember { mutableStateOf("CAMBIO") } // "CAMBIO" | "DEVOLUCION"
-    var motivo by remember { mutableStateOf("Talla no me quedó") }
-    var detalleOtro by remember { mutableStateOf("") }
-    var errorValidacion by remember { mutableStateOf<String?>(null) }
-
-    val motivosPredefinidos = listOf(
-        "Talla no me quedó",
-        "El corte o caída no me favorece",
-        "Color diferente al esperado",
-        "Falla de costura o tela",
-        "Otro",
-    )
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Solicitar cambio o devolución", fontWeight = FontWeight.Bold) },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Text(
-                    text = "Selecciona la prenda:",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                )
-                pedido.items.forEach { item ->
-                    val esElegida = prendaSeleccionada?.codigo == item.codigo
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { prendaSeleccionada = item },
-                        shape = RoundedCornerShape(8.dp),
-                        color = if (esElegida) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                    ) {
-                        Text(
-                            text = "${item.nombre} (Talla ${item.talla})",
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(8.dp),
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Tipo de solicitud:",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = tipo == "CAMBIO", onClick = { tipo = "CAMBIO" })
-                    Text("Cambio de talla", style = MaterialTheme.typography.bodySmall)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    RadioButton(selected = tipo == "DEVOLUCION", onClick = { tipo = "DEVOLUCION" })
-                    Text("Devolución", style = MaterialTheme.typography.bodySmall)
-                }
-
-                Text(
-                    text = "Motivo:",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                )
-                motivosPredefinidos.forEach { m ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { motivo = m },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        RadioButton(selected = motivo == m, onClick = { motivo = m })
-                        Text(m, style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-
-                if (motivo == "Otro") {
-                    OutlinedTextField(
-                        value = detalleOtro,
-                        onValueChange = { detalleOtro = it },
-                        label = { Text("Especifica el motivo") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = false,
-                        maxLines = 3,
-                    )
-                }
-
-                if (errorValidacion != null) {
-                    Text(
-                        text = errorValidacion.orEmpty(),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val p = prendaSeleccionada
-                    if (p == null) {
-                        errorValidacion = "Selecciona una prenda."
-                        return@Button
-                    }
-                    if (motivo == "Otro" && detalleOtro.trim().length < 5) {
-                        errorValidacion = "Escribe el detalle del motivo."
-                        return@Button
-                    }
-                    onEnviar(p.codigo, p.nombre, p.talla, tipo, motivo, detalleOtro.ifBlank { null })
-                },
-            ) {
-                Text("Enviar solicitud")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
-            }
-        },
-    )
+private fun FilaSolicitud(sol: SolicitudPostventa) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "${sol.numeroSolicitud} • ${sol.tipo.etiqueta}",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = "${sol.prendaNombre} (talla ${sol.talla}) — ${sol.motivoTexto}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        val (fondo, texto) = when (sol.estado) {
+            EstadoSolicitud.EN_EVALUACION -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
+            EstadoSolicitud.APROBADA -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+            EstadoSolicitud.RECHAZADA -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
+        }
+        Surface(shape = RoundedCornerShape(12.dp), color = fondo) {
+            Text(
+                text = sol.estado.etiqueta,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = texto,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+            )
+        }
+    }
 }
 
 private fun formatearFechaHora(epochMillis: Long): String {

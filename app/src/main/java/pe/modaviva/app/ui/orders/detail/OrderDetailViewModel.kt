@@ -15,6 +15,7 @@ import pe.modaviva.app.domain.model.Pedido
 import pe.modaviva.app.domain.model.SolicitudPostventa
 import pe.modaviva.app.domain.model.TipoMedioPago
 import pe.modaviva.app.domain.repository.OrderRepository
+import pe.modaviva.app.domain.repository.SolicitudRepository
 import javax.inject.Inject
 
 data class OrderDetailUiState(
@@ -23,13 +24,15 @@ data class OrderDetailUiState(
     val segundosRestantes: Long = 0L,
     val actualizando: Boolean = false,
     val mensaje: String? = null,
-    val mostrarDialogoPostventa: Boolean = false,
+    /** HU-24: solicitudes de cambio o devolución de este pedido. */
+    val solicitudes: List<SolicitudPostventa> = emptyList(),
 )
 
 @HiltViewModel
 class OrderDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val orderRepository: OrderRepository,
+    solicitudRepository: SolicitudRepository,
 ) : ViewModel() {
 
     private val pedidoId: String = checkNotNull(savedStateHandle["pedidoId"])
@@ -46,6 +49,12 @@ class OrderDetailViewModel @Inject constructor(
                         segundosRestantes = p?.segundosRestantesPago() ?: 0L,
                     )
                 }
+            }
+        }
+
+        viewModelScope.launch {
+            solicitudRepository.observarSolicitudesDePedido(pedidoId).collect { lista ->
+                _uiState.update { it.copy(solicitudes = lista) }
             }
         }
 
@@ -128,49 +137,6 @@ class OrderDetailViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    fun registrarPostventa(
-        prendaCodigo: String,
-        prendaNombre: String,
-        talla: String,
-        tipo: String,
-        motivo: String,
-        detalleOtro: String?,
-    ) {
-        _uiState.update { it.copy(actualizando = true) }
-        viewModelScope.launch {
-            val s = SolicitudPostventa(
-                id = "",
-                numeroSolicitud = "",
-                pedidoId = pedidoId,
-                prendaCodigo = prendaCodigo,
-                prendaNombre = prendaNombre,
-                talla = talla,
-                tipo = tipo,
-                motivo = motivo,
-                detalleOtro = detalleOtro,
-                tuvoPruebaVirtual = _uiState.value.pedido?.items?.firstOrNull { it.codigo == prendaCodigo }?.usoProbadorVirtual == true,
-            )
-            val res = orderRepository.registrarSolicitudPostventa(pedidoId, s)
-            res.onSuccess { sol ->
-                _uiState.update {
-                    it.copy(
-                        actualizando = false,
-                        mostrarDialogoPostventa = false,
-                        mensaje = "Solicitud ${sol.numeroSolicitud} registrada con éxito (En evaluación).",
-                    )
-                }
-            }.onFailure { err ->
-                _uiState.update {
-                    it.copy(actualizando = false, mensaje = err.message)
-                }
-            }
-        }
-    }
-
-    fun setMostrarDialogoPostventa(mostrar: Boolean) {
-        _uiState.update { it.copy(mostrarDialogoPostventa = mostrar) }
     }
 
     fun limpiarMensaje() {

@@ -23,7 +23,9 @@ import pe.modaviva.app.data.repository.FirestoreDireccionRepository
 import pe.modaviva.app.data.repository.FirestoreNotificacionRepository
 import pe.modaviva.app.domain.repository.NotificacionRepository
 import pe.modaviva.app.data.repository.FirestoreOrderRepository
+import pe.modaviva.app.data.repository.FirestoreSolicitudRepository
 import pe.modaviva.app.domain.repository.OrderRepository
+import pe.modaviva.app.domain.repository.SolicitudRepository
 import pe.modaviva.app.data.repository.FirestoreFavoritosRepository
 import pe.modaviva.app.data.repository.FirestorePortadaRepository
 import pe.modaviva.app.data.repository.FirestoreStockRepository
@@ -127,6 +129,12 @@ abstract class RepositoryModule {
     abstract fun bindOrderRepository(
         impl: FirestoreOrderRepository,
     ): OrderRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSolicitudRepository(
+        impl: FirestoreSolicitudRepository,
+    ): SolicitudRepository
 
     @Binds
     @Singleton
