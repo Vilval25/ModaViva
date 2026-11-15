@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -34,33 +36,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
-import pe.modaviva.app.domain.model.DestinoEntrega
-import pe.modaviva.app.domain.model.EstimacionEntrega
 import pe.modaviva.app.domain.model.Prenda
 import pe.modaviva.app.domain.model.Stock
 import pe.modaviva.app.domain.model.Tienda
-import pe.modaviva.app.domain.model.TipoDestino
-import pe.modaviva.app.domain.usecase.ResultadoTiendaCercana
 import pe.modaviva.app.ui.stock.StockAvailability
 
 /**
- * Secciones desplegables de información de la prenda (Detalles, Material y cuidado, Envío y devoluciones).
+ * Secciones desplegables de información de la prenda (Detalles, Material y cuidado,
+ * Disponibilidad y envío, Cambios y devoluciones).
  * Inician todas colapsadas por defecto para mantener la vista limpia y evitar redundancia superior.
  */
 @Composable
 fun ProductAccordionSections(
     prenda: Prenda,
-    destinoEntrega: DestinoEntrega?,
-    estimacionEntrega: EstimacionEntrega?,
-    resultadoTiendaCercana: ResultadoTiendaCercana,
+    tallaSeleccionada: String?,
     stock: Stock?,
     tiendas: List<Tienda>,
-    onOpenDestinationSelector: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var detailsExpanded by remember { mutableStateOf(false) }
     var fabricExpanded by remember { mutableStateOf(false) }
-    var deliveryExpanded by remember { mutableStateOf(false) }
+    var availabilityExpanded by remember { mutableStateOf(false) }
+    var returnsExpanded by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxWidth()) {
         AccordionItem(
@@ -135,40 +132,100 @@ fun ProductAccordionSections(
         }
 
         AccordionItem(
-            title = "Envío y devoluciones",
-            isExpanded = deliveryExpanded,
-            onToggle = { deliveryExpanded = !deliveryExpanded },
+            title = "Disponibilidad y envío",
+            isExpanded = availabilityExpanded,
+            onToggle = { availabilityExpanded = !availabilityExpanded },
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.padding(bottom = 14.dp),
             ) {
-                DeliveryDestinationCard(
-                    destinoEntrega = destinoEntrega,
-                    onClick = onOpenDestinationSelector,
+                InfoSummaryCard(
+                    titulo = "Opciones de entrega (se eligen al pagar)",
+                    lineas = listOf(
+                        "• Envío a domicilio en Lima Metropolitana (tarifa y plazo según tu distrito en Checkout).",
+                        "• Recojo gratis en tienda: disponible hoy o entre 24 y 48 h según disponibilidad en la sede elegida.",
+                    ),
                 )
 
-                estimacionEntrega?.let { DeliveryEstimateCard(estimacion = it) }
+                when {
+                    tallaSeleccionada == null -> {
+                        Text(
+                            text = "Elige una talla arriba para ver el stock disponible por tienda.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
 
-                resultadoTiendaCercana.tiendaRecomendada?.let { recomendada ->
-                    NearestStoreCard(
-                        nombre = recomendada.tienda.nombre,
-                        direccion = recomendada.tienda.direccion,
-                        distrito = recomendada.tienda.distrito,
-                        distanciaKm = recomendada.distanciaKm,
-                    )
-                }
+                    stock != null -> {
+                        StockAvailability(
+                            stockByStore = stock.porTienda,
+                            tiendas = tiendas,
+                        )
+                    }
 
-                stock?.let {
-                    StockAvailability(
-                        stockByStore = it.porTienda,
-                        tiendas = tiendas,
-                    )
+                    else -> {
+                        Text(
+                            text = "Consultando disponibilidad en tiendas…",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }
 
+        AccordionItem(
+            title = "Cambios y devoluciones",
+            isExpanded = returnsExpanded,
+            onToggle = { returnsExpanded = !returnsExpanded },
+        ) {
+            InfoSummaryCard(
+                titulo = "Cómo funcionan los cambios y devoluciones",
+                lineas = listOf(
+                    "• Plazo de hasta 7 días después de recibir tu pedido (estado Entregado).",
+                    "• Ingresa a Mis pedidos → Detalle del pedido, selecciona la prenda, elige cambio o devolución, indica el motivo y adjunta hasta 3 fotos.",
+                    "• La prenda debe encontrarse sin uso y con sus etiquetas originales.",
+                ),
+                modifier = Modifier.padding(bottom = 14.dp),
+            )
+        }
+
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    }
+}
+
+@Composable
+private fun InfoSummaryCard(
+    titulo: String,
+    lineas: List<String>,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+        shape = RoundedCornerShape(10.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(
+                text = titulo,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            lineas.forEach { linea ->
+                Text(
+                    text = linea,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 
@@ -186,145 +243,6 @@ private fun DetailMetaRow(label: String, value: String) {
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-    }
-}
-
-@Composable
-private fun DeliveryDestinationCard(
-    destinoEntrega: DestinoEntrega?,
-    onClick: () -> Unit,
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        shape = RoundedCornerShape(10.dp),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Text(text = "Destino de entrega", style = MaterialTheme.typography.titleSmall)
-            val completo = destinoEntrega != null && destinoEntrega.estaCompleto
-            val textoDestino = if (completo) {
-                val tipoStr = when (destinoEntrega.tipo) {
-                    TipoDestino.DIRECCION_REGISTRADA -> "Dirección registrada"
-                    TipoDestino.UBICACION_ACTUAL_GPS -> "Ubicación GPS"
-                    TipoDestino.OTRA_DIRECCION -> "Ingreso manual"
-                }
-                val dir = if (destinoEntrega.direccion.isNotBlank()) "${destinoEntrega.direccion}, " else ""
-                "$tipoStr: $dir${destinoEntrega.distrito}"
-            } else {
-                "Selecciona tu distrito o dirección de entrega"
-            }
-            Text(
-                text = textoDestino,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (completo) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.primary,
-            )
-        }
-    }
-}
-
-@Composable
-private fun DeliveryEstimateCard(estimacion: EstimacionEntrega) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (estimacion.tieneCobertura && estimacion.tarifaRegistrada) {
-                MaterialTheme.colorScheme.surfaceVariant
-            } else {
-                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-            },
-        ),
-        shape = RoundedCornerShape(10.dp),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Text(text = "Estimación de entrega", style = MaterialTheme.typography.titleSmall)
-            when {
-                !estimacion.tarifaRegistrada -> {
-                    Text(
-                        text = estimacion.mensajeInformativo ?: "Sin tarifa registrada para este distrito",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-
-                !estimacion.tieneCobertura -> {
-                    Text(
-                        text = estimacion.mensajeInformativo ?: "Sin cobertura de entrega a domicilio",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-
-                else -> {
-                    Text(
-                        text = "Costo de envío: S/ ${"%.2f".format(estimacion.costoEnvio)}",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Text(
-                        text = "Plazo estimado: ${estimacion.rangoDiasTexto}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun NearestStoreCard(
-    nombre: String,
-    direccion: String,
-    distrito: String,
-    distanciaKm: Double?,
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        shape = RoundedCornerShape(10.dp),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Text(
-                text = "Tienda más cercana con stock",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-            Text(
-                text = nombre,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-            if (direccion.isNotBlank()) {
-                Text(
-                    text = "$direccion, $distrito",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-            }
-            distanciaKm?.let { km ->
-                Text(
-                    text = "Distancia: ${"%.1f".format(km)} km",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-            }
-        }
     }
 }
 
@@ -361,6 +279,7 @@ private fun AccordionItem(
         AnimatedVisibility(visible = isExpanded) {
             content()
         }
+        Spacer(modifier = Modifier.height(0.dp))
     }
 }
 

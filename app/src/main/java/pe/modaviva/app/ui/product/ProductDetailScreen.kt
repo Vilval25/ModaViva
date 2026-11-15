@@ -1,8 +1,5 @@
 package pe.modaviva.app.ui.product
 
-import android.Manifest
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -55,7 +52,6 @@ import pe.modaviva.app.domain.model.Prenda
 import pe.modaviva.app.domain.model.RecomendacionTalla
 import pe.modaviva.app.ui.component.MvImageGalleryDialog
 import pe.modaviva.app.ui.format.formatearSoles
-import pe.modaviva.app.ui.product.components.DestinationSelectorBottomSheet
 import pe.modaviva.app.ui.product.components.ProductAccordionSections
 import pe.modaviva.app.ui.product.components.ProductAddToBagBar
 import pe.modaviva.app.ui.product.components.ProductHeroGallery
@@ -97,24 +93,6 @@ fun ProductDetailScreen(
     var mostrarMedidas by remember { mutableStateOf(false) }
     var mostrarGaleria by remember { mutableStateOf(false) }
     var fotoSeleccionada by remember { mutableIntStateOf(0) }
-    var mostrarSelectorDestino by remember { mutableStateOf(false) }
-
-    val destinoEntrega by viewModel.destinoEntrega.collectAsStateWithLifecycle()
-    val ubicacionEstado by viewModel.ubicacionEstado.collectAsStateWithLifecycle()
-    val estimacionEntrega by viewModel.estimacionEntrega.collectAsStateWithLifecycle()
-    val resultadoTiendaCercana by viewModel.resultadoTiendaCercana.collectAsStateWithLifecycle()
-    val tarifasDisponibles by viewModel.tarifasDisponibles.collectAsStateWithLifecycle()
-    val cargandoTarifas by viewModel.cargandoTarifas.collectAsStateWithLifecycle()
-    val errorTarifas by viewModel.errorTarifas.collectAsStateWithLifecycle()
-    val direccionesGuardadas by viewModel.direccionesGuardadas.collectAsStateWithLifecycle()
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-    ) { isGranted ->
-        if (isGranted) {
-            viewModel.obtenerUbicacionGps()
-        }
-    }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -135,7 +113,6 @@ fun ProductDetailScreen(
             }
             if (sugerida != null && prenda!!.tallas.contains(sugerida)) {
                 tallaSeleccionada = sugerida
-                viewModel.seleccionarTalla(codigo, sugerida)
             }
         }
     }
@@ -242,7 +219,6 @@ fun ProductDetailScreen(
                     allStocks = allStocks,
                     onSelectSize = { talla ->
                         tallaSeleccionada = talla
-                        viewModel.seleccionarTalla(codigo, talla)
                     },
                     onOpenSizeGuide = { mostrarMedidas = true },
                     onDecreaseQty = { if (cantidad > 1) cantidad-- },
@@ -253,12 +229,9 @@ fun ProductDetailScreen(
 
                 ProductAccordionSections(
                     prenda = item,
-                    destinoEntrega = destinoEntrega,
-                    estimacionEntrega = estimacionEntrega,
-                    resultadoTiendaCercana = resultadoTiendaCercana,
+                    tallaSeleccionada = tallaSeleccionada,
                     stock = stock,
                     tiendas = tiendas,
-                    onOpenDestinationSelector = { mostrarSelectorDestino = true },
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -287,31 +260,10 @@ fun ProductDetailScreen(
         }
     }
 
-    if (mostrarSelectorDestino) {
-        DestinationSelectorBottomSheet(
-            currentUser = currentUser,
-            destinoActual = destinoEntrega,
-            ubicacionEstado = ubicacionEstado,
-            tarifas = tarifasDisponibles,
-            direcciones = direccionesGuardadas,
-            cargandoTarifas = cargandoTarifas,
-            errorTarifas = errorTarifas,
-            onRetryTarifas = { viewModel.cargarTarifas() },
-            onDismiss = { mostrarSelectorDestino = false },
-            onConfirm = { destino -> viewModel.actualizarDestino(destino) },
-            onGpsRequested = {
-                if (viewModel.locationService.tienePermisoUbicacion()) {
-                    viewModel.obtenerUbicacionGps()
-                } else {
-                    permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                }
-            },
-        )
-    }
-
     if (mostrarMedidas) {
         SizeGuideBottomSheet(
             medidas = item.medidas,
+            tallasOrdenadas = item.tallas,
             onDismiss = { mostrarMedidas = false },
         )
     }
