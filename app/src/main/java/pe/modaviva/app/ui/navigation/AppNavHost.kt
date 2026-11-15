@@ -1,17 +1,30 @@
 package pe.modaviva.app.ui.navigation
 
 import android.net.Uri
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -21,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
@@ -122,8 +136,16 @@ fun AppNavHost(
         }
 
         CompositionLocalProvider(LocalFavoritos provides favoritos) {
+            // Franja superior fija que respeta la barra de estado y el recorte de cámara.
+            val topSafeInsets = WindowInsets.statusBars
+                .union(WindowInsets.displayCutout)
+                .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+
             Scaffold(
                 contentWindowInsets = WindowInsets(0),
+                topBar = {
+                    MvStatusBarSafeBand(topSafeInsets = topSafeInsets)
+                },
                 bottomBar = {
                     if (currentTab != null) {
                         AppBottomBar(
@@ -147,6 +169,7 @@ fun AppNavHost(
                     startDestination = TopLevelDestination.HOME.route,
                     modifier = Modifier
                         .padding(innerPadding)
+                        .consumeWindowInsets(topSafeInsets)
                         .consumeWindowInsets(innerPadding),
                 ) {
                     topLevelGraph(
@@ -518,5 +541,32 @@ private fun NavHostController.navigateToTab(tab: TopLevelDestination) {
         popUpTo(graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
         restoreState = true
+    }
+}
+
+/**
+ * Franja superior fija con la altura de la barra de estado y el recorte de
+ * cámara (`displayCutout`), evitando que los encabezados toquen la cámara.
+ */
+@Composable
+private fun MvStatusBarSafeBand(
+    topSafeInsets: WindowInsets,
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(topSafeInsets)
+                    .height(4.dp),
+            )
+            HorizontalDivider(
+                thickness = 0.5.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
+            )
+        }
     }
 }
