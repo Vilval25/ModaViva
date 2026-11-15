@@ -42,16 +42,16 @@ El cliente elige uno de los 4 medios de pago y paga a través de la pasarela en 
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que estoy en Pago, cuando veo las opciones, entonces aparecen los 4 medios de pago definidos en el caso.
-- [ ] **CA-02** Dado que tengo tarjetas guardadas en Métodos de pago, cuando pago con tarjeta, entonces puedo elegir una sin volver a ingresar sus datos o usar una nueva y, si quiero, guardarla.
-- [ ] **CA-03** Dado que pago con una tarjeta nueva, cuando ingreso los datos, entonces se envían directamente a la pasarela y en Firestore solo se guardan la marca y los últimos 4 dígitos.
-- [ ] **CA-04** Dado que agrego una tarjeta desde Perfil > Métodos de pago con datos válidos, cuando la guardo, entonces los datos se envían a la pasarela y en la app y en Firestore solo quedan la marca, los últimos 4 dígitos, el vencimiento y el token de la pasarela.
-- [ ] **CA-05** Dado que la pasarela rechaza la tarjeta, cuando intento guardarla, entonces veo el motivo y la tarjeta no se guarda.
-- [ ] **CA-06** Dado que elimino una tarjeta guardada, cuando confirmo, entonces deja de aparecer en Métodos de pago y al momento de pagar.
-- [ ] **CA-07** Dado que el pago es aprobado, cuando termina, entonces el pedido queda 'Aprobado' con un número correlativo único, el stock queda reservado y el carrito se vacía.
-- [ ] **CA-08** Dado que el pedido fue aprobado, cuando veo la confirmación, entonces puedo descargar la boleta o factura en PDF y recibo una notificación push.
-- [ ] **CA-09** Dado que el pago es rechazado, cuando termina, entonces veo el motivo devuelto por la pasarela y puedo intentar con otro medio sin perder el carrito.
-- [ ] **CA-10** Dado que toco 'Pagar' varias veces o se corta la conexión durante el pago, cuando se procesa, entonces existe un solo cobro y un solo pedido.
+- [x] **CA-01** Dado que estoy en Pago, cuando veo las opciones, entonces aparecen los 4 medios de pago definidos en el caso.
+- [x] **CA-02** Dado que tengo tarjetas guardadas en Métodos de pago, cuando pago con tarjeta, entonces puedo elegir una sin volver a ingresar sus datos o usar una nueva y, si quiero, guardarla.
+- [x] **CA-03** Dado que pago con una tarjeta nueva, cuando ingreso los datos, entonces se envían directamente a la pasarela y en Firestore solo se guardan la marca y los últimos 4 dígitos.
+- [x] **CA-04** Dado que agrego una tarjeta desde Perfil > Métodos de pago con datos válidos, cuando la guardo, entonces los datos se envían a la pasarela y en la app y en Firestore solo quedan la marca, los últimos 4 dígitos, el vencimiento y el token de la pasarela.
+- [x] **CA-05** Dado que la pasarela rechaza la tarjeta, cuando intento guardarla, entonces veo el motivo y la tarjeta no se guarda.
+- [x] **CA-06** Dado que elimino una tarjeta guardada, cuando confirmo, entonces deja de aparecer en Métodos de pago y al momento de pagar.
+- [x] **CA-07** Dado que el pago es aprobado, cuando termina, entonces el pedido queda 'Aprobado' con un número correlativo único, el stock queda reservado y el carrito se vacía.
+- [x] **CA-08** Dado que el pedido fue aprobado, cuando veo la confirmación, entonces puedo descargar la boleta o factura en PDF y recibo una notificación push.
+- [x] **CA-09** Dado que el pago es rechazado, cuando termina, entonces veo el motivo devuelto por la pasarela y puedo intentar con otro medio sin perder el carrito.
+- [x] **CA-10** Dado que toco 'Pagar' varias veces o se corta la conexión durante el pago, cuando se procesa, entonces existe un solo cobro y un solo pedido.
 
 ## Tecnologías
 
