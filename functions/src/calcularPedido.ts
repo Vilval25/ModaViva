@@ -1,8 +1,9 @@
-import { onCall, HttpsError } from "firebase-functions/v2/https";
-import * as admin from "firebase-admin";
+import { onCall } from "firebase-functions/v2/https";
+import { getApps, initializeApp } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 
-if (!admin.apps.length) {
-  admin.initializeApp();
+if (!getApps().length) {
+  initializeApp();
 }
 
 export interface ItemEntrada {
@@ -67,7 +68,7 @@ function normalizarSlug(texto: string): string {
  */
 export const calcularPedido = onCall(async (request) => {
   const data = (request.data || {}) as SolicitudCalculoPedido;
-  const db = admin.firestore();
+  const db = getFirestore();
   const ahora = new Date();
 
   const itemsInput = Array.isArray(data.items) ? data.items : [];
