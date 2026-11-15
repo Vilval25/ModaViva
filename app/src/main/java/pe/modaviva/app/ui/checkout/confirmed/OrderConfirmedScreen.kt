@@ -42,6 +42,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -49,6 +50,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import android.content.ActivityNotFoundException
+import pe.modaviva.app.util.ComprobantePdf
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import pe.modaviva.app.domain.model.EstadoPedido
@@ -70,6 +75,8 @@ fun OrderConfirmedScreen(
     var cargando by remember { mutableStateOf(true) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    var generandoPdf by remember { mutableStateOf(false) }
 
     LaunchedEffect(pedidoId) {
         cargando = true
@@ -200,18 +207,40 @@ fun OrderConfirmedScreen(
                 }
 
                 // Botón Descargar comprobante (PDF) (HU-21 CA-08)
+                val pagado = p != null && p.estado != EstadoPedido.PENDIENTE && p.estado != EstadoPedido.ANULADO
                 OutlinedButton(
                     onClick = {
+                        val pedidoPdf = p ?: return@OutlinedButton
+                        generandoPdf = true
                         scope.launch {
-                            snackbarHostState.showSnackbar("Comprobante electrónico emitido (PDF listo para descargar).")
+                            val resultado = runCatching {
+                                withContext(Dispatchers.IO) { ComprobantePdf.generarYGuardar(context, pedidoPdf) }
+                            }
+                            generandoPdf = false
+                            resultado.onSuccess { uri ->
+                                try {
+                                    context.startActivity(ComprobantePdf.intentAbrir(uri))
+                                } catch (_: ActivityNotFoundException) {
+                                    snackbarHostState.showSnackbar(
+                                        "Boleta guardada en Descargas/ModaViva. Instala un visor de PDF para abrirla.",
+                                    )
+                                }
+                            }.onFailure {
+                                snackbarHostState.showSnackbar("No se pudo generar la boleta. Intenta de nuevo.")
+                            }
                         }
                     },
+                    enabled = pagado && !generandoPdf,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                 ) {
-                    Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                    if (generandoPdf) {
+                        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                    } else {
+                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                    }
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Descargar comprobante (PDF)")
+                    Text(if (pagado) "Descargar boleta (PDF)" else "Boleta disponible al confirmar el pago")
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))

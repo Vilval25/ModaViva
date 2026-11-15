@@ -40,6 +40,9 @@ data class CheckoutPaymentUiState(
     val procesandoPago: Boolean = false,
     val errorPago: String? = null,
     val pedidoConfirmadoId: String? = null,
+    /** CA-09: motivo del rechazo de la pasarela; mientras exista se muestra la pantalla de rechazo. */
+    val rechazoMotivo: String? = null,
+    val rechazoMedio: String? = null,
 )
 
 @HiltViewModel
@@ -126,6 +129,13 @@ class CheckoutPaymentViewModel @Inject constructor(
 
     fun onGuardarTarjetaToggle(v: Boolean) {
         _uiState.update { it.copy(guardarTarjetaParaProximas = v) }
+    }
+
+    /** Cierra la pantalla de rechazo y vuelve a elegir medio de pago, sin la tarjeta rechazada. */
+    fun intentarConOtroMedio() {
+        _uiState.update {
+            it.copy(rechazoMotivo = null, rechazoMedio = null, numeroTarjeta = "", vencimiento = "", cvv = "")
+        }
     }
 
     /**
@@ -218,8 +228,19 @@ class CheckoutPaymentViewModel @Inject constructor(
                         is ResultadoPago.Rechazado -> {
                             // CA-09: nuevo intento con otro medio; el carrito se conserva.
                             idempotencyKey = nuevaClave()
+                            val medioIntentado = when {
+                                usaTarjetaNueva -> "${medio.titulo} •••• ${s.numeroTarjeta.takeLast(4)}"
+                                tarjetaGuardadaId != null -> s.tarjetasGuardadas
+                                    .firstOrNull { it.id == tarjetaGuardadaId }?.etiquetaResumen ?: medio.titulo
+                                else -> medio.titulo
+                            }
                             _uiState.update {
-                                it.copy(procesandoPago = false, errorPago = resultado.motivo, cvv = "")
+                                it.copy(
+                                    procesandoPago = false,
+                                    cvv = "",
+                                    rechazoMotivo = resultado.motivo,
+                                    rechazoMedio = medioIntentado,
+                                )
                             }
                         }
                     }

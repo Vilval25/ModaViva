@@ -1,9 +1,11 @@
 package pe.modaviva.app.domain.repository
 
 import kotlinx.coroutines.flow.Flow
+import pe.modaviva.app.domain.model.DatosTarjetaNueva
 import pe.modaviva.app.domain.model.EstadoPedido
 import pe.modaviva.app.domain.model.Pedido
 import pe.modaviva.app.domain.model.ResultadoPago
+import pe.modaviva.app.domain.model.ResultadoRegistroTarjeta
 import pe.modaviva.app.domain.model.SolicitudPago
 import pe.modaviva.app.domain.model.SolicitudPostventa
 import pe.modaviva.app.domain.model.TarjetaGuardada
@@ -38,7 +40,12 @@ interface OrderRepository {
         solicitud: SolicitudPostventa,
     ): Result<SolicitudPostventa>
 
-    suspend fun guardarTarjeta(tarjeta: TarjetaGuardada): Result<TarjetaGuardada>
+    /**
+     * HU-21 CA-04, CA-05: envía la tarjeta a la pasarela del servidor (Cloud Function
+     * `registrarTarjeta`). Si la pasarela la rechaza, no se guarda y llega el motivo.
+     */
+    suspend fun registrarTarjeta(datos: DatosTarjetaNueva): Result<ResultadoRegistroTarjeta>
+    suspend fun establecerTarjetaPredeterminada(tarjetaId: String): Result<Unit>
     suspend fun eliminarTarjeta(tarjetaId: String): Result<Unit>
 
     /**

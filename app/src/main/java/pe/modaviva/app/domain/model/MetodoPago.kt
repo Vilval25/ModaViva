@@ -67,7 +67,14 @@ data class DatosTarjetaNueva(
     val vencimiento: String,
     val cvv: String,
     val titular: String,
+    val tipo: String = "CREDITO", // "CREDITO" | "DEBITO"
 )
+
+/** Respuesta de la pasarela al registrar una tarjeta desde Perfil > Métodos de pago (CA-04, CA-05). */
+sealed interface ResultadoRegistroTarjeta {
+    data class Guardada(val tarjetaId: String, val etiqueta: String) : ResultadoRegistroTarjeta
+    data class Rechazada(val motivo: String) : ResultadoRegistroTarjeta
+}
 
 /** Solicitud de pago que la app envía a la Cloud Function `crearPedido` (HU-21). */
 data class SolicitudPago(

@@ -16,11 +16,13 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import pe.modaviva.app.data.seed.PedidosSeedLoader
+import pe.modaviva.app.domain.model.DatosTarjetaNueva
 import pe.modaviva.app.domain.model.EstadoPedido
 import pe.modaviva.app.domain.model.HitoPedido
 import pe.modaviva.app.domain.model.ItemPedido
 import pe.modaviva.app.domain.model.Pedido
 import pe.modaviva.app.domain.model.ResultadoPago
+import pe.modaviva.app.domain.model.ResultadoRegistroTarjeta
 import pe.modaviva.app.domain.model.SolicitudPago
 import pe.modaviva.app.domain.model.SolicitudPostventa
 import pe.modaviva.app.domain.model.TarjetaGuardada
@@ -376,38 +378,43 @@ class FirestoreOrderRepository @Inject constructor(
         )
     }
 
-    override suspend fun guardarTarjeta(tarjeta: TarjetaGuardada): Result<TarjetaGuardada> = runCatching {
+    override suspend fun registrarTarjeta(datos: DatosTarjetaNueva): Result<ResultadoRegistroTarjeta> = runCatching {
+        val payload = mapOf(
+            "numero" to datos.numero,
+            "vencimiento" to datos.vencimiento,
+            "cvv" to datos.cvv,
+            "titular" to datos.titular,
+            "tipo" to datos.tipo,
+        )
+        val res = try {
+            functions.getHttpsCallable(REGISTRAR_TARJETA).call(payload).await().getData() as? Map<*, *>
+        } catch (e: FirebaseFunctionsException) {
+            throw IllegalStateException(e.message ?: "No se pudo registrar la tarjeta.", e)
+        } ?: throw IllegalStateException("Respuesta vacía de la pasarela.")
+
+        if (res["ok"] == true) {
+            val t = res["tarjeta"] as? Map<*, *> ?: emptyMap<String, Any>()
+            ResultadoRegistroTarjeta.Guardada(
+                tarjetaId = t["id"] as? String ?: "",
+                etiqueta = "${t["marca"] ?: ""} •••• ${t["ultimos4"] ?: ""}",
+            )
+        } else {
+            ResultadoRegistroTarjeta.Rechazada(res["motivo"] as? String ?: "La pasarela rechazó la tarjeta.")
+        }
+    }
+
+    override suspend fun establecerTarjetaPredeterminada(tarjetaId: String): Result<Unit> = runCatching {
         val uid = auth.currentUser?.uid ?: throw IllegalStateException("Usuario no autenticado")
         val collection = firestore.collection(CLIENTES).document(uid).collection(METODOS_PAGO)
-
-        val existing = collection.get().await()
-        val esPrimera = existing.isEmpty
-        val tarjetaId = if (tarjeta.id.isNotBlank()) tarjeta.id else "card_${tarjeta.marca.lowercase()}_${tarjeta.ultimos4}"
-        val debeSerPredeterminada = tarjeta.esPredeterminada || esPrimera
-
-        if (debeSerPredeterminada && !existing.isEmpty) {
-            val batch = firestore.batch()
-            for (doc in existing.documents) {
-                if (doc.id != tarjetaId) {
-                    batch.update(doc.reference, "esPredeterminada", false)
-                }
+        val existentes = collection.get().await()
+        val batch = firestore.batch()
+        for (doc in existentes.documents) {
+            val debeSer = doc.id == tarjetaId
+            if (doc.getBoolean("esPredeterminada") != debeSer) {
+                batch.update(doc.reference, "esPredeterminada", debeSer)
             }
-            batch.commit().await()
         }
-
-        val tarjetaFinal = tarjeta.copy(id = tarjetaId, esPredeterminada = debeSerPredeterminada)
-        val data = mapOf(
-            "marca" to tarjetaFinal.marca,
-            "ultimos4" to tarjetaFinal.ultimos4,
-            "vencimiento" to tarjetaFinal.vencimiento,
-            "titular" to tarjetaFinal.titular,
-            "tipo" to tarjetaFinal.tipo,
-            "tokenPasarela" to tarjetaFinal.tokenPasarela,
-            "esPredeterminada" to tarjetaFinal.esPredeterminada,
-            "actualizadoEn" to FieldValue.serverTimestamp(),
-        )
-        collection.document(tarjetaId).set(data, SetOptions.merge()).await()
-        tarjetaFinal
+        batch.commit().await()
     }
 
     override suspend fun eliminarTarjeta(tarjetaId: String): Result<Unit> = runCatching {
@@ -630,5 +637,6 @@ class FirestoreOrderRepository @Inject constructor(
         const val PEDIDOS = "pedidos"
         const val METODOS_PAGO = "metodosPago"
         const val CREAR_PEDIDO = "crearPedido"
+        const val REGISTRAR_TARJETA = "registrarTarjeta"
     }
 }

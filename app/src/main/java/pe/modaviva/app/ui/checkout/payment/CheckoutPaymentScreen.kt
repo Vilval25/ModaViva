@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pe.modaviva.app.domain.model.TipoMedioPago
+import pe.modaviva.app.ui.checkout.rejected.PaymentRejectedScreen
 import pe.modaviva.app.ui.format.formatearSoles
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,6 +65,16 @@ fun CheckoutPaymentScreen(
         state.pedidoConfirmadoId?.let { id ->
             onPaymentSuccess(id)
         }
+    }
+
+    state.rechazoMotivo?.let { motivo ->
+        PaymentRejectedScreen(
+            motivo = motivo,
+            medioIntentado = state.rechazoMedio.orEmpty(),
+            total = state.total,
+            onIntentarOtroMedio = viewModel::intentarConOtroMedio,
+        )
+        return
     }
 
     Scaffold(
@@ -328,7 +339,7 @@ fun CheckoutPaymentScreen(
                         value = state.numeroTarjeta,
                         onValueChange = viewModel::onNumeroTarjetaChanged,
                         label = { Text("Número de tarjeta") },
-                        placeholder = { Text("4557 8801 2345 6789") },
+                        placeholder = { Text("4111 1111 1111 1111") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )

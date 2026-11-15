@@ -74,6 +74,7 @@ fun SessionScreen(
     onNavigateToFitting: () -> Unit = {},
     onNavigateToAddresses: () -> Unit = {},
     onNavigateToActivity: () -> Unit = {},
+    onNavigateToPaymentMethods: () -> Unit = {},
     viewModel: SessionViewModel = hiltViewModel(),
 ) {
     val user by viewModel.currentUser.collectAsStateWithLifecycle()
@@ -108,7 +109,6 @@ fun SessionScreen(
     val measurementsTitle = stringResource(R.string.profile_item_measurements)
     val measurementsDesc = stringResource(R.string.profile_measurements_soon_desc)
     val paymentsTitle = stringResource(R.string.profile_item_payments)
-    val paymentsDesc = stringResource(R.string.profile_payments_soon_desc)
 
     BoxWithConstraints(
         modifier = modifier.fillMaxSize(),
@@ -197,9 +197,7 @@ fun SessionScreen(
                         icon = Icons.Outlined.CreditCard,
                         title = paymentsTitle,
                         subtitle = stringResource(R.string.profile_item_payments_desc),
-                        onClick = {
-                            soonDialogInfo = Pair(paymentsTitle, paymentsDesc)
-                        },
+                        onClick = onNavigateToPaymentMethods,
                     )
                     ProfileItemRow(
                         icon = Icons.Outlined.Insights,

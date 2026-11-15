@@ -57,7 +57,7 @@
     <string name="profile_item_measurements">Mis medidas corporales</string>
     <string name="profile_item_measurements_desc">Tallas para el probador virtual</string>
     <string name="profile_item_payments">Métodos de pago</string>
-    <string name="profile_item_payments_desc">Tarjetas y billeteras digitales</string>
+    <string name="profile_item_payments_desc">Tus tarjetas guardadas para pagar más rápido</string>
 
     <string name="profile_section_security">Seguridad y privacidad</string>
     <string name="profile_item_change_password">Cambiar contraseña</string>
@@ -96,7 +96,6 @@
     <string name="profile_addresses_soon_desc">Podrás registrar y gestionar tus direcciones de entrega en Lima Metropolitana para recibir tus compras en casa.</string>
     <string name="profile_measurements_soon_desc">Podrás registrar tus medidas de busto/pecho, cintura y cadera para obtener recomendaciones automáticas de talla con el probador virtual. Requiere consentimiento previo de fotografía.</string>
     <string name="profile_measurements_consent_active_desc">Tu consentimiento para el probador virtual está registrado y activo. Podrás registrar tu altura y medidas para la recomendación automática de talla con IA en la próxima actualización.</string>
-    <string name="profile_payments_soon_desc">Podrás guardar tus tarjetas de crédito/débito y vincular pagos directos con Yape o Plin de forma 100% segura.</string>
     <string name="profile_soon_footer">Esta funcionalidad estará disponible en la próxima actualización de ModaViva.</string>
     <string name="profile_measurements_go_to_fitting">Otorgar consentimiento en probador</string>
     <string name="dialog_understood">Entendido</string>

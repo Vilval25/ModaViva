@@ -43,6 +43,17 @@
             </intent-filter>
         </service>
 
+        <!-- HU-21 CA-08: abre el comprobante PDF en Android 8 y 9 (en 10+ se usa MediaStore) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.archivos"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/rutas_archivos" />
+        </provider>
+
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="avisos" />

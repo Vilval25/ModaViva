@@ -30,6 +30,7 @@ fun ProfileTab(
     onNavigateToFitting: () -> Unit = {},
     onNavigateToAddresses: () -> Unit = {},
     onNavigateToActivity: () -> Unit = {},
+    onNavigateToPaymentMethods: () -> Unit = {},
     sessionViewModel: SessionViewModel = hiltViewModel(),
 ) {
     val user by sessionViewModel.currentUser.collectAsStateWithLifecycle()
@@ -60,6 +61,7 @@ fun ProfileTab(
                 onNavigateToFitting = onNavigateToFitting,
                 onNavigateToAddresses = onNavigateToAddresses,
                 onNavigateToActivity = onNavigateToActivity,
+                onNavigateToPaymentMethods = onNavigateToPaymentMethods,
                 viewModel = sessionViewModel,
             )
         }

@@ -1,5 +1,6 @@
 package pe.modaviva.app.ui.navigation
 
+import pe.modaviva.app.ui.payments.PaymentMethodsScreen
 import pe.modaviva.app.push.AvisoPush
 import pe.modaviva.app.ui.notifications.NotificationsViewModel
 import pe.modaviva.app.ui.notifications.SolicitudPermisoNotificaciones
@@ -301,7 +302,11 @@ private fun NavGraphBuilder.topLevelGraph(
             onNavigateToFitting = { navController.navigate(TopLevelDestination.FITTING.route) },
             onNavigateToAddresses = { navController.navigate(Routes.ADDRESSES) },
             onNavigateToActivity = { navController.navigate(Routes.MY_ACTIVITY) },
+            onNavigateToPaymentMethods = { navController.navigate(Routes.PAYMENT_METHODS) },
         )
+    }
+    composable(Routes.PAYMENT_METHODS) {
+        PaymentMethodsScreen(onBack = { navController.popBackStack() })
     }
     composable(TopLevelDestination.FITTING.route) {
         FittingTab(
