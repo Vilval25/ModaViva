@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -60,6 +62,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
@@ -114,7 +117,10 @@ fun CheckoutSummaryScreen(
         bottomBar = {
             if (!state.cargando && state.items.isNotEmpty()) {
                 val habilitado = state.totalPrendas > 0 && !state.calculando &&
-                        (state.tipoEntrega == TipoEntregaUi.DELIVERY || (state.tipoEntrega == TipoEntregaUi.RECOJO && state.tiendaRecojoSeleccionada != null && state.hayStockSuficienteRecojo))
+                    when (state.tipoEntrega) {
+                        TipoEntregaUi.RECOJO -> state.tiendaRecojoSeleccionada != null && state.hayStockSuficienteRecojo
+                        TipoEntregaUi.DELIVERY -> state.distritoSeleccionado?.let { it.cobertura && it.costo > 0.0 } == true
+                    }
 
                 CheckoutBottomBar(
                     total = state.total,
@@ -214,6 +220,7 @@ fun CheckoutSummaryScreen(
                                 envio = state.costoEnvio,
                                 total = state.total,
                                 tipoEntrega = state.tipoEntrega,
+                                distritoSeleccionado = state.distritoSeleccionado,
                                 cuponesAplicados = state.cuponesAplicados,
                             )
                         }
@@ -350,89 +357,43 @@ private fun ModalidadEntregaSection(
             )
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Selector Recojo vs Delivery
+            // Selector Recojo en tienda (primero por defecto) vs Envío a domicilio, ambos de igual tamaño
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Max),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                val esDelivery = tipoEntrega == TipoEntregaUi.DELIVERY
                 val esRecojo = tipoEntrega == TipoEntregaUi.RECOJO
+                val esDelivery = tipoEntrega == TipoEntregaUi.DELIVERY
 
-                Surface(
+                ModalidadEntregaCard(
+                    titulo = "Recojo en tienda",
+                    subtitulo = "Gratis (S/ 0.00)",
+                    icon = Icons.Default.Storefront,
+                    seleccionada = esRecojo,
+                    subtituloDestacado = !esRecojo,
+                    onClick = { onTipoChanged(TipoEntregaUi.RECOJO) },
                     modifier = Modifier
                         .weight(1f)
-                        .clickable { onTipoChanged(TipoEntregaUi.DELIVERY) },
-                    shape = RoundedCornerShape(8.dp),
-                    color = if (esDelivery) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                    border = androidx.compose.foundation.BorderStroke(
-                        width = 1.dp,
-                        color = if (esDelivery) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-                    ),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.LocalShipping,
-                            contentDescription = null,
-                            tint = if (esDelivery) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp),
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(
-                                text = "Envío",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = if (esDelivery) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                            )
-                            Text(
-                                text = if (distritoSeleccionado != null) formatearSoles(distritoSeleccionado.costo) else "Tarifa según zona",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (esDelivery) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                }
+                        .fillMaxHeight(),
+                )
 
-                Surface(
+                ModalidadEntregaCard(
+                    titulo = "Envío a domicilio",
+                    subtitulo = if (distritoSeleccionado != null) {
+                        formatearSoles(distritoSeleccionado.costo)
+                    } else {
+                        "S/ -"
+                    },
+                    icon = Icons.Default.LocalShipping,
+                    seleccionada = esDelivery,
+                    subtituloDestacado = false,
+                    onClick = { onTipoChanged(TipoEntregaUi.DELIVERY) },
                     modifier = Modifier
                         .weight(1f)
-                        .clickable { onTipoChanged(TipoEntregaUi.RECOJO) },
-                    shape = RoundedCornerShape(8.dp),
-                    color = if (esRecojo) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                    border = androidx.compose.foundation.BorderStroke(
-                        width = 1.dp,
-                        color = if (esRecojo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-                    ),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Storefront,
-                            contentDescription = null,
-                            tint = if (esRecojo) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp),
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(
-                                text = "Recojo en tienda",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = if (esRecojo) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                            )
-                            Text(
-                                text = "Gratis (S/ 0.00)",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (esRecojo) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary,
-                            )
-                        }
-                    }
-                }
+                        .fillMaxHeight(),
+                )
             }
 
             // Si es delivery, mostrar selector de distrito
@@ -466,26 +427,63 @@ private fun ModalidadEntregaSection(
                         onDismissRequest = { expandedDropdown = false },
                     ) {
                         distritosDisponibles.forEach { tarifa ->
+                            val disponible = tarifa.cobertura && tarifa.costo > 0.0
+                            val etiquetaTarifa = when {
+                                !tarifa.cobertura -> "Sin cobertura"
+                                tarifa.costo <= 0.0 -> "No disponible"
+                                else -> formatearSoles(tarifa.costo)
+                            }
                             DropdownMenuItem(
+                                enabled = disponible,
                                 text = {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically,
                                     ) {
-                                        Text(text = tarifa.distrito)
                                         Text(
-                                            text = formatearSoles(tarifa.costo),
-                                            fontWeight = FontWeight.Bold,
+                                            text = tarifa.distrito,
+                                            color = if (disponible) {
+                                                MaterialTheme.colorScheme.onSurface
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+                                            },
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            text = etiquetaTarifa,
+                                            fontWeight = if (disponible) FontWeight.Bold else FontWeight.Medium,
+                                            style = if (disponible) {
+                                                MaterialTheme.typography.bodyMedium
+                                            } else {
+                                                MaterialTheme.typography.labelMedium
+                                            },
+                                            color = if (disponible) {
+                                                MaterialTheme.colorScheme.onSurface
+                                            } else {
+                                                MaterialTheme.colorScheme.error.copy(alpha = 0.75f)
+                                            },
                                         )
                                     }
                                 },
                                 onClick = {
-                                    onDistritoChanged(tarifa)
-                                    expandedDropdown = false
+                                    if (disponible) {
+                                        onDistritoChanged(tarifa)
+                                        expandedDropdown = false
+                                    }
                                 },
                             )
                         }
                     }
+                }
+
+                if (distritoSeleccionado == null) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Elige uno de los distritos disponibles para calcular el costo de envío.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
 
@@ -593,6 +591,63 @@ private fun ModalidadEntregaSection(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModalidadEntregaCard(
+    titulo: String,
+    subtitulo: String,
+    icon: ImageVector,
+    seleccionada: Boolean,
+    subtituloDestacado: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.clickable(onClick = onClick),
+        shape = RoundedCornerShape(8.dp),
+        color = if (seleccionada) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = if (seleccionada) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (seleccionada) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
+                Text(
+                    text = titulo,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    color = if (seleccionada) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = subtitulo,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = when {
+                        seleccionada -> MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
+                        subtituloDestacado -> MaterialTheme.colorScheme.primary
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
             }
         }
     }
@@ -852,8 +907,10 @@ private fun DesglosePedidoCard(
     envio: Double,
     total: Double,
     tipoEntrega: TipoEntregaUi,
+    distritoSeleccionado: TarifaEnvio?,
     cuponesAplicados: List<CuponAplicado>,
 ) {
+    val envioPorDefinir = tipoEntrega == TipoEntregaUi.DELIVERY && distritoSeleccionado == null
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -890,8 +947,16 @@ private fun DesglosePedidoCard(
             Spacer(modifier = Modifier.height(8.dp))
             FilaDesglose(
                 etiqueta = if (tipoEntrega == TipoEntregaUi.RECOJO) "Recojo en tienda" else "Envío a domicilio",
-                valor = if (envio <= 0.0) "Gratis" else formatearSoles(envio),
-                colorValor = if (envio <= 0.0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                valor = when {
+                    envioPorDefinir -> "-"
+                    envio <= 0.0 -> "Gratis"
+                    else -> formatearSoles(envio)
+                },
+                colorValor = when {
+                    envioPorDefinir -> MaterialTheme.colorScheme.onSurfaceVariant
+                    envio <= 0.0 -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.onSurface
+                },
             )
 
             Spacer(modifier = Modifier.height(12.dp))

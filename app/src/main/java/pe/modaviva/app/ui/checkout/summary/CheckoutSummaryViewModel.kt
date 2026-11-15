@@ -58,15 +58,16 @@ class CheckoutSummaryViewModel @Inject constructor(
             // 1. Obtener tarifas de distritos disponibles
             val tarifas = backendRepository.obtenerTarifasEnvio().getOrDefault(emptyList())
 
-            // 2. Recuperar destino de CheckoutSessionRepository si existe
+            // 2. Recuperar destino de CheckoutSessionRepository solo si el usuario ya eligió uno con cobertura
             val destinoSesion = checkoutSessionRepository.destinoActual.value
             val distritoInicial = if (destinoSesion != null && destinoSesion.distrito.isNotBlank()) {
                 tarifas.firstOrNull {
-                    it.id.equals(destinoSesion.distritoSlug, ignoreCase = true) ||
-                            it.distrito.equals(destinoSesion.distrito, ignoreCase = true)
-                } ?: tarifas.firstOrNull { it.cobertura } ?: tarifas.firstOrNull()
+                    (it.id.equals(destinoSesion.distritoSlug, ignoreCase = true) ||
+                        it.distrito.equals(destinoSesion.distrito, ignoreCase = true)) &&
+                        it.cobertura && it.costo > 0.0
+                }
             } else {
-                tarifas.firstOrNull { it.cobertura } ?: tarifas.firstOrNull()
+                null
             }
 
             val cartItems = cartRepository.items.first()
@@ -139,6 +140,7 @@ class CheckoutSummaryViewModel @Inject constructor(
     }
 
     fun onDistritoChanged(tarifa: TarifaEnvio) {
+        if (!tarifa.cobertura || tarifa.costo <= 0.0) return
         if (_uiState.value.distritoSeleccionado?.id == tarifa.id) return
         _uiState.update { it.copy(distritoSeleccionado = tarifa) }
 
@@ -405,11 +407,11 @@ class CheckoutSummaryViewModel @Inject constructor(
             }
         }
 
-        // Costo de envío (CA-03)
+        // Costo de envío (CA-03): recojo es 0 y delivery sin distrito seleccionado inicia en 0
         val costoEnvio = if (_uiState.value.tipoEntrega == TipoEntregaUi.RECOJO) {
             0.0
         } else {
-            _uiState.value.distritoSeleccionado?.costo ?: 8.0
+            _uiState.value.distritoSeleccionado?.costo ?: 0.0
         }
 
         // Total final (CA-02: total = subtotal - descuento + envio)

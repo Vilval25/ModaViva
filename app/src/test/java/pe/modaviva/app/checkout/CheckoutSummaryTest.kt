@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -103,11 +104,24 @@ class CheckoutSummaryTest {
         )
 
         val vm = crearViewModel()
+        val stateInicial = vm.uiState.value
+
+        // Por defecto inicia en Recojo en tienda (envío 0) y sin distrito preseleccionado
+        assertEquals(TipoEntregaUi.RECOJO, stateInicial.tipoEntrega)
+        assertNull(stateInicial.distritoSeleccionado)
+        assertEquals(0.0, stateInicial.costoEnvio, 0.01)
+
+        // Al cambiar a envío sin elegir distrito, el costo de envío permanece en 0 hasta elegir uno
+        vm.onTipoEntregaChanged(TipoEntregaUi.DELIVERY)
+        assertEquals(0.0, vm.uiState.value.costoEnvio, 0.01)
+
+        val miraflores = vm.uiState.value.distritosDisponibles.first { it.id == "miraflores" }
+        vm.onDistritoChanged(miraflores)
         val state = vm.uiState.value
 
         assertEquals(200.0, state.subtotal, 0.01)
         assertEquals(0.0, state.descuentoTotal, 0.01)
-        assertEquals(8.0, state.costoEnvio, 0.01) // Tarifa por defecto Miraflores
+        assertEquals(8.0, state.costoEnvio, 0.01) // Tarifa Miraflores seleccionada
         val totalEsperado = state.subtotal - state.descuentoTotal + state.costoEnvio
         assertEquals(totalEsperado, state.total, 0.01)
         assertEquals(208.0, state.total, 0.01)
@@ -188,6 +202,9 @@ class CheckoutSummaryTest {
         )
 
         val vm = crearViewModel()
+        vm.onTipoEntregaChanged(TipoEntregaUi.DELIVERY)
+        val miraflores = vm.uiState.value.distritosDisponibles.first { it.id == "miraflores" }
+        vm.onDistritoChanged(miraflores)
 
         vm.onCuponInputChanged("MODA10")
         vm.aplicarCupon()
@@ -244,7 +261,7 @@ class CheckoutSummaryTest {
         assertTrue(state.alertas.any { it.contains("agotado", ignoreCase = true) })
 
         assertEquals(90.0, state.subtotal, 0.01)
-        assertEquals(90.0 + 8.0, state.total, 0.01)
+        assertEquals(90.0, state.total, 0.01) // Recojo por defecto (S/ 0 envío)
     }
 
     private fun prendaBase(codigo: String, precio: Double) = Prenda(
@@ -306,6 +323,8 @@ class CheckoutSummaryTest {
                 TarifaEnvio("miraflores", "Miraflores", true, 8.0, 2),
                 TarifaEnvio("san-isidro", "San Isidro", true, 8.0, 2),
                 TarifaEnvio("surco", "Santiago de Surco", true, 10.0, 3),
+                TarifaEnvio("ancon", "Ancón", false, 0.0, 0),
+                TarifaEnvio("sin-precio", "Santa Rosa", true, 0.0, 0),
             )
         )
     }
@@ -328,5 +347,35 @@ class CheckoutSummaryTest {
         kotlinx.coroutines.delay(100L)
 
         assertEquals("San Isidro", vm.uiState.value.distritoSeleccionado?.distrito)
+    }
+
+    @Test
+    fun `distritos sin cobertura o con costo cero no pueden seleccionarse`() = runBlocking {
+        val prenda = prendaBase(codigo = "BL-1001", precio = 100.0)
+        fakeCatalogoRepo.prendasFlow.value = listOf(prenda)
+        fakeStockRepo.stocksFlow.value = mapOf("BL-1001_M" to Stock("BL-1001_M", total = 10))
+        fakeCartRepo.itemsFlow.value = listOf(
+            CartItem(
+                varianteId = "BL-1001_M",
+                prendaId = "BL-1001",
+                talla = "M",
+                colorNombre = "Azul",
+                colorHex = "#0000FF",
+                cantidad = 1,
+                precioAlAgregar = 100.0,
+            )
+        )
+
+        val vm = crearViewModel()
+        vm.onTipoEntregaChanged(TipoEntregaUi.DELIVERY)
+
+        val ancon = vm.uiState.value.distritosDisponibles.first { it.id == "ancon" }
+        val sinPrecio = vm.uiState.value.distritosDisponibles.first { it.id == "sin-precio" }
+        vm.onDistritoChanged(ancon)
+        assertNull(vm.uiState.value.distritoSeleccionado)
+
+        vm.onDistritoChanged(sinPrecio)
+        assertNull(vm.uiState.value.distritoSeleccionado)
+        assertEquals(0.0, vm.uiState.value.costoEnvio, 0.01)
     }
 }

@@ -14,7 +14,7 @@ data class CheckoutSummaryUiState(
     val cargando: Boolean = true,
     val calculando: Boolean = false,
     val items: List<ItemPedidoCalculado> = emptyList(),
-    val tipoEntrega: TipoEntregaUi = TipoEntregaUi.DELIVERY,
+    val tipoEntrega: TipoEntregaUi = TipoEntregaUi.RECOJO,
     val distritoSeleccionado: TarifaEnvio? = null,
     val distritosDisponibles: List<TarifaEnvio> = emptyList(),
     val tiendasRecojoElegibles: List<TiendaCartConDistancia> = emptyList(),
