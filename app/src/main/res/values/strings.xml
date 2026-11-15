@@ -49,6 +49,11 @@
     <string name="profile_item_personal_data_desc">Nombres, apellidos y celular</string>
     <string name="profile_item_addresses">Mis direcciones</string>
     <string name="profile_item_addresses_desc">Direcciones de entrega para tus pedidos</string>
+    <string name="profile_item_activity">Mi actividad</string>
+    <string name="profile_item_activity_desc">Compras, ahorros y pruebas virtuales</string>
+    <string name="analytics_title">Mi actividad</string>
+    <string name="analytics_empty_title">Sin actividad en este rango</string>
+    <string name="analytics_empty_body">Prueba con otro periodo de fechas o explora el catálogo para ver tus estadísticas.</string>
     <string name="profile_item_measurements">Mis medidas corporales</string>
     <string name="profile_item_measurements_desc">Tallas para el probador virtual</string>
     <string name="profile_item_payments">Métodos de pago</string>

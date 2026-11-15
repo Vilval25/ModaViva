@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Person
@@ -72,6 +73,7 @@ fun SessionScreen(
     modifier: Modifier = Modifier,
     onNavigateToFitting: () -> Unit = {},
     onNavigateToAddresses: () -> Unit = {},
+    onNavigateToActivity: () -> Unit = {},
     viewModel: SessionViewModel = hiltViewModel(),
 ) {
     val user by viewModel.currentUser.collectAsStateWithLifecycle()
@@ -198,6 +200,12 @@ fun SessionScreen(
                         onClick = {
                             soonDialogInfo = Pair(paymentsTitle, paymentsDesc)
                         },
+                    )
+                    ProfileItemRow(
+                        icon = Icons.Outlined.Insights,
+                        title = stringResource(R.string.profile_item_activity),
+                        subtitle = stringResource(R.string.profile_item_activity_desc),
+                        onClick = onNavigateToActivity,
                         showDivider = false,
                     )
                 }

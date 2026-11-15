@@ -17,6 +17,7 @@ object Routes {
     const val ORDER_CONFIRMED = "order_confirmed/{pedidoId}"
     const val ORDER_DETAIL = "order_detail/{pedidoId}"
     const val ADDRESSES = "addresses"
+    const val MY_ACTIVITY = "my_activity"
     const val PAYMENT_METHODS = "payment_methods"
     const val PRENDA = "prenda/{codigo}"
 

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,13 +31,18 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -47,6 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pe.modaviva.app.R
 import pe.modaviva.app.domain.model.EstadoPedido
 import pe.modaviva.app.domain.model.Pedido
+import pe.modaviva.app.ui.analytics.AnalyticsDashboardContent
 import pe.modaviva.app.ui.components.MvEmptyState
 import pe.modaviva.app.ui.components.MvScreen
 import pe.modaviva.app.ui.format.formatearSoles
@@ -64,6 +71,7 @@ fun OrderHistoryScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    var seccionActiva by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(state.mensaje) {
         state.mensaje?.let {
@@ -73,6 +81,7 @@ fun OrderHistoryScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = modifier,
     ) { innerPadding ->
@@ -80,12 +89,38 @@ fun OrderHistoryScreen(
             title = stringResource(R.string.orders_title),
             modifier = Modifier.padding(innerPadding),
         ) { padding ->
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
             ) {
-                when {
+                val opciones = listOf("Historial", "Mi actividad")
+                SingleChoiceSegmentedButtonRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                ) {
+                    opciones.forEachIndexed { index, label ->
+                        SegmentedButton(
+                            shape = SegmentedButtonDefaults.itemShape(
+                                index = index,
+                                count = opciones.size,
+                            ),
+                            onClick = { seccionActiva = index },
+                            selected = seccionActiva == index,
+                            label = { Text(label) },
+                        )
+                    }
+                }
+
+                if (seccionActiva == 1) {
+                    AnalyticsDashboardContent(
+                        onExploreClick = onGoToHome,
+                        modifier = Modifier.weight(1f),
+                    )
+                } else {
+                    Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                        when {
                     state.cargando -> {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                     }
@@ -163,6 +198,8 @@ fun OrderHistoryScreen(
                             }
                         }
                     }
+                }
+            }
                 }
             }
         }

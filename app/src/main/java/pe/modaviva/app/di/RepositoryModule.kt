@@ -7,6 +7,7 @@ import dagger.hilt.components.SingletonComponent
 import pe.modaviva.app.data.network.MonitorDeConexion
 import pe.modaviva.app.data.network.MonitorDeConexionAndroid
 import pe.modaviva.app.data.repository.FirebaseAuthRepository
+import pe.modaviva.app.data.repository.FirestoreAnalyticsRepository
 import pe.modaviva.app.data.repository.FirebaseBackendRepository
 import pe.modaviva.app.data.repository.FirestoreCatalogoRepository
 import pe.modaviva.app.data.repository.FirebaseFittingConfigRepository
@@ -21,6 +22,7 @@ import pe.modaviva.app.data.repository.FirestoreStockRepository
 import pe.modaviva.app.data.repository.FirestoreTiendaRepository
 import pe.modaviva.app.data.repository.PersistentSessionRepository
 import pe.modaviva.app.data.repository.RoomCartRepository
+import pe.modaviva.app.domain.repository.AnalyticsRepository
 import pe.modaviva.app.domain.repository.AuthRepository
 import pe.modaviva.app.domain.repository.BackendRepository
 import pe.modaviva.app.domain.repository.CartRepository
@@ -117,4 +119,10 @@ abstract class RepositoryModule {
     abstract fun bindOrderRepository(
         impl: FirestoreOrderRepository,
     ): OrderRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAnalyticsRepository(
+        impl: FirestoreAnalyticsRepository,
+    ): AnalyticsRepository
 }
