@@ -54,6 +54,28 @@ service cloud.firestore {
         allow read, write: if isOwner(uid);
       }
 
+      // Centro de notificaciones (HU-18). El cliente lee y borra sus avisos,
+      // solo puede cambiar el campo `leida` y crear avisos para sí mismo con
+      // la forma esperada. Las Cloud Functions también los crean (Admin SDK).
+      match /notificaciones/{avisoId} {
+        allow read, delete: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && request.resource.data.keys()
+               .hasOnly(['tipo', 'titulo', 'texto', 'creadaEn', 'leida', 'refId'])
+          && request.resource.data.tipo in
+               ['PRUEBA_VIRTUAL', 'ELIMINACION_FOTO', 'PEDIDO', 'SOLICITUD', 'GENERAL']
+          && request.resource.data.titulo is string
+          && request.resource.data.titulo.size() <= 120
+          && request.resource.data.texto is string
+          && request.resource.data.texto.size() <= 500
+          && request.resource.data.creadaEn == request.time
+          && request.resource.data.leida == false
+          && (!('refId' in request.resource.data) || request.resource.data.refId is string);
+        allow update: if isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leida'])
+          && request.resource.data.leida is bool;
+      }
+
       // Caché de imágenes generadas por el probador virtual (escritura solo desde Cloud Functions)
       match /probadorCache/{prendaId} {
         allow read, delete: if isOwner(uid);

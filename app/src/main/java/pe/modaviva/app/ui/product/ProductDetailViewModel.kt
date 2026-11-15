@@ -1,5 +1,7 @@
 package pe.modaviva.app.ui.product
 
+import pe.modaviva.app.domain.model.TipoNotificacion
+import pe.modaviva.app.domain.repository.NotificacionRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,6 +41,7 @@ class ProductDetailViewModel @Inject constructor(
     private val fittingConfigRepository: FittingConfigRepository,
     private val recommendSizeUseCase: RecommendSizeUseCase,
     private val tryOnRepository: TryOnRepository,
+    private val notificaciones: NotificacionRepository,
 ) : ViewModel() {
 
     val currentUser: StateFlow<UserProfile?> = sessionRepository.currentUser
@@ -77,6 +80,7 @@ class ProductDetailViewModel @Inject constructor(
      */
     fun iniciarPruebaVirtual(
         prendaCodigo: String,
+        prendaNombre: String = prendaCodigo,
         forzarRegeneracion: Boolean = false,
     ) {
         if (_tryOnState.value is TryOnUiState.Loading) return
@@ -88,6 +92,15 @@ class ProductDetailViewModel @Inject constructor(
                 forzarRegeneracion = forzarRegeneracion,
             ).onSuccess { resultado ->
                 _tryOnState.value = TryOnUiState.Success(resultado)
+                // HU-18: aviso de imagen lista (solo para generaciones nuevas, no las del historial).
+                if (!resultado.cached) {
+                    notificaciones.crear(
+                        tipo = TipoNotificacion.PRUEBA_VIRTUAL,
+                        titulo = "Tu prueba virtual está lista",
+                        texto = "Mira cómo te queda: $prendaNombre.",
+                        refId = prendaCodigo,
+                    )
+                }
             }.onFailure { error ->
                 _tryOnState.value = TryOnUiState.Error(
                     error.localizedMessage?.takeIf { it.isNotBlank() }

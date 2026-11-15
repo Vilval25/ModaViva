@@ -1,5 +1,7 @@
 package pe.modaviva.app.data.repository
 
+import pe.modaviva.app.domain.model.TipoNotificacion
+import pe.modaviva.app.domain.repository.NotificacionRepository
 import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
@@ -37,6 +39,7 @@ class FirestoreOrderRepository @Inject constructor(
     private val cartRepository: CartRepository,
     private val catalogoRepository: CatalogoRepository,
     private val sessionRepository: SessionRepository,
+    private val notificaciones: NotificacionRepository,
 ) : OrderRepository {
 
     override fun observarPedidos(): Flow<List<Pedido>> = callbackFlow {
@@ -182,6 +185,23 @@ class FirestoreOrderRepository @Inject constructor(
             cartRepository.vaciarCarrito()
         }
 
+        // HU-18: aviso de pago aprobado o de reserva pendiente (HU-21 / HU-22).
+        if (pedidoListo.estado == EstadoPedido.APROBADO) {
+            notificaciones.crear(
+                tipo = TipoNotificacion.PEDIDO,
+                titulo = "Pedido ${pedidoListo.numeroPedido} aprobado",
+                texto = "Tu pago fue confirmado. Te avisaremos cuando cambie el estado de tu pedido.",
+                refId = pedidoListo.id,
+            )
+        } else if (pedidoListo.estado == EstadoPedido.PENDIENTE) {
+            notificaciones.crear(
+                tipo = TipoNotificacion.PEDIDO,
+                titulo = "Pedido ${pedidoListo.numeroPedido} reservado",
+                texto = "Tienes 30 minutos para completar el pago antes de que se libere la reserva.",
+                refId = pedidoListo.id,
+            )
+        }
+
         pedidoListo
     }
 
@@ -216,6 +236,7 @@ class FirestoreOrderRepository @Inject constructor(
         )
 
         docRef.set(pedidoAMap(pedidoActualizado), SetOptions.merge()).await()
+        avisarCambioDeEstado(pedidoActual, pedidoActualizado)
         pedidoActualizado
     }
 
@@ -243,6 +264,7 @@ class FirestoreOrderRepository @Inject constructor(
         )
 
         docRef.set(pedidoAMap(pedidoActualizado), SetOptions.merge()).await()
+        avisarCambioDeEstado(pedidoActual, pedidoActualizado)
 
         // HU-22 CA-05: Al anularse, devolver prendas con stock al carrito
         for (item in pedidoActual.items) {
@@ -307,6 +329,7 @@ class FirestoreOrderRepository @Inject constructor(
         )
 
         docRef.set(pedidoAMap(pedidoActualizado), SetOptions.merge()).await()
+        avisarCambioDeEstado(pedidoActual, pedidoActualizado)
         pedidoActualizado
     }
 
@@ -329,7 +352,36 @@ class FirestoreOrderRepository @Inject constructor(
         )
 
         docRef.update("solicitudPostventa", solicitudAMap(solicitudFinal)).await()
+        notificaciones.crear(
+            tipo = TipoNotificacion.SOLICITUD,
+            titulo = "Solicitud ${solicitudFinal.numeroSolicitud} registrada",
+            texto = "Tu solicitud de ${solicitudFinal.tipo.lowercase()} de ${solicitudFinal.prendaNombre} está En evaluación.",
+            refId = pedidoId,
+        )
         solicitudFinal
+    }
+
+    /** HU-18: aviso cuando un pedido cambia de estado (solo si el estado cambió). */
+    private fun avisarCambioDeEstado(anterior: Pedido, actual: Pedido) {
+        if (anterior.estado == actual.estado) return
+        val texto = when (actual.estado) {
+            EstadoPedido.APROBADO -> "Tu pago fue confirmado."
+            EstadoPedido.EN_PREPARACION -> if (actual.esRecojoEnTienda) {
+                "Tu pedido está listo para recoger en ${actual.tiendaRecojoNombre ?: "tienda"}."
+            } else {
+                "Estamos preparando tus prendas."
+            }
+            EstadoPedido.DESPACHADO -> "Tu pedido va en camino."
+            EstadoPedido.ENTREGADO -> "Tu pedido fue entregado. Tienes 7 días para solicitar cambio o devolución."
+            EstadoPedido.ANULADO -> "La reserva venció sin pago y el pedido se anuló."
+            EstadoPedido.PENDIENTE -> "Tu pedido está pendiente de pago."
+        }
+        notificaciones.crear(
+            tipo = TipoNotificacion.PEDIDO,
+            titulo = "Pedido ${actual.numeroPedido}: ${actual.estado.etiqueta}",
+            texto = texto,
+            refId = actual.id,
+        )
     }
 
     override suspend fun guardarTarjeta(tarjeta: TarjetaGuardada): Result<TarjetaGuardada> = runCatching {

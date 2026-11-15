@@ -96,13 +96,13 @@ fun HomeScreen(
     onAudienciaClick: (genero: String) -> Unit,
     onChatClick: () -> Unit = {},
     modifier: Modifier = Modifier,
-    unreadNotifications: Int = 0,
     cartItemCount: Int = 0,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val mensaje by viewModel.mensaje.collectAsStateWithLifecycle()
     val conteoCarrito by viewModel.cartItemCount.collectAsStateWithLifecycle()
+    val unreadNotifications by viewModel.unreadNotifications.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val textoMensaje = mensaje?.let { stringResource(it.texto()) }
 

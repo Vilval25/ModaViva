@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Checkroom
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.HorizontalDivider
@@ -69,9 +68,15 @@ import pe.modaviva.app.ui.favorites.LocalFavoritos
 import pe.modaviva.app.ui.favorites.MarcarFavoritoViewModel
 import pe.modaviva.app.ui.fitting.FittingTab
 import pe.modaviva.app.ui.home.HomeScreen
+import pe.modaviva.app.ui.notifications.NotificationsScreen
+import pe.modaviva.app.ui.fitting.deletion.ConstanciaEliminacionScreen
+import pe.modaviva.app.ui.components.MvScreen
+import pe.modaviva.app.domain.model.ConstanciaEliminacionFoto
+import pe.modaviva.app.domain.model.Notificacion
+import pe.modaviva.app.domain.model.TipoNotificacion
+import java.time.Instant
 import pe.modaviva.app.ui.orders.detail.OrderDetailScreen
 import pe.modaviva.app.ui.orders.history.OrderHistoryScreen
-import pe.modaviva.app.ui.placeholder.ComingSoonScreen
 import pe.modaviva.app.ui.product.ProductDetailScreen
 import pe.modaviva.app.ui.profile.ProfileTab
 import pe.modaviva.app.ui.search.SearchScreen
@@ -326,11 +331,30 @@ private fun NavGraphBuilder.overlayGraph(
         )
     }
     composable(Routes.NOTIFICATIONS) {
-        ComingSoonScreen(
-            title = stringResource(R.string.notifications_title),
-            icon = Icons.Outlined.Notifications,
+        NotificationsScreen(
             onBack = { navController.popBackStack() },
+            // HU-18 CA-04: cada aviso abre su pantalla relacionada.
+            onAvisoClick = { aviso -> navController.abrirDestinoDeAviso(aviso) },
         )
+    }
+    composable(
+        route = Routes.CONSTANCIA_FOTO,
+        arguments = listOf(navArgument("eliminadaEnMillis") { type = NavType.LongType }),
+    ) { entry ->
+        val millis = entry.arguments?.getLong("eliminadaEnMillis") ?: 0L
+        MvScreen(
+            title = "Constancia de eliminación",
+            onBack = { navController.popBackStack() },
+        ) { padding ->
+            ConstanciaEliminacionScreen(
+                constancia = ConstanciaEliminacionFoto(eliminadaEn = Instant.ofEpochMilli(millis)),
+                onNuevaFotoClick = { navController.navigateToTab(TopLevelDestination.FITTING) },
+                onCatalogoClick = {
+                    navController.popBackStack(TopLevelDestination.HOME.route, inclusive = false)
+                },
+                modifier = Modifier.padding(padding),
+            )
+        }
     }
     composable(
         route = Routes.PRENDA,
@@ -568,6 +592,17 @@ private fun NavHostController.abrirBusqueda(filtro: String, valor: String) {
  * Cambia de pestaña conservando el estado de cada una y sin apilar pestañas:
  * el botón atrás desde cualquier pestaña vuelve a Inicio y luego sale.
  */
+/** HU-18 CA-04: pantalla que abre cada tipo de aviso. */
+private fun NavHostController.abrirDestinoDeAviso(aviso: Notificacion) {
+    val ref = aviso.refId?.takeIf { it.isNotBlank() } ?: return
+    when (aviso.tipo) {
+        TipoNotificacion.PRUEBA_VIRTUAL -> navigate(Routes.prenda(ref))
+        TipoNotificacion.PEDIDO, TipoNotificacion.SOLICITUD -> navigate(Routes.orderDetail(ref))
+        TipoNotificacion.ELIMINACION_FOTO -> ref.toLongOrNull()?.let { navigate(Routes.constanciaFoto(it)) }
+        TipoNotificacion.GENERAL -> Unit
+    }
+}
+
 private fun NavHostController.navigateToTab(tab: TopLevelDestination) {
     navigate(tab.route) {
         popUpTo(graph.findStartDestination().id) { saveState = true }

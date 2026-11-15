@@ -129,6 +129,52 @@ describe("carrito", () => {
   });
 });
 
+describe("notificaciones (HU-18)", () => {
+  const aviso = (extra = {}) => ({
+    tipo: "PEDIDO",
+    titulo: "Pedido aprobado",
+    texto: "Tu pago fue confirmado.",
+    creadaEn: serverTimestamp(),
+    leida: false,
+    refId: "ped-1",
+    ...extra,
+  });
+
+  beforeEach(async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "clientes", ANA, "notificaciones", "n1"), {
+        tipo: "PEDIDO", titulo: "Aviso", texto: "", creadaEn: new Date(), leida: false,
+      });
+    });
+  });
+
+  test("un cliente lee y crea sus propios avisos", async () => {
+    await assertSucceeds(getDocs(collection(as(ANA), "clientes", ANA, "notificaciones")));
+    await assertSucceeds(setDoc(doc(as(ANA), "clientes", ANA, "notificaciones", "n2"), aviso()));
+  });
+
+  test("un aviso con tipo, campos extra o ya leído se rechaza", async () => {
+    const ref = (id) => doc(as(ANA), "clientes", ANA, "notificaciones", id);
+    await assertFails(setDoc(ref("x1"), aviso({ tipo: "SPAM" })));
+    await assertFails(setDoc(ref("x2"), aviso({ urgente: true })));
+    await assertFails(setDoc(ref("x3"), aviso({ leida: true })));
+    await assertFails(setDoc(ref("x4"), aviso({ creadaEn: new Date(2020, 0, 1) })));
+  });
+
+  test("solo se puede cambiar el campo leida", async () => {
+    const ref = doc(as(ANA), "clientes", ANA, "notificaciones", "n1");
+    await assertSucceeds(updateDoc(ref, { leida: true }));
+    await assertFails(updateDoc(ref, { titulo: "Otro" }));
+  });
+
+  test("un cliente no ve ni toca los avisos de otro", async () => {
+    await assertFails(getDocs(collection(as(BETO), "clientes", ANA, "notificaciones")));
+    await assertFails(updateDoc(doc(as(BETO), "clientes", ANA, "notificaciones", "n1"), { leida: true }));
+    await assertFails(setDoc(doc(as(BETO), "clientes", ANA, "notificaciones", "n9"), aviso()));
+    await assertFails(getDocs(collection(guest(), "clientes", ANA, "notificaciones")));
+  });
+});
+
 describe("catálogo", () => {
   for (const coleccion of ["categorias", "prendas", "stock", "tiendas", "tarifasEnvio", "inicio"]) {
     test(`${coleccion}: lectura pública y sin escritura desde la app`, async () => {

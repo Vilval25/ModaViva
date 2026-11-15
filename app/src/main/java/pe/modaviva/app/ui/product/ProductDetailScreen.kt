@@ -273,7 +273,7 @@ fun ProductDetailScreen(
                                 }
                             }
                             else -> {
-                                viewModel.iniciarPruebaVirtual(item.codigo)
+                                viewModel.iniciarPruebaVirtual(item.codigo, item.nombre)
                             }
                         }
                     },
@@ -325,8 +325,8 @@ fun ProductDetailScreen(
         prendaNombre = item.nombre,
         tallaSeleccionada = tallaSeleccionada,
         onDismiss = viewModel::cerrarPruebaVirtual,
-        onRetry = { viewModel.iniciarPruebaVirtual(item.codigo) },
-        onRegenerate = { viewModel.iniciarPruebaVirtual(item.codigo, forzarRegeneracion = true) },
+        onRetry = { viewModel.iniciarPruebaVirtual(item.codigo, item.nombre) },
+        onRegenerate = { viewModel.iniciarPruebaVirtual(item.codigo, item.nombre, forzarRegeneracion = true) },
         onAddToCartClick = {
             val talla = tallaSeleccionada
             viewModel.cerrarPruebaVirtual()

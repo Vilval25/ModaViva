@@ -1,5 +1,7 @@
 package pe.modaviva.app.data.repository
 
+import pe.modaviva.app.domain.model.TipoNotificacion
+import pe.modaviva.app.domain.repository.NotificacionRepository
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -40,6 +42,7 @@ class FirebaseFittingRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val storage: FirebaseStorage,
     private val sessionRepository: SessionRepository,
+    private val notificaciones: NotificacionRepository,
 ) : FittingRepository {
 
     override suspend fun validateImageMetadata(uri: Uri): Result<Unit> = withContext(Dispatchers.IO) {
@@ -328,7 +331,15 @@ class FirebaseFittingRepository @Inject constructor(
                 sessionRepository.currentUser.value?.let { perfil ->
                     sessionRepository.signIn(perfil.sinFotoProbador())
                 }
-                ConstanciaEliminacionFoto(eliminadaEn = Instant.now())
+                val constancia = ConstanciaEliminacionFoto(eliminadaEn = Instant.now())
+                // HU-18: constancia de eliminación también en la bandeja de avisos.
+                notificaciones.crear(
+                    tipo = TipoNotificacion.ELIMINACION_FOTO,
+                    titulo = "Tu foto del probador fue eliminada",
+                    texto = "Toca para ver la constancia de eliminación.",
+                    refId = constancia.eliminadaEn.toEpochMilli().toString(),
+                )
+                constancia
             }
         }
 
