@@ -259,6 +259,16 @@ fun VirtualTryOnSheet(
                         }
                     }
 
+                    // HU-12 CA-05: leyenda obligatoria y siempre visible en el resultado.
+                    Text(
+                        text = "Simulación referencial generada por IA",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
                     MvPrimaryButton(
                         text = if (tallaSeleccionada != null) {
                             "Agregar talla $tallaSeleccionada al carrito"
