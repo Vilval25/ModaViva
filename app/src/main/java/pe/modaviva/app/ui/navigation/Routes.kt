@@ -16,6 +16,7 @@ object Routes {
     const val CHECKOUT_PAYMENT = "checkout_payment"
     const val ORDER_CONFIRMED = "order_confirmed/{pedidoId}"
     const val ORDER_DETAIL = "order_detail/{pedidoId}"
+    const val SOLICITUD = "solicitud/{pedidoId}"
     const val ADDRESSES = "addresses"
     const val MY_ACTIVITY = "my_activity"
     const val PAYMENT_METHODS = "payment_methods"
@@ -28,5 +29,6 @@ object Routes {
         if (prendaCodigo.isNullOrBlank()) "chat" else "chat?prendaCodigo=$prendaCodigo"
     fun orderConfirmed(pedidoId: String) = "order_confirmed/$pedidoId"
     fun orderDetail(pedidoId: String) = "order_detail/$pedidoId"
+    fun solicitud(pedidoId: String) = "solicitud/$pedidoId"
     fun constanciaFoto(eliminadaEnMillis: Long) = "constancia_foto/$eliminadaEnMillis"
 }

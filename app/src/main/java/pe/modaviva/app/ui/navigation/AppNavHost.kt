@@ -1,5 +1,6 @@
 package pe.modaviva.app.ui.navigation
 
+import pe.modaviva.app.ui.orders.postventa.SolicitudScreen
 import pe.modaviva.app.ui.payments.PaymentMethodsScreen
 import pe.modaviva.app.push.AvisoPush
 import pe.modaviva.app.ui.notifications.NotificationsViewModel
@@ -495,7 +496,14 @@ private fun NavGraphBuilder.overlayGraph(
     ) {
         OrderDetailScreen(
             onBack = { navController.popBackStack() },
+            onSolicitarCambio = { pedidoId -> navController.navigate(Routes.solicitud(pedidoId)) },
         )
+    }
+    composable(
+        route = Routes.SOLICITUD,
+        arguments = listOf(navArgument("pedidoId") { type = NavType.StringType }),
+    ) {
+        SolicitudScreen(onBack = { navController.popBackStack() })
     }
     composable("stock-test") {
         StockTestScreen()

@@ -2,4 +2,6 @@
 <paths>
     <!-- Comprobantes PDF guardados por la app (HU-21 CA-08) -->
     <external-files-path name="comprobantes" path="Download/" />
+    <!-- Fotos tomadas con la cámara para una solicitud de cambio o devolución (HU-24 CA-04) -->
+    <cache-path name="fotos_solicitudes" path="solicitudes/" />
 </paths>

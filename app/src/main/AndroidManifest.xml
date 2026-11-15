@@ -43,7 +43,8 @@
             </intent-filter>
         </service>
 
-        <!-- HU-21 CA-08: abre el comprobante PDF en Android 8 y 9 (en 10+ se usa MediaStore) -->
+        <!-- Archivos compartidos con otras apps: comprobante PDF en Android 8 y 9 (HU-21)
+             y fotos de la cámara para solicitudes de cambio o devolución (HU-24) -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.archivos"
