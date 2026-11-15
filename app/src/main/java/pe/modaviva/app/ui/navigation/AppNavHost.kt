@@ -57,6 +57,7 @@ import pe.modaviva.app.ui.auth.login.LoginScreen
 import pe.modaviva.app.ui.auth.register.RegisterScreen
 import pe.modaviva.app.ui.auth.verify.EmailVerifyScreen
 import pe.modaviva.app.ui.cart.CartScreen
+import pe.modaviva.app.ui.chat.ChatAssistantScreen
 import pe.modaviva.app.ui.checkout.confirmed.OrderConfirmedScreen
 import pe.modaviva.app.ui.checkout.delivery.CheckoutDeliveryScreen
 import pe.modaviva.app.ui.checkout.payment.CheckoutPaymentScreen
@@ -178,11 +179,13 @@ fun AppNavHost(
                         notificationsPrompt = notificationsPrompt,
                         favoritesPrompt = favoritesPrompt,
                         cartPrompt = cartPrompt,
+                        defaultPrompt = defaultPrompt,
                     )
                     overlayGraph(
                         navController = navController,
                         requireAuth = requireAuth,
                         cartPrompt = cartPrompt,
+                        defaultPrompt = defaultPrompt,
                     )
                     authGraph(navController)
                 }
@@ -215,6 +218,7 @@ private fun NavGraphBuilder.topLevelGraph(
     notificationsPrompt: String,
     favoritesPrompt: String,
     cartPrompt: String,
+    defaultPrompt: String,
 ) {
     composable(TopLevelDestination.HOME.route) {
         HomeScreen(
@@ -244,6 +248,11 @@ private fun NavGraphBuilder.topLevelGraph(
             },
             onAudienciaClick = { genero ->
                 navController.abrirBusqueda(FILTRO_GENERO, genero)
+            },
+            onChatClick = {
+                requireAuth(defaultPrompt) {
+                    navController.navigate(Routes.chat())
+                }
             },
         )
     }
@@ -292,6 +301,7 @@ private fun NavGraphBuilder.overlayGraph(
     navController: NavHostController,
     requireAuth: (String, () -> Unit) -> Unit,
     cartPrompt: String,
+    defaultPrompt: String,
 ) {
     composable(Routes.FAVORITES) {
         FavoritesScreen(
@@ -337,6 +347,28 @@ private fun NavGraphBuilder.overlayGraph(
             onBack = { navController.popBackStack() },
             onCartClick = { navController.navigate(Routes.CART) },
             onFittingClick = { navController.navigate(TopLevelDestination.FITTING.route) },
+            onChatClick = { prendaCodigo ->
+                requireAuth(defaultPrompt) {
+                    navController.navigate(Routes.chat(prendaCodigo))
+                }
+            },
+        )
+    }
+    composable(
+        route = Routes.CHAT,
+        arguments = listOf(
+            navArgument("prendaCodigo") {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            },
+        ),
+    ) { backStackEntry ->
+        val prendaCodigo = backStackEntry.arguments?.getString("prendaCodigo")
+        ChatAssistantScreen(
+            onBack = { navController.popBackStack() },
+            onPrendaClick = { codigo -> navController.navigate(Routes.prenda(codigo)) },
+            prendaCodigoContexto = prendaCodigo,
         )
     }
     composable(Routes.CART) {

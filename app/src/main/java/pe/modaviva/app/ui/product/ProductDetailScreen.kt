@@ -28,6 +28,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,6 +40,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -59,6 +61,7 @@ import pe.modaviva.app.ui.product.components.ProductHeroGallery
 import pe.modaviva.app.ui.product.components.ProductHeroTopBar
 import pe.modaviva.app.ui.product.components.ProductSizeAndQuantitySection
 import pe.modaviva.app.ui.product.components.SizeGuideBottomSheet
+import pe.modaviva.app.ui.product.components.VirtualTryOnSheet
 import pe.modaviva.app.ui.stock.StockViewModel
 import java.time.Instant
 
@@ -68,6 +71,7 @@ fun ProductDetailScreen(
     onBack: () -> Unit,
     onCartClick: () -> Unit = {},
     onFittingClick: () -> Unit = {},
+    onChatClick: (String) -> Unit = {},
     viewModel: ProductDetailViewModel = hiltViewModel(),
     stockViewModel: StockViewModel = hiltViewModel(),
 ) {
@@ -82,6 +86,7 @@ fun ProductDetailScreen(
         prenda?.let { viewModel.isPrendaHabilitadaParaProbador(it) } ?: true
     }
     val cartItemCount by viewModel.cartItemCount.collectAsStateWithLifecycle()
+    val tryOnState by viewModel.tryOnState.collectAsStateWithLifecycle()
     val allStocks by stockViewModel.stocksMap.collectAsStateWithLifecycle()
     val tiendas by stockViewModel.tiendas.collectAsStateWithLifecycle()
     val stock by stockViewModel.stock.collectAsState()
@@ -242,22 +247,50 @@ fun ProductDetailScreen(
                     prendaHabilitada = prendaHabilitada,
                     tieneConsentimiento = tieneConsentimiento,
                     onTryOnClick = {
-                        if (!tieneConsentimiento) {
-                            scope.launch {
-                                val res = snackbarHostState.showSnackbar(
-                                    message = "El probador virtual requiere consentimiento de fotografía (Ley N° 29733)",
-                                    actionLabel = "Ir al probador",
-                                    duration = SnackbarDuration.Long,
-                                )
-                                if (res == SnackbarResult.ActionPerformed) {
-                                    onFittingClick()
+                        when {
+                            !tieneConsentimiento -> {
+                                scope.launch {
+                                    val res = snackbarHostState.showSnackbar(
+                                        message = "El probador virtual requiere consentimiento de fotografía (Ley N° 29733)",
+                                        actionLabel = "Ir al probador",
+                                        duration = SnackbarDuration.Long,
+                                    )
+                                    if (res == SnackbarResult.ActionPerformed) {
+                                        onFittingClick()
+                                    }
                                 }
                             }
-                        } else {
-                            onFittingClick()
+                            currentUser?.fotoProbadorUrl.isNullOrBlank() -> {
+                                scope.launch {
+                                    val res = snackbarHostState.showSnackbar(
+                                        message = "Registra tu fotografía de cuerpo completo en el Probador",
+                                        actionLabel = "Ir al probador",
+                                        duration = SnackbarDuration.Long,
+                                    )
+                                    if (res == SnackbarResult.ActionPerformed) {
+                                        onFittingClick()
+                                    }
+                                }
+                            }
+                            else -> {
+                                viewModel.iniciarPruebaVirtual(item.codigo)
+                            }
                         }
                     },
                 )
+
+                TextButton(
+                    onClick = { onChatClick(item.codigo) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_bot_assistant),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Preguntar al asistente sobre esta prenda")
+                }
                 }
             }
 
@@ -286,6 +319,38 @@ fun ProductDetailScreen(
             onDismiss = { mostrarGaleria = false },
         )
     }
+
+    VirtualTryOnSheet(
+        state = tryOnState,
+        prendaNombre = item.nombre,
+        tallaSeleccionada = tallaSeleccionada,
+        onDismiss = viewModel::cerrarPruebaVirtual,
+        onRetry = { viewModel.iniciarPruebaVirtual(item.codigo) },
+        onRegenerate = { viewModel.iniciarPruebaVirtual(item.codigo, forzarRegeneracion = true) },
+        onAddToCartClick = {
+            val talla = tallaSeleccionada
+            viewModel.cerrarPruebaVirtual()
+            if (talla != null && buttonEnabled) {
+                viewModel.agregarAlCarrito(
+                    prenda = item,
+                    talla = talla,
+                    cantidad = cantidad,
+                    onCompletado = {
+                        scope.launch {
+                            val resultado = snackbarHostState.showSnackbar(
+                                message = "Se agregó al carrito ($cantidad unidad${if (cantidad > 1) "es" else ""})",
+                                actionLabel = "Ver carrito",
+                                duration = SnackbarDuration.Short,
+                            )
+                            if (resultado == SnackbarResult.ActionPerformed) {
+                                onCartClick()
+                            }
+                        }
+                    },
+                )
+            }
+        },
+    )
 }
 
 @Composable

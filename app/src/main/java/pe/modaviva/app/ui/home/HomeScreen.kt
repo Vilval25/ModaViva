@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +50,7 @@ import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -91,6 +94,7 @@ fun HomeScreen(
     onPrendaClick: (String) -> Unit,
     onPortadaClick: (Portada) -> Unit,
     onAudienciaClick: (genero: String) -> Unit,
+    onChatClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     unreadNotifications: Int = 0,
     cartItemCount: Int = 0,
@@ -122,6 +126,21 @@ fun HomeScreen(
             )
         },
         snackbarHost = { MvSnackbarHost(snackbar) },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onChatClick,
+                icon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_bot_assistant),
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp),
+                    )
+                },
+                text = { Text("Asistente") },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            )
+        },
     ) { padding ->
         HomeContent(
             state = state,
