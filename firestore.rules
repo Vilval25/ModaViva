@@ -68,6 +68,31 @@ service cloud.firestore {
           && request.resource.data.tokenPasarela.matches('^tok_.*');
       }
 
+      // Solicitudes de cambio o devolución (HU-24). El cliente solo las crea
+      // 'En evaluación' para un pedido suyo entregado y las lee; el estado y la
+      // resolución los cambia el back-office (CA-07), nunca la app.
+      match /solicitudes/{solicitudId} {
+        allow read: if isOwner(uid);
+        allow update, delete: if false;
+        allow create: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(['numeroSolicitud', 'pedidoId', 'numeroPedido',
+               'prendaCodigo', 'prendaNombre', 'prendaFotoUrl', 'talla', 'tipo', 'motivo',
+               'detalleOtro', 'fotosUrls', 'tuvoPruebaVirtual', 'estado', 'creadaEnMillis', 'creadaEn'])
+          && request.resource.data.estado == 'EN_EVALUACION'
+          && request.resource.data.tipo in ['CAMBIO', 'DEVOLUCION']
+          && request.resource.data.motivo is string
+          && request.resource.data.motivo.size() > 0
+          && (request.resource.data.motivo != 'Otro'
+              || (request.resource.data.detalleOtro is string
+                  && request.resource.data.detalleOtro.size() >= 5))
+          && request.resource.data.fotosUrls is list
+          && request.resource.data.fotosUrls.size() <= 3
+          && request.resource.data.tuvoPruebaVirtual is bool
+          && request.resource.data.creadaEn == request.time
+          && get(/databases/$(database)/documents/clientes/$(uid)/pedidos/$(request.resource.data.pedidoId))
+               .data.estado == 'ENTREGADO';
+      }
+
       // Centro de notificaciones (HU-18). El cliente lee y borra sus avisos,
       // solo puede cambiar el campo `leida` y crear avisos para sí mismo con
       // la forma esperada. Las Cloud Functions también los crean (Admin SDK).

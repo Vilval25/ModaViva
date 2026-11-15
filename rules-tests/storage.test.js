@@ -62,6 +62,21 @@ describe("storage", () => {
     await assertFails(uploadBytes(ref(guestStorage, "clientes/cli-ana/probador/foto.jpg"), bytes));
   });
 
+  test("fotos de solicitudes: solo imágenes del dueño, máximo foto_3 y sin reemplazo (HU-24)", async () => {
+    const ana = env.authenticatedContext("cli-ana").storage();
+    const bob = env.authenticatedContext("cli-bob").storage();
+    const jpg = { contentType: "image/jpeg" };
+    const ruta = (n) => `clientes/cli-ana/solicitudes/s1/foto_${n}.jpg`;
+
+    await assertSucceeds(uploadBytes(ref(ana, ruta(1)), bytes, jpg));
+    await assertSucceeds(getBytes(ref(ana, ruta(1))));
+    await assertFails(uploadBytes(ref(ana, ruta(1)), bytes, jpg)); // no se reemplaza
+    await assertFails(uploadBytes(ref(ana, ruta(4)), bytes, jpg)); // máximo 3
+    await assertFails(uploadBytes(ref(ana, ruta(2)), bytes, { contentType: "application/pdf" }));
+    await assertFails(getBytes(ref(bob, ruta(1))));
+    await assertFails(uploadBytes(ref(bob, ruta(2)), bytes, jpg));
+  });
+
   test("se rechaza cualquier ruta que no esté en las reglas", async () => {
     const storage = env.authenticatedContext("cli-ana").storage();
     await assertFails(getBytes(ref(storage, "privado/x.jpg")));

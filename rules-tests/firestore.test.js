@@ -223,6 +223,63 @@ describe("metodosPago (HU-21)", () => {
   });
 });
 
+describe("solicitudes de cambio o devolución (HU-24)", () => {
+  const solicitud = (extra = {}) => ({
+    numeroSolicitud: "SOL-000001-1",
+    pedidoId: "ped_entregado",
+    numeroPedido: "MV-000001",
+    prendaCodigo: "BL-1002",
+    prendaNombre: "Blusa",
+    prendaFotoUrl: "",
+    talla: "M",
+    tipo: "CAMBIO",
+    motivo: "La talla no me quedó",
+    detalleOtro: null,
+    fotosUrls: [],
+    tuvoPruebaVirtual: false,
+    estado: "EN_EVALUACION",
+    creadaEnMillis: 1,
+    creadaEn: serverTimestamp(),
+    ...extra,
+  });
+  const ref = (id, uid = ANA) => doc(as(uid), "clientes", uid, "solicitudes", id);
+
+  beforeEach(async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore();
+      await setDoc(doc(db, "clientes", ANA, "pedidos", "ped_entregado"), { estado: "ENTREGADO" });
+      await setDoc(doc(db, "clientes", ANA, "pedidos", "ped_aprobado"), { estado: "APROBADO" });
+      await setDoc(doc(db, "clientes", ANA, "solicitudes", "s1"), { ...solicitud(), creadaEn: new Date() });
+    });
+  });
+
+  test("un cliente crea una solicitud 'En evaluación' de un pedido entregado y la lee", async () => {
+    await assertSucceeds(setDoc(ref("s2"), solicitud()));
+    await assertSucceeds(getDoc(ref("s1")));
+  });
+
+  test("motivo 'Otro' exige detalle y se aceptan como máximo 3 fotos", async () => {
+    await assertFails(setDoc(ref("x1"), solicitud({ motivo: "Otro" })));
+    await assertFails(setDoc(ref("x2"), solicitud({ motivo: "Otro", detalleOtro: "no" })));
+    await assertSucceeds(setDoc(ref("x3"), solicitud({ motivo: "Otro", detalleOtro: "Se descosió" })));
+    await assertFails(setDoc(ref("x4"), solicitud({ fotosUrls: ["a", "b", "c", "d"] })));
+  });
+
+  test("la app no puede aprobar, resolver ni borrar solicitudes", async () => {
+    await assertFails(setDoc(ref("x5"), solicitud({ estado: "APROBADA" })));
+    await assertFails(setDoc(ref("x6"), solicitud({ resolucion: "Aprobada" })));
+    await assertFails(updateDoc(ref("s1"), { estado: "APROBADA" }));
+    await assertFails(deleteDoc(ref("s1")));
+  });
+
+  test("solo para pedidos entregados y propios", async () => {
+    await assertFails(setDoc(ref("x7"), solicitud({ pedidoId: "ped_aprobado" })));
+    await assertFails(setDoc(ref("x8"), solicitud({ pedidoId: "no_existe" })));
+    await assertFails(getDoc(doc(as(BETO), "clientes", ANA, "solicitudes", "s1")));
+    await assertFails(setDoc(doc(as(BETO), "clientes", ANA, "solicitudes", "x9"), solicitud()));
+  });
+});
+
 describe("catálogo", () => {
   for (const coleccion of ["categorias", "prendas", "stock", "tiendas", "tarifasEnvio", "inicio"]) {
     test(`${coleccion}: lectura pública y sin escritura desde la app`, async () => {
