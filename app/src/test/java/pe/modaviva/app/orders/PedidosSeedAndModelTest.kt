@@ -2,12 +2,10 @@ package pe.modaviva.app.orders
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import pe.modaviva.app.data.seed.PedidosSeedLoader
 import pe.modaviva.app.domain.model.EstadoPedido
-import pe.modaviva.app.domain.model.TarjetaGuardada
 import java.io.File
 
 class PedidosSeedAndModelTest {
@@ -82,32 +80,6 @@ class PedidosSeedAndModelTest {
         val mediaHoraDespues = ahora + (30L * 60_000L)
         assertEquals(0L, pendiente.segundosRestantesPago(mediaHoraDespues))
         assertTrue(pendiente.haVencidoReserva(mediaHoraDespues))
-    }
-
-    @Test
-    fun `tokenizacion sandbox guarda solo marca y ultimos 4 digitos y rechaza tarjetas terminadas en 0000`() {
-        val exito = TarjetaGuardada.validarYTokenizarSandbox(
-            numeroTarjeta = "4557 8801 2345 9876",
-            vencimiento = "08/29",
-            cvv = "123",
-            titular = "Edson Vila",
-            tipo = "CREDITO",
-        )
-        assertTrue(exito.isSuccess)
-        val tarjeta = exito.getOrNull()
-        assertNotNull(tarjeta)
-        assertEquals("Visa", tarjeta!!.marca)
-        assertEquals("9876", tarjeta.ultimos4)
-        assertTrue(tarjeta.tokenPasarela.startsWith("tok_sandbox_visa_9876"))
-
-        val rechazo = TarjetaGuardada.validarYTokenizarSandbox(
-            numeroTarjeta = "5412 7500 1234 0000",
-            vencimiento = "08/29",
-            cvv = "123",
-            titular = "Edson Vila",
-            tipo = "CREDITO",
-        )
-        assertTrue(rechazo.isFailure)
     }
 }
 

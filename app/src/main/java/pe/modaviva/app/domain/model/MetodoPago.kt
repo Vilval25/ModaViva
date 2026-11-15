@@ -44,7 +44,8 @@ enum class TipoMedioPago(
 /**
  * Tarjeta tokenizada guardada en Perfil > Métodos de pago (HU-21 CA-02, CA-03, CA-04).
  * Por seguridad PCI-DSS, en la app y en Firestore NUNCA se guardan el número completo (PAN) ni el CVV:
- * únicamente marca, últimos 4 dígitos, vencimiento y token de la pasarela sandbox.
+ * únicamente marca, últimos 4 dígitos, vencimiento y token de la pasarela sandbox. La tarjeta se
+ * valida y tokeniza en el servidor (Cloud Functions `crearPedido` y `registrarTarjeta`).
  */
 data class TarjetaGuardada(
     val id: String = "",
@@ -58,70 +59,41 @@ data class TarjetaGuardada(
 ) {
     val etiquetaResumen: String
         get() = "$marca •••• $ultimos4"
-
-    companion object {
-        /**
-         * Detecta la marca de la tarjeta según el BIN (primeros dígitos).
-         */
-        fun detectarMarca(numeroLimpio: String): String {
-            return when {
-                numeroLimpio.startsWith("4") -> "Visa"
-                numeroLimpio.startsWith("5") || numeroLimpio.startsWith("2") -> "Mastercard"
-                numeroLimpio.startsWith("34") || numeroLimpio.startsWith("37") -> "Amex"
-                numeroLimpio.startsWith("36") || numeroLimpio.startsWith("38") -> "Diners"
-                else -> "Visa"
-            }
-        }
-
-        /**
-         * Valida y simula la tokenización en la pasarela sandbox (HU-21 CA-03, CA-04, CA-05).
-         * - Si la tarjeta termina en "0000" o el CVV es "000", simula un rechazo de la pasarela
-         *   para poder demostrar en vivo los criterios CA-05 y CA-09.
-         */
-        fun validarYTokenizarSandbox(
-            numeroTarjeta: String,
-            vencimiento: String,
-            cvv: String,
-            titular: String,
-            tipo: String = "CREDITO",
-        ): Result<TarjetaGuardada> {
-            val soloDigitos = numeroTarjeta.filter { it.isDigit() }
-            if (soloDigitos.length !in 15..16) {
-                return Result.failure(IllegalArgumentException("Ingresa un número de tarjeta válido de 15 o 16 dígitos."))
-            }
-            if (!Regex("""^(0[1-9]|1[0-2])/\d{2}$""").matches(vencimiento.trim())) {
-                return Result.failure(IllegalArgumentException("Ingresa la fecha de vencimiento en formato MM/AA (ej. 08/28)."))
-            }
-            if (cvv.filter { it.isDigit() }.length !in 3..4) {
-                return Result.failure(IllegalArgumentException("Ingresa un código CVV válido de 3 o 4 dígitos."))
-            }
-            if (titular.trim().length < 3) {
-                return Result.failure(IllegalArgumentException("Ingresa el nombre del titular de la tarjeta."))
-            }
-
-            // Simulación de rechazo de pasarela sandbox (CA-05 y CA-09)
-            if (soloDigitos.endsWith("0000") || cvv.trim() == "000") {
-                return Result.failure(
-                    IllegalStateException("Pasarela Sandbox: Tarjeta rechazada por el banco emisor (fondos insuficientes o tarjeta restringida).")
-                )
-            }
-
-            val ultimos4 = soloDigitos.takeLast(4)
-            val marca = detectarMarca(soloDigitos)
-            val token = "tok_sandbox_${marca.lowercase()}_${ultimos4}_${System.currentTimeMillis() % 100000}"
-
-            return Result.success(
-                TarjetaGuardada(
-                    id = "card_${marca.lowercase()}_$ultimos4",
-                    marca = marca,
-                    ultimos4 = ultimos4,
-                    vencimiento = vencimiento.trim(),
-                    titular = titular.trim().uppercase(),
-                    tipo = tipo,
-                    tokenPasarela = token,
-                )
-            )
-        }
-    }
 }
 
+/** Datos de una tarjeta nueva. Solo viajan a la Cloud Function; nunca se guardan en el celular. */
+data class DatosTarjetaNueva(
+    val numero: String,
+    val vencimiento: String,
+    val cvv: String,
+    val titular: String,
+)
+
+/** Solicitud de pago que la app envía a la Cloud Function `crearPedido` (HU-21). */
+data class SolicitudPago(
+    val idempotencyKey: String,
+    val items: List<ItemCalculoRequest>,
+    val tipoEntrega: String,
+    val distritoSlug: String?,
+    val cupones: List<String>,
+    val direccion: String?,
+    val referencia: String?,
+    val distrito: String?,
+    val tiendaRecojoId: String?,
+    val destinatario: String,
+    val telefono: String,
+    val medioPago: TipoMedioPago,
+    val tarjetaGuardadaId: String? = null,
+    val tarjetaNueva: DatosTarjetaNueva? = null,
+    val guardarTarjeta: Boolean = false,
+    val prendasProbadas: List<String> = emptyList(),
+    /** Total mostrado en 'Pagar S/ X'; el servidor no cobra si su cálculo es distinto. */
+    val totalEsperado: Double? = null,
+)
+
+/** Respuesta de la pasarela y del servidor al intentar pagar. */
+sealed interface ResultadoPago {
+    data class Aprobado(val pedidoId: String, val numeroPedido: String) : ResultadoPago
+    data class Pendiente(val pedidoId: String, val numeroPedido: String) : ResultadoPago
+    data class Rechazado(val motivo: String) : ResultadoPago
+}

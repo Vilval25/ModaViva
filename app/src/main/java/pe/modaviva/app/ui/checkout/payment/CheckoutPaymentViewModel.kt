@@ -10,16 +10,16 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pe.modaviva.app.data.repository.CheckoutSessionRepository
-import pe.modaviva.app.domain.model.EstadoPedido
-import pe.modaviva.app.domain.model.ItemPedido
-import pe.modaviva.app.domain.model.Pedido
+import pe.modaviva.app.domain.model.DatosTarjetaNueva
+import pe.modaviva.app.domain.model.ItemCalculoRequest
+import pe.modaviva.app.domain.model.ResultadoPago
+import pe.modaviva.app.domain.model.SolicitudPago
 import pe.modaviva.app.domain.model.TarjetaGuardada
 import pe.modaviva.app.domain.model.TipoMedioPago
 import pe.modaviva.app.domain.repository.AnalyticsRepository
-import pe.modaviva.app.domain.repository.CatalogoRepository
 import pe.modaviva.app.domain.repository.OrderRepository
 import pe.modaviva.app.domain.repository.SessionRepository
-import pe.modaviva.app.domain.repository.TiendaRepository
+import java.util.UUID
 import javax.inject.Inject
 
 data class CheckoutPaymentUiState(
@@ -47,8 +47,6 @@ class CheckoutPaymentViewModel @Inject constructor(
     private val checkoutSessionRepository: CheckoutSessionRepository,
     private val orderRepository: OrderRepository,
     private val sessionRepository: SessionRepository,
-    private val tiendaRepository: TiendaRepository,
-    private val catalogoRepository: CatalogoRepository,
     private val analyticsRepository: AnalyticsRepository,
 ) : ViewModel() {
 
@@ -130,154 +128,112 @@ class CheckoutPaymentViewModel @Inject constructor(
         _uiState.update { it.copy(guardarTarjetaParaProximas = v) }
     }
 
+    /**
+     * Identificador del intento de pago (HU-21 CA-10). Se mantiene mientras el intento siga
+     * abierto: un doble toque o un reintento tras un corte de red reusan la misma clave y el
+     * servidor devuelve el mismo pedido sin cobrar dos veces. Se renueva tras un rechazo.
+     */
+    private var idempotencyKey: String = nuevaClave()
+
+    private fun nuevaClave(): String = "pay_" + UUID.randomUUID().toString().replace("-", "")
+
     fun procesarPago() {
         val s = _uiState.value
         if (s.procesandoPago) return
 
         val medio = s.medioSeleccionado
-        var resumenMedio = medio.titulo
-        var tarjetaParaGuardar: TarjetaGuardada? = null
+        val usaTarjetaNueva = medio.esTarjeta && (s.usarNuevaTarjeta || s.tarjetasGuardadas.isEmpty())
+        val tarjetaGuardadaId = if (medio.esTarjeta && !usaTarjetaNueva) s.tarjetaSeleccionadaId else null
 
-        if (medio.esTarjeta) {
-            if (s.usarNuevaTarjeta || s.tarjetasGuardadas.isEmpty()) {
-                val resultadoToken = TarjetaGuardada.validarYTokenizarSandbox(
-                    numeroTarjeta = s.numeroTarjeta,
-                    vencimiento = s.vencimiento,
-                    cvv = s.cvv,
-                    titular = s.titular,
-                    tipo = if (medio == TipoMedioPago.TARJETA_CREDITO) "CREDITO" else "DEBITO",
-                )
-
-                if (resultadoToken.isFailure) {
-                    _uiState.update {
-                        it.copy(errorPago = resultadoToken.exceptionOrNull()?.message ?: "Datos de tarjeta no válidos.")
-                    }
-                    return
-                }
-
-                val tarjetaNueva = resultadoToken.getOrNull()!!
-                resumenMedio = tarjetaNueva.etiquetaResumen
-                if (s.guardarTarjetaParaProximas) {
-                    tarjetaParaGuardar = tarjetaNueva
-                }
-            } else {
-                val tarjetaGuardada = s.tarjetasGuardadas.firstOrNull { it.id == s.tarjetaSeleccionadaId }
-                if (tarjetaGuardada == null) {
-                    _uiState.update { it.copy(errorPago = "Selecciona una tarjeta para pagar.") }
-                    return
-                }
-                resumenMedio = tarjetaGuardada.etiquetaResumen
-            }
-        } else if (medio == TipoMedioPago.BILLETERA_ELECTRONICA) {
-            resumenMedio = "Billetera electrónica (Yape / Plin)"
-        } else if (medio == TipoMedioPago.CONTRA_ENTREGA) {
-            resumenMedio = "Pago contra entrega / Reserva 30 min"
+        if (medio.esTarjeta && !usaTarjetaNueva && tarjetaGuardadaId == null) {
+            _uiState.update { it.copy(errorPago = "Selecciona una tarjeta para pagar.") }
+            return
         }
 
         _uiState.update { it.copy(procesandoPago = true, errorPago = null) }
 
         viewModelScope.launch {
-            try {
-                // Guardar tarjeta si correspondía
-                tarjetaParaGuardar?.let {
-                    orderRepository.guardarTarjeta(it)
-                }
+            val profile = sessionRepository.currentUser.value
+            val destino = checkoutSessionRepository.destinoActual.value
 
-                val tipoEntrega = checkoutSessionRepository.tipoEntrega.value
-                val destino = checkoutSessionRepository.destinoActual.value
-                val tiendaId = checkoutSessionRepository.tiendaRecojoId.value
-                val profile = sessionRepository.currentUser.value
-                val uid = profile?.uid ?: "uid_guest"
+            val codigosProbados = runCatching {
+                analyticsRepository.observarPruebasVirtuales().first()
+                    .map { it.prendaCodigo }
+                    .distinct()
+            }.getOrDefault(emptyList())
 
-                val tiendas = tiendaRepository.observarTiendas().first()
-                val tiendaSeleccionada = tiendas.firstOrNull { it.id == tiendaId }
-
-                val codigosProbados = runCatching {
-                    analyticsRepository.observarPruebasVirtuales().first()
-                        .map { it.prendaCodigo }
-                        .toSet()
-                }.getOrDefault(emptySet())
-
-                val itemsCalculados = checkoutSessionRepository.itemsCalculados.value
-                val itemsPedido = itemsCalculados.map {
-                    ItemPedido(
+            val items = checkoutSessionRepository.itemsCalculados.value
+                .filter { it.cantidadAprobada > 0 }
+                .map {
+                    ItemCalculoRequest(
                         prendaId = it.prendaId,
-                        codigo = it.codigo,
-                        nombre = it.nombre,
-                        fotoUrl = it.fotoUrl,
                         talla = it.talla,
                         cantidad = it.cantidadAprobada,
-                        precioUnitario = it.precioUnitario,
-                        subtotal = it.subtotal,
-                        usoProbadorVirtual = it.codigo in codigosProbados,
+                        precioVisto = it.precioUnitario,
                     )
                 }
 
-                val estadoInicial = if (medio == TipoMedioPago.CONTRA_ENTREGA) {
-                    EstadoPedido.PENDIENTE
-                } else {
-                    EstadoPedido.APROBADO
-                }
-
-                val destinatario = checkoutSessionRepository.destinatario.value.ifBlank {
+            val solicitud = SolicitudPago(
+                idempotencyKey = idempotencyKey,
+                items = items,
+                tipoEntrega = checkoutSessionRepository.tipoEntrega.value,
+                distritoSlug = destino?.distritoSlug?.ifBlank { null },
+                cupones = listOfNotNull(s.cupon),
+                direccion = destino?.direccion,
+                referencia = destino?.referencia,
+                distrito = destino?.distrito,
+                tiendaRecojoId = checkoutSessionRepository.tiendaRecojoId.value,
+                destinatario = checkoutSessionRepository.destinatario.value.ifBlank {
                     profile?.let { "${it.nombres} ${it.apellidos}".trim() }.orEmpty()
-                }
-                val telefono = checkoutSessionRepository.telefonoContacto.value.ifBlank {
+                },
+                telefono = checkoutSessionRepository.telefonoContacto.value.ifBlank {
                     profile?.telefono.orEmpty()
-                }
-
-                val nuevoPedido = Pedido(
-                    id = "",
-                    numeroPedido = "",
-                    uidCliente = uid,
-                    estado = estadoInicial,
-                    tipoEntrega = tipoEntrega,
-                    direccionEntrega = destino?.direccion ?: tiendaSeleccionada?.direccion.orEmpty(),
-                    referenciaEntrega = destino?.referencia,
-                    distrito = destino?.distrito ?: tiendaSeleccionada?.distrito.orEmpty(),
-                    distritoSlug = destino?.distritoSlug.orEmpty(),
-                    tiendaRecojoId = tiendaId,
-                    tiendaRecojoNombre = tiendaSeleccionada?.nombre,
-                    tiendaRecojoDireccion = tiendaSeleccionada?.direccion,
-                    tiendaRecojoHorario = tiendaSeleccionada?.horario,
-                    destinatario = destinatario,
-                    telefonoContacto = telefono,
-                    medioPago = medio,
-                    resumenMedioPago = resumenMedio,
-                    items = itemsPedido,
-                    subtotal = s.subtotal,
-                    descuentoTotal = s.descuentoTotal,
-                    costoEnvio = s.costoEnvio,
-                    total = s.total,
-                    cuponAplicado = s.cupon,
-                )
-
-                val resultadoPedido = orderRepository.crearPedido(nuevoPedido)
-                resultadoPedido.onSuccess { creado ->
-                    checkoutSessionRepository.limpiarDestino()
-                    _uiState.update {
-                        it.copy(
-                            procesandoPago = false,
-                            pedidoConfirmadoId = creado.id,
-                        )
-                    }
-                }.onFailure { err ->
-                    _uiState.update {
-                        it.copy(
-                            procesandoPago = false,
-                            errorPago = err.message ?: "Ocurrió un error al confirmar tu pedido.",
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        procesandoPago = false,
-                        errorPago = e.message ?: "Error inesperado al conectar con la pasarela.",
+                },
+                medioPago = medio,
+                tarjetaGuardadaId = tarjetaGuardadaId,
+                tarjetaNueva = if (usaTarjetaNueva) {
+                    DatosTarjetaNueva(
+                        numero = s.numeroTarjeta,
+                        vencimiento = s.vencimiento,
+                        cvv = s.cvv,
+                        titular = s.titular,
                     )
+                } else null,
+                guardarTarjeta = usaTarjetaNueva && s.guardarTarjetaParaProximas,
+                prendasProbadas = codigosProbados,
+                totalEsperado = s.total,
+            )
+
+            orderRepository.pagarPedido(solicitud)
+                .onSuccess { resultado ->
+                    when (resultado) {
+                        is ResultadoPago.Aprobado, is ResultadoPago.Pendiente -> {
+                            val pedidoId = (resultado as? ResultadoPago.Aprobado)?.pedidoId
+                                ?: (resultado as ResultadoPago.Pendiente).pedidoId
+                            checkoutSessionRepository.limpiarDestino()
+                            _uiState.update {
+                                it.copy(procesandoPago = false, pedidoConfirmadoId = pedidoId, cvv = "")
+                            }
+                        }
+                        is ResultadoPago.Rechazado -> {
+                            // CA-09: nuevo intento con otro medio; el carrito se conserva.
+                            idempotencyKey = nuevaClave()
+                            _uiState.update {
+                                it.copy(procesandoPago = false, errorPago = resultado.motivo, cvv = "")
+                            }
+                        }
+                    }
                 }
-            }
+                .onFailure { err ->
+                    // Error de red o de validación: se conserva la clave para que el reintento
+                    // no genere un segundo cobro si el servidor alcanzó a procesar el pago.
+                    _uiState.update {
+                        it.copy(
+                            procesandoPago = false,
+                            errorPago = err.message ?: "No se pudo conectar con la pasarela. Intenta de nuevo.",
+                        )
+                    }
+                }
         }
     }
 }
-

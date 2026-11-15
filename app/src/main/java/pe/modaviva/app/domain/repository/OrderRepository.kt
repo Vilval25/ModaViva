@@ -3,6 +3,8 @@ package pe.modaviva.app.domain.repository
 import kotlinx.coroutines.flow.Flow
 import pe.modaviva.app.domain.model.EstadoPedido
 import pe.modaviva.app.domain.model.Pedido
+import pe.modaviva.app.domain.model.ResultadoPago
+import pe.modaviva.app.domain.model.SolicitudPago
 import pe.modaviva.app.domain.model.SolicitudPostventa
 import pe.modaviva.app.domain.model.TarjetaGuardada
 import pe.modaviva.app.domain.model.TipoMedioPago
@@ -12,10 +14,11 @@ interface OrderRepository {
     fun observarPedidoPorId(pedidoId: String): Flow<Pedido?>
     fun observarTarjetasGuardadas(): Flow<List<TarjetaGuardada>>
 
-    suspend fun crearPedido(
-        pedido: Pedido,
-        idempotencyKey: String? = null,
-    ): Result<Pedido>
+    /**
+     * HU-21: cobra en la pasarela sandbox y crea el pedido en el servidor (Cloud Function
+     * `crearPedido`). Un rechazo de la pasarela llega como [ResultadoPago.Rechazado], no como error.
+     */
+    suspend fun pagarPedido(solicitud: SolicitudPago): Result<ResultadoPago>
 
     suspend fun confirmarPagoPedidoPendiente(
         pedidoId: String,

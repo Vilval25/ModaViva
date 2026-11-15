@@ -175,6 +175,54 @@ describe("notificaciones (HU-18)", () => {
   });
 });
 
+describe("metodosPago (HU-21)", () => {
+  const tarjeta = (extra = {}) => ({
+    marca: "Visa",
+    ultimos4: "1111",
+    vencimiento: "08/29",
+    titular: "ANA",
+    tipo: "CREDITO",
+    tokenPasarela: "tok_sandbox_abc",
+    esPredeterminada: true,
+    ...extra,
+  });
+
+  beforeEach(async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "clientes", ANA, "metodosPago", "card_visa_1111"), tarjeta());
+    });
+  });
+
+  test("un cliente lee, elimina y cambia la predeterminada de sus tarjetas", async () => {
+    const ref = doc(as(ANA), "clientes", ANA, "metodosPago", "card_visa_1111");
+    await assertSucceeds(getDocs(collection(as(ANA), "clientes", ANA, "metodosPago")));
+    await assertSucceeds(updateDoc(ref, { esPredeterminada: false }));
+    await assertFails(updateDoc(ref, { ultimos4: "2222" }));
+    await assertSucceeds(deleteDoc(ref));
+  });
+
+  test("nunca se guarda el número completo ni el CVV", async () => {
+    const ref = (id) => doc(as(ANA), "clientes", ANA, "metodosPago", id);
+    await assertSucceeds(setDoc(ref("demo"), tarjeta()));
+    await assertFails(setDoc(ref("x1"), tarjeta({ numero: "4111111111111111" })));
+    await assertFails(setDoc(ref("x2"), tarjeta({ cvv: "123" })));
+    await assertFails(setDoc(ref("x3"), tarjeta({ ultimos4: "4111111111111111" })));
+    await assertFails(setDoc(ref("x4"), tarjeta({ tokenPasarela: "4111111111111111" })));
+  });
+
+  test("un cliente no ve las tarjetas de otro", async () => {
+    await assertFails(getDocs(collection(as(BETO), "clientes", ANA, "metodosPago")));
+    await assertFails(deleteDoc(doc(as(BETO), "clientes", ANA, "metodosPago", "card_visa_1111")));
+  });
+
+  test("operaciones de pago y contador de pedidos son solo del servidor", async () => {
+    await assertFails(getDoc(doc(as(ANA), "clientes", ANA, "operacionesPago", "pay_1")));
+    await assertFails(setDoc(doc(as(ANA), "clientes", ANA, "operacionesPago", "pay_1"), { x: 1 }));
+    await assertFails(getDoc(doc(as(ANA), "contadores", "pedidos")));
+    await assertFails(setDoc(doc(as(ANA), "contadores", "pedidos"), { ultimo: 1 }));
+  });
+});
+
 describe("catálogo", () => {
   for (const coleccion of ["categorias", "prendas", "stock", "tiendas", "tarifasEnvio", "inicio"]) {
     test(`${coleccion}: lectura pública y sin escritura desde la app`, async () => {

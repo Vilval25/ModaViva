@@ -50,8 +50,22 @@ service cloud.firestore {
         allow read, write: if isOwner(uid);
       }
 
+      // Tarjetas guardadas (HU-21 CA-03, CA-04). Las registra la pasarela del
+      // servidor (Cloud Functions). La app solo puede leerlas, eliminarlas y
+      // cambiar cuál es la predeterminada; los datos de demostración solo
+      // pueden traer marca, últimos 4, vencimiento y token (nunca PAN ni CVV).
       match /metodosPago/{tarjetaId} {
-        allow read, write: if isOwner(uid);
+        allow read, delete: if isOwner(uid);
+        allow update: if isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['esPredeterminada'])
+          && request.resource.data.esPredeterminada is bool;
+        allow create: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(['marca', 'ultimos4', 'vencimiento', 'titular',
+               'tipo', 'tokenPasarela', 'esPredeterminada', 'creadoEn'])
+          && request.resource.data.ultimos4 is string
+          && request.resource.data.ultimos4.matches('^[0-9]{4}$')
+          && request.resource.data.tokenPasarela is string
+          && request.resource.data.tokenPasarela.matches('^tok_.*');
       }
 
       // Centro de notificaciones (HU-18). El cliente lee y borra sus avisos,

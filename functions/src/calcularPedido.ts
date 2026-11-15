@@ -66,8 +66,15 @@ function normalizarSlug(texto: string): string {
  * - CA-05: Rechazo de múltiples cupones si alguno no es combinable.
  * - CA-06: Notificación de ítems agotados o con precio modificado, recalculando el total.
  */
-export const calcularPedido = onCall(async (request) => {
-  const data = (request.data || {}) as SolicitudCalculoPedido;
+export const calcularPedido = onCall(async (request) =>
+  calcularResumen((request.data || {}) as SolicitudCalculoPedido)
+);
+
+/**
+ * Cálculo compartido con crearPedido (HU-21): el total que se cobra se
+ * recalcula siempre en el servidor y nunca se toma del celular.
+ */
+export async function calcularResumen(data: SolicitudCalculoPedido) {
   const db = getFirestore();
   const ahora = new Date();
 
@@ -136,7 +143,9 @@ export const calcularPedido = onCall(async (request) => {
     let stockTotal = 0;
     if (stockDoc.exists) {
       const sData = stockDoc.data() || {};
-      stockTotal = typeof sData.stockTotal === "number" ? sData.stockTotal : 0;
+      // El documento de stock guarda `total` (ver seed/cargar.mjs).
+      const totalDoc = typeof sData.total === "number" ? sData.total : sData.stockTotal;
+      stockTotal = typeof totalDoc === "number" ? totalDoc : 0;
     }
 
     let cantidadAprobada = item.cantidad;
@@ -303,4 +312,4 @@ export const calcularPedido = onCall(async (request) => {
     alertas,
     totalPrendasAprobadas: itemsCalculados.reduce((sum, i) => sum + i.cantidadAprobada, 0),
   };
-});
+}

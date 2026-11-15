@@ -7,6 +7,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.FirebaseFunctionsException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -18,6 +20,8 @@ import pe.modaviva.app.domain.model.EstadoPedido
 import pe.modaviva.app.domain.model.HitoPedido
 import pe.modaviva.app.domain.model.ItemPedido
 import pe.modaviva.app.domain.model.Pedido
+import pe.modaviva.app.domain.model.ResultadoPago
+import pe.modaviva.app.domain.model.SolicitudPago
 import pe.modaviva.app.domain.model.SolicitudPostventa
 import pe.modaviva.app.domain.model.TarjetaGuardada
 import pe.modaviva.app.domain.model.TipoMedioPago
@@ -25,9 +29,6 @@ import pe.modaviva.app.domain.repository.CartRepository
 import pe.modaviva.app.domain.repository.CatalogoRepository
 import pe.modaviva.app.domain.repository.OrderRepository
 import pe.modaviva.app.domain.repository.SessionRepository
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -40,6 +41,7 @@ class FirestoreOrderRepository @Inject constructor(
     private val catalogoRepository: CatalogoRepository,
     private val sessionRepository: SessionRepository,
     private val notificaciones: NotificacionRepository,
+    private val functions: FirebaseFunctions,
 ) : OrderRepository {
 
     override fun observarPedidos(): Flow<List<Pedido>> = callbackFlow {
@@ -131,78 +133,68 @@ class FirestoreOrderRepository @Inject constructor(
         awaitClose { listener.remove() }
     }
 
-    override suspend fun crearPedido(
-        pedido: Pedido,
-        idempotencyKey: String?,
-    ): Result<Pedido> = runCatching {
-        val uid = auth.currentUser?.uid ?: throw IllegalStateException("Usuario no autenticado")
-        val collection = firestore.collection(CLIENTES).document(uid).collection(PEDIDOS)
-
-        val correlativo = if (pedido.numeroPedido.isNotBlank()) {
-            pedido.numeroPedido
-        } else {
-            generarNumeroPedido()
-        }
-
-        val pedidoFinalId = if (pedido.id.isNotBlank()) pedido.id else "ped_${correlativo.lowercase()}"
-        val ahora = System.currentTimeMillis()
-
-        val hitosIniciales = if (pedido.hitos.isNotEmpty()) {
-            pedido.hitos
-        } else {
-            listOf(
-                HitoPedido(
-                    estado = pedido.estado,
-                    titulo = if (pedido.estado == EstadoPedido.APROBADO) "Pago aprobado" else "Reserva creada (30 min)",
-                    descripcion = if (pedido.estado == EstadoPedido.APROBADO) {
-                        "Pago confirmado mediante ${pedido.resumenMedioPago}. El stock ha sido reservado."
-                    } else {
-                        "Stock reservado temporalmente por 30 minutos mientras completas el pago."
-                    },
-                    fechaEpochMillis = ahora,
+    override suspend fun pagarPedido(solicitud: SolicitudPago): Result<ResultadoPago> = runCatching {
+        val tarjetaNueva = solicitud.tarjetaNueva
+        val payload = mapOf(
+            "idempotencyKey" to solicitud.idempotencyKey,
+            "items" to solicitud.items.map {
+                mapOf(
+                    "prendaId" to it.prendaId,
+                    "talla" to it.talla,
+                    "cantidad" to it.cantidad,
+                    "precioVisto" to it.precioVisto,
                 )
-            )
-        }
-
-        val venceEn = if (pedido.estado == EstadoPedido.PENDIENTE) {
-            pedido.venceEnMillis ?: (ahora + Pedido.DURACION_RESERVA_MS)
-        } else null
-
-        val pedidoListo = pedido.copy(
-            id = pedidoFinalId,
-            numeroPedido = correlativo,
-            uidCliente = uid,
-            creadoEnMillis = if (pedido.creadoEnMillis > 0) pedido.creadoEnMillis else ahora,
-            actualizadoEnMillis = ahora,
-            venceEnMillis = venceEn,
-            hitos = hitosIniciales,
+            },
+            "tipoEntrega" to solicitud.tipoEntrega,
+            "distritoSlug" to solicitud.distritoSlug,
+            "cupones" to solicitud.cupones,
+            "entrega" to mapOf(
+                "direccion" to solicitud.direccion,
+                "referencia" to solicitud.referencia,
+                "distrito" to solicitud.distrito,
+                "tiendaRecojoId" to solicitud.tiendaRecojoId,
+                "destinatario" to solicitud.destinatario,
+                "telefono" to solicitud.telefono,
+            ),
+            "medioPago" to solicitud.medioPago.codigo,
+            "pago" to mapOf(
+                "tarjetaId" to solicitud.tarjetaGuardadaId,
+                "tarjetaNueva" to tarjetaNueva?.let {
+                    mapOf(
+                        "numero" to it.numero,
+                        "vencimiento" to it.vencimiento,
+                        "cvv" to it.cvv,
+                        "titular" to it.titular,
+                    )
+                },
+                "guardarTarjeta" to solicitud.guardarTarjeta,
+            ),
+            "prendasProbadas" to solicitud.prendasProbadas,
+            "totalEsperado" to solicitud.totalEsperado,
         )
 
-        collection.document(pedidoFinalId).set(pedidoAMap(pedidoListo)).await()
+        val res = try {
+            functions.getHttpsCallable(CREAR_PEDIDO).call(payload).await().getData() as? Map<*, *>
+        } catch (e: FirebaseFunctionsException) {
+            // Los errores de validación del servidor traen un mensaje listo para mostrar.
+            throw IllegalStateException(e.message ?: "No se pudo procesar el pago.", e)
+        } ?: throw IllegalStateException("Respuesta vacía del servidor de pagos.")
 
-        // Si el pedido fue Aprobado o Pendiente, se vacía el carrito tras confirmar la compra (HU-21 CA-07)
-        if (pedidoListo.estado == EstadoPedido.APROBADO || pedidoListo.estado == EstadoPedido.PENDIENTE) {
+        val pedidoId = res["pedidoId"] as? String
+        val numero = res["numeroPedido"] as? String
+        val resultado = when (res["estado"] as? String) {
+            "APROBADO" -> ResultadoPago.Aprobado(pedidoId!!, numero!!)
+            "PENDIENTE" -> ResultadoPago.Pendiente(pedidoId!!, numero!!)
+            else -> ResultadoPago.Rechazado(
+                res["motivo"] as? String ?: "La pasarela rechazó el pago.",
+            )
+        }
+
+        // CA-07: con el pedido creado se vacía el carrito. Si el pago fue rechazado, se conserva (CA-09).
+        if (resultado !is ResultadoPago.Rechazado) {
             cartRepository.vaciarCarrito()
         }
-
-        // HU-18: aviso de pago aprobado o de reserva pendiente (HU-21 / HU-22).
-        if (pedidoListo.estado == EstadoPedido.APROBADO) {
-            notificaciones.crear(
-                tipo = TipoNotificacion.PEDIDO,
-                titulo = "Pedido ${pedidoListo.numeroPedido} aprobado",
-                texto = "Tu pago fue confirmado. Te avisaremos cuando cambie el estado de tu pedido.",
-                refId = pedidoListo.id,
-            )
-        } else if (pedidoListo.estado == EstadoPedido.PENDIENTE) {
-            notificaciones.crear(
-                tipo = TipoNotificacion.PEDIDO,
-                titulo = "Pedido ${pedidoListo.numeroPedido} reservado",
-                texto = "Tienes 30 minutos para completar el pago antes de que se libere la reserva.",
-                refId = pedidoListo.id,
-            )
-        }
-
-        pedidoListo
+        resultado
     }
 
     override suspend fun confirmarPagoPedidoPendiente(
@@ -475,12 +467,6 @@ class FirestoreOrderRepository @Inject constructor(
         semilla.pedidos.size
     }
 
-    private fun generarNumeroPedido(): String {
-        val fecha = DateTimeFormatter.ofPattern("yyyyMMdd").withZone(ZoneId.of("America/Lima")).format(Instant.now())
-        val randomSuffix = (1000..9999).random()
-        return "MV-$fecha-$randomSuffix"
-    }
-
     @Suppress("UNCHECKED_CAST")
     private fun mapearPedido(id: String, data: Map<String, Any?>): Pedido? {
         val rawItems = data["items"] as? List<Map<String, Any?>> ?: emptyList()
@@ -643,5 +629,6 @@ class FirestoreOrderRepository @Inject constructor(
         const val CLIENTES = "clientes"
         const val PEDIDOS = "pedidos"
         const val METODOS_PAGO = "metodosPago"
+        const val CREAR_PEDIDO = "crearPedido"
     }
 }

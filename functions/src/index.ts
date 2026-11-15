@@ -19,3 +19,5 @@ export { probarPrenda } from "./probarPrenda.js";
 export { calcularPedido } from "./calcularPedido.js";
 export { chatAsistente } from "./chatAsistente.js";
 export { enviarPush } from "./enviarPush.js";
+export { crearPedido } from "./crearPedido.js";
+export { registrarTarjeta } from "./pasarela.js";
