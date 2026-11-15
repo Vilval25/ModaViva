@@ -150,7 +150,7 @@ fun ProductDetailScreen(
     val precioVigente = item.precioVigente(ahora)
 
     val textoBoton = when {
-        tallaSeleccionada == null -> "Elige una talla"
+        tallaSeleccionada == null -> "Elige tu talla"
         esCargaPendiente -> "Verificando…"
         estaAgotado -> "Agotado"
         else -> "Agregar al carrito"
