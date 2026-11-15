@@ -51,7 +51,14 @@ class RecommendSizeUseCase @Inject constructor() {
                     prenda.categoria.contains("short", ignoreCase = true) ||
                     prenda.categoria.contains("jean", ignoreCase = true)
 
-            val tallasConMedidas = prenda.tallas.filter { prenda.medidas.containsKey(it) }
+            val tallasConMedidas = prenda.tallas.filter { talla ->
+                val med = prenda.medidas[talla] ?: return@filter false
+                // Exigimos al menos una medida antropométrica > 0 para evitar comparar contra 0.0
+                (esParteInferior && med.cintura > 0) ||
+                    med.pecho > 0 ||
+                    med.cadera > 0 ||
+                    med.hombro > 0
+            }
             if (tallasConMedidas.isNotEmpty()) {
                 val distancias = tallasConMedidas.map { talla ->
                     val med = prenda.medidas[talla]!!

@@ -41,7 +41,7 @@ object PrendaMapper {
             promoHasta = instante(data["promoHasta"]),
             color = color,
             tallas = tallas,
-            medidas = convertirMedidas(medidas),
+            medidas = convertirMedidas(medidas, tallas),
             fotos = fotos,
             stockTotal = (data["stockTotal"] as? Number)?.toInt() ?: 0,
             creadaEn = instante(data["creadaEn"]) ?: Instant.EPOCH,
@@ -57,23 +57,46 @@ object PrendaMapper {
 
     private fun convertirMedidas(
         mapa: Map<*, *>,
+        tallasOrdenadas: List<String>,
     ): Map<String, MedidasPrenda> {
-        return mapa.mapNotNull { (tallaKey, valores) ->
+        val porTalla = mapa.mapNotNull { (tallaKey, valores) ->
             val talla = tallaKey as? String ?: return@mapNotNull null
             val datos = valores as? Map<*, *> ?: return@mapNotNull null
 
-            val medidas = MedidasPrenda(
-                pecho = (datos["pecho"] as? Number)?.toDouble() ?: return@mapNotNull null,
-                cintura = (datos["cintura"] as? Number)?.toDouble() ?: return@mapNotNull null,
-                cadera = (datos["cadera"] as? Number)?.toDouble() ?: return@mapNotNull null,
-                hombro = (datos["hombro"] as? Number)?.toDouble() ?: return@mapNotNull null,
-                largo = (datos["largo"] as? Number)?.toDouble() ?: return@mapNotNull null,
-                manga = (datos["manga"] as? Number)?.toDouble() ?: return@mapNotNull null,
-            )
+            val pecho = datos.medidaCm("pecho")
+            val cintura = datos.medidaCm("cintura")
+            val cadera = datos.medidaCm("cadera")
+            val hombro = datos.medidaCm("hombro")
+            val largo = datos.medidaCm("largo")
+            val manga = datos.medidaCm("manga")
 
-            talla to medidas
+            val tieneAlgunValor = pecho > 0 || cintura > 0 || cadera > 0 || hombro > 0 || largo > 0 || manga > 0
+            if (!tieneAlgunValor) return@mapNotNull null
+
+            talla to MedidasPrenda(
+                pecho = pecho,
+                cintura = cintura,
+                cadera = cadera,
+                hombro = hombro,
+                largo = largo,
+                manga = manga,
+            )
         }.toMap()
+
+        if (porTalla.isEmpty()) return emptyMap()
+
+        val ordenadas = linkedMapOf<String, MedidasPrenda>()
+        for (talla in tallasOrdenadas) {
+            porTalla[talla]?.let { ordenadas[talla] = it }
+        }
+        for ((talla, med) in porTalla) {
+            ordenadas.putIfAbsent(talla, med)
+        }
+        return ordenadas
     }
+
+    private fun Map<*, *>.medidaCm(clave: String): Double =
+        (this[clave] as? Number)?.toDouble()?.takeIf { it > 0.0 } ?: 0.0
 
 
     private fun instante(valor: Any?): Instant? = when (valor) {

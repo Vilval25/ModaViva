@@ -163,5 +163,21 @@ class RecommendSizeUseCaseTest {
 
         assertTrue("Precisión debe ser al menos 7 de 10 (actual: $aciertos/10)", aciertos >= 7)
     }
+
+    @Test
+    fun `prenda solo con largo y manga usa fallback antropometrico y no compara contra cero`() {
+        val prenda = crearPrendaPrueba(
+            medidasPorTalla = mapOf(
+                "S" to MedidasPrenda(pecho = 0.0, cintura = 0.0, cadera = 0.0, hombro = 0.0, largo = 58.0, manga = 56.0),
+                "M" to MedidasPrenda(pecho = 0.0, cintura = 0.0, cadera = 0.0, hombro = 0.0, largo = 60.0, manga = 58.0),
+                "L" to MedidasPrenda(pecho = 0.0, cintura = 0.0, cadera = 0.0, hombro = 0.0, largo = 62.0, manga = 60.0),
+            ),
+            tallas = listOf("S", "M", "L"),
+        )
+        val userAlto = crearUsuario(alturaCm = 180)
+
+        val resultado = useCase(prenda, userAlto)
+        assertEquals("L", (resultado as RecomendacionTalla.TallaExacta).talla)
+    }
 }
 

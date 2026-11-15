@@ -40,6 +40,29 @@ class PrendaMapperTest {
         assertEquals(179.9, prenda.precio, 0.0)
         assertEquals("Azul índigo", prenda.color.nombre)
         assertEquals(12, prenda.stockTotal)
+        assertEquals(listOf("26", "27"), prenda.medidas.keys.toList())
+        assertEquals(72.0, prenda.medidas["26"]!!.cintura, 0.0)
+        assertEquals(0.0, prenda.medidas["26"]!!.pecho, 0.0)
+    }
+
+    @Test
+    fun `conserva el orden de tallas y descarta tallas sin valores numericos positivos`() {
+        val data = fichaCompleta().apply {
+            put("tallas", listOf("28", "26", "27"))
+            put(
+                "medidas",
+                mapOf(
+                    "26" to mapOf("cintura" to 72, "cadera" to 96),
+                    "27" to mapOf("cintura" to 74),
+                    "28" to mapOf("cintura" to 78, "tiro" to 26),
+                ),
+            )
+        }
+        val prenda = mapear(data)
+        assertNotNull(prenda)
+        assertEquals(listOf("28", "26", "27"), prenda!!.medidas.keys.toList())
+        assertEquals(78.0, prenda.medidas["28"]!!.cintura, 0.0)
+        assertEquals(96.0, prenda.medidas["26"]!!.cadera, 0.0)
     }
 
     @Test
