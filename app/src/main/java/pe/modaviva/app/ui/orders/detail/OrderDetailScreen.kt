@@ -389,7 +389,9 @@ fun OrderDetailScreen(
                     LineaDeTiempoVertical(hitos = p.hitos)
 
                     // HU-23 CA-08 y HU-24: Botón Solicitar cambio o devolución
-                    if (p.estado == EstadoPedido.ENTREGADO) {
+                    // HU-24 CA-01: la opción solo aparece hasta 7 días después de 'Entregado';
+                    // si ya existe una solicitud, se sigue mostrando su estado.
+                    if (p.solicitudPostventa != null || p.puedeSolicitarCambioODevolucion()) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
