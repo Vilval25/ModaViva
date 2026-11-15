@@ -14,7 +14,11 @@ data class TiendaCartConDistancia(
     val tienda: Tienda,
     val distanciaKm: Double?,
     val esRecomendada: Boolean = false,
-)
+    val disponibleHoy: Boolean = true,
+) {
+    val plazoRecojoTexto: String
+        get() = if (disponibleHoy) "Disponible hoy" else "Disponible en 24–48 h"
+}
 
 data class ResultadoTiendasRecojo(
     val tiendasElegibles: List<TiendaCartConDistancia> = emptyList(),
@@ -35,39 +39,20 @@ class CalculateNearestStoreForCartUseCase @Inject constructor() {
             return ResultadoTiendasRecojo(hayStockSuficiente = true)
         }
 
-        val tiendasElegibles = mutableListOf<TiendaCartConDistancia>()
         val latDestino = destino?.lat
         val lngDestino = destino?.lng
         val destinoTieneCoordenadas = latDestino != null && lngDestino != null
 
-        for (tienda in tiendas) {
-            var puedeAtenderTodo = true
-            for (item in cartItems) {
-                val stockVariante = stocksMap[item.varianteId]
-                val stockEnTienda = stockVariante?.porTienda?.get(tienda.id) ?: 0
-                if (stockEnTienda < item.cantidad) {
-                    puedeAtenderTodo = false
-                    break
-                }
-            }
-
-            if (puedeAtenderTodo) {
-                var distancia: Double? = null
-                val latTienda = tienda.lat
-                val lngTienda = tienda.lng
-                if (destinoTieneCoordenadas && latDestino != null && lngDestino != null && latTienda != null && lngTienda != null) {
-                    distancia = calcularDistanciaKm(latDestino, lngDestino, latTienda, lngTienda)
-                }
-                tiendasElegibles.add(
-                    TiendaCartConDistancia(
-                        tienda = tienda,
-                        distanciaKm = distancia,
-                    )
-                )
-            }
+        val hayStockGlobal = cartItems.all { item ->
+            val stockVariante = stocksMap[item.varianteId]
+            val stockTotal = maxOf(
+                stockVariante?.total ?: 0,
+                stockVariante?.porTienda?.values?.sum() ?: 0,
+            )
+            stockTotal >= item.cantidad
         }
 
-        if (tiendasElegibles.isEmpty()) {
+        if (!hayStockGlobal) {
             return ResultadoTiendasRecojo(
                 tiendasElegibles = emptyList(),
                 tiendaRecomendada = null,
@@ -76,21 +61,39 @@ class CalculateNearestStoreForCartUseCase @Inject constructor() {
             )
         }
 
-        var tiendaRecomendada: TiendaCartConDistancia? = null
-        if (destinoTieneCoordenadas) {
-            val conDistancia = tiendasElegibles.filter { it.distanciaKm != null }
-            val masCercana = conDistancia.minByOrNull { it.distanciaKm!! }
-            if (masCercana != null) {
-                tiendaRecomendada = masCercana.copy(esRecomendada = true)
+        // Si el stock global alcanza, todas las tiendas pueden entregar el pedido:
+        // "Disponible hoy" si esa sede tiene todo; "Disponible en 24–48 h" si requiere reposición/traslado.
+        val tiendasEvaluadas = tiendas.map { tienda ->
+            val disponibleHoy = cartItems.all { item ->
+                val stockEnTienda = stocksMap[item.varianteId]?.porTienda?.get(tienda.id) ?: 0
+                stockEnTienda >= item.cantidad
             }
-        } else {
-            tiendaRecomendada = tiendasElegibles.first().copy(esRecomendada = true)
+            val latTienda = tienda.lat
+            val lngTienda = tienda.lng
+            val distancia = if (
+                latDestino != null && lngDestino != null &&
+                latTienda != null && lngTienda != null
+            ) {
+                calcularDistanciaKm(latDestino, lngDestino, latTienda, lngTienda)
+            } else {
+                null
+            }
+            TiendaCartConDistancia(
+                tienda = tienda,
+                distanciaKm = distancia,
+                disponibleHoy = disponibleHoy,
+            )
         }
 
-        val rec = tiendaRecomendada
-        val listaConRecomendada = tiendasElegibles.map { t ->
-            if (rec != null && t.tienda.id == rec.tienda.id) {
-                rec
+        val tiendasOrdenadas = tiendasEvaluadas.sortedWith(
+            compareByDescending<TiendaCartConDistancia> { it.disponibleHoy }
+                .thenBy { it.distanciaKm ?: Double.MAX_VALUE },
+        )
+
+        val tiendaRecomendada = tiendasOrdenadas.firstOrNull()?.copy(esRecomendada = true)
+        val listaConRecomendada = tiendasOrdenadas.map { t ->
+            if (tiendaRecomendada != null && t.tienda.id == tiendaRecomendada.tienda.id) {
+                tiendaRecomendada
             } else {
                 t
             }
@@ -98,7 +101,7 @@ class CalculateNearestStoreForCartUseCase @Inject constructor() {
 
         return ResultadoTiendasRecojo(
             tiendasElegibles = listaConRecomendada,
-            tiendaRecomendada = rec,
+            tiendaRecomendada = tiendaRecomendada,
             requiereCoordenadasParaDistancia = !destinoTieneCoordenadas,
             hayStockSuficiente = true,
         )

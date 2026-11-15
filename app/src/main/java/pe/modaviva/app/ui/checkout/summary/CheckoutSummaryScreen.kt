@@ -570,6 +570,16 @@ private fun ModalidadEntregaSection(
                                             color = if (esElegida) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
                                     }
+                                    Text(
+                                        text = tiendaCart.plazoRecojoTexto,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Medium,
+                                        color = when {
+                                            esElegida -> MaterialTheme.colorScheme.onPrimaryContainer
+                                            tiendaCart.disponibleHoy -> MaterialTheme.colorScheme.primary
+                                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                        },
+                                    )
                                     tiendaCart.distanciaKm?.let { km ->
                                         Text(
                                             text = "Distancia aproximada: ${"%.1f".format(km)} km",

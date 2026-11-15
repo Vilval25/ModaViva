@@ -28,6 +28,7 @@ data class CheckoutDeliveryUiState(
     val referencia: String = "",
     val distrito: String = "",
     val tiendaRecojo: Tienda? = null,
+    val plazoRecojo: String? = null,
     val direccionesRegistradas: List<DireccionEntrega> = emptyList(),
     val direccionSeleccionadaId: String? = null,
     val error: String? = null,
@@ -65,6 +66,7 @@ class CheckoutDeliveryViewModel @Inject constructor(
                     direccionTexto = destino?.direccion.orEmpty(),
                     referencia = destino?.referencia.orEmpty(),
                     distrito = destino?.distrito.orEmpty(),
+                    plazoRecojo = checkoutSessionRepository.plazoRecojo.value,
                 )
             }
 

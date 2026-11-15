@@ -80,7 +80,10 @@ class CheckoutSummaryViewModel @Inject constructor(
                 ?: resultadoRecojo.tiendasElegibles.firstOrNull()
 
             if (tiendaSeleccionada != null) {
-                checkoutSessionRepository.actualizarTiendaRecojo(tiendaSeleccionada.tienda.id)
+                checkoutSessionRepository.actualizarTiendaRecojo(
+                    tiendaSeleccionada.tienda.id,
+                    tiendaSeleccionada.plazoRecojoTexto,
+                )
             }
 
             _uiState.update {
@@ -115,7 +118,10 @@ class CheckoutSummaryViewModel @Inject constructor(
                     ?: resultadoRecojo.tiendasElegibles.firstOrNull()
 
                 if (tiendaSeleccionada != null) {
-                    checkoutSessionRepository.actualizarTiendaRecojo(tiendaSeleccionada.tienda.id)
+                    checkoutSessionRepository.actualizarTiendaRecojo(
+                        tiendaSeleccionada.tienda.id,
+                        tiendaSeleccionada.plazoRecojoTexto,
+                    )
                 }
 
                 _uiState.update {
@@ -157,7 +163,7 @@ class CheckoutSummaryViewModel @Inject constructor(
     fun onTiendaRecojoChanged(tienda: TiendaCartConDistancia) {
         if (_uiState.value.tiendaRecojoSeleccionada?.tienda?.id == tienda.tienda.id) return
         _uiState.update { it.copy(tiendaRecojoSeleccionada = tienda) }
-        checkoutSessionRepository.actualizarTiendaRecojo(tienda.tienda.id)
+        checkoutSessionRepository.actualizarTiendaRecojo(tienda.tienda.id, tienda.plazoRecojoTexto)
     }
 
     fun onCuponInputChanged(input: String) {

@@ -280,6 +280,14 @@ fun CheckoutDeliveryScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
+                            state.plazoRecojo?.let { plazo ->
+                                Text(
+                                    text = plazo,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
                             Text(
                                 text = "Costo de entrega: ¡Gratis!",
                                 style = MaterialTheme.typography.labelMedium,

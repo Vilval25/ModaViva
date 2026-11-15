@@ -19,6 +19,9 @@ class CheckoutSessionRepository @Inject constructor() {
     private val _tiendaRecojoId = MutableStateFlow<String?>(null)
     val tiendaRecojoId: StateFlow<String?> = _tiendaRecojoId.asStateFlow()
 
+    private val _plazoRecojo = MutableStateFlow<String?>(null)
+    val plazoRecojo: StateFlow<String?> = _plazoRecojo.asStateFlow()
+
     private val _tipoEntrega = MutableStateFlow("delivery") // "delivery" | "recojo"
     val tipoEntrega: StateFlow<String> = _tipoEntrega.asStateFlow()
 
@@ -56,8 +59,9 @@ class CheckoutSessionRepository @Inject constructor() {
         _destinoActual.value = destino
     }
 
-    fun actualizarTiendaRecojo(tiendaId: String?) {
+    fun actualizarTiendaRecojo(tiendaId: String?, plazoRecojo: String? = null) {
         _tiendaRecojoId.value = tiendaId
+        _plazoRecojo.value = plazoRecojo
     }
 
     fun guardarResumenCalculo(
@@ -91,6 +95,7 @@ class CheckoutSessionRepository @Inject constructor() {
     fun limpiarDestino() {
         _destinoActual.value = null
         _tiendaRecojoId.value = null
+        _plazoRecojo.value = null
         _subtotal.value = 0.0
         _descuentoTotal.value = 0.0
         _costoEnvio.value = 0.0
