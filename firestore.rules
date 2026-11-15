@@ -53,6 +53,12 @@ service cloud.firestore {
       match /metodosPago/{tarjetaId} {
         allow read, write: if isOwner(uid);
       }
+
+      // Caché de imágenes generadas por el probador virtual (escritura solo desde Cloud Functions)
+      match /probadorCache/{prendaId} {
+        allow read, delete: if isOwner(uid);
+        allow write: if false;
+      }
     }
 
     // --- Catálogo: lectura pública, escritura solo desde el back-office ---
