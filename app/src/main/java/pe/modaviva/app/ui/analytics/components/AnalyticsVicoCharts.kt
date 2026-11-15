@@ -188,6 +188,7 @@ private fun TryOnVsPurchasedChartCard(
                 rememberColumnCartesianLayer(columnProvider = columnProvider),
                 startAxis = VerticalAxis.rememberStart(
                     valueFormatter = integerAxisFormatter(),
+                    itemPlacer = remember { VerticalAxis.ItemPlacer.step(step = { 1.0 }) },
                 ),
                 bottomAxis = HorizontalAxis.rememberBottom(
                     valueFormatter = monthAxisFormatter(),
@@ -311,9 +312,9 @@ private fun monthAxisFormatter(): CartesianValueFormatter =
         val labels = context.model.extraStore.getOrNull(LabelsMesKey).orEmpty()
         val index = value.roundToInt()
         if (abs(value - index) > 0.01) {
-            " "
+            "–"
         } else {
-            labels.getOrNull(index) ?: " "
+            labels.getOrNull(index)?.takeIf { it.isNotBlank() } ?: "–"
         }
     }
 
@@ -324,6 +325,5 @@ private fun solesAxisFormatter(): CartesianValueFormatter =
 
 private fun integerAxisFormatter(): CartesianValueFormatter =
     CartesianValueFormatter { _, value, _ ->
-        val rounded = value.roundToInt()
-        if (abs(value - rounded) > 0.01) " " else rounded.toString()
+        value.roundToInt().toString()
     }
