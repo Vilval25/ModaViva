@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
@@ -37,6 +36,7 @@ import pe.modaviva.app.ui.components.MvGarmentCard
 import pe.modaviva.app.ui.components.MvLoadingState
 import pe.modaviva.app.ui.components.MvPrimaryButton
 import pe.modaviva.app.ui.components.MvScreen
+import pe.modaviva.app.ui.components.MvSnackbarHost
 
 /**
  * Favoritos (HU-08): cuadrícula de las prendas guardadas, de la más reciente
@@ -60,7 +60,7 @@ fun FavoritesScreen(
     MvScreen(
         title = stringResource(R.string.favorites_title),
         onBack = onBack,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { MvSnackbarHost(snackbarHostState) },
     ) { padding ->
         val modifier = Modifier
             .fillMaxSize()

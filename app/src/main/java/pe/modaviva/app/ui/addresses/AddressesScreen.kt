@@ -37,7 +37,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -60,6 +59,7 @@ import pe.modaviva.app.domain.model.DireccionEntrega
 import pe.modaviva.app.domain.model.TarifaEnvio
 import pe.modaviva.app.ui.components.MvConfirmDialog
 import pe.modaviva.app.ui.components.MvPrimaryButton
+import pe.modaviva.app.ui.components.MvSnackbarHost
 import pe.modaviva.app.ui.format.formatearSoles
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,7 +107,7 @@ fun AddressesScreen(
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Agregar dirección")
             }
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { MvSnackbarHost(snackbarHostState) },
     ) { padding ->
         Box(
             modifier = Modifier

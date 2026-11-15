@@ -1,6 +1,5 @@
 package pe.modaviva.app.ui.components
 
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,5 +21,5 @@ fun MvFormErrors(
         }
     }
 
-    SnackbarHost(hostState = snackbarHostState, modifier = modifier)
+    MvSnackbarHost(hostState = snackbarHostState, modifier = modifier)
 }

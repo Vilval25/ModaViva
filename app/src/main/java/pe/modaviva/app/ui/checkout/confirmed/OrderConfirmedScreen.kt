@@ -30,7 +30,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -55,6 +54,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import pe.modaviva.app.domain.model.EstadoPedido
 import pe.modaviva.app.domain.model.Pedido
 import pe.modaviva.app.domain.repository.OrderRepository
+import pe.modaviva.app.ui.components.MvSnackbarHost
 import pe.modaviva.app.ui.format.formatearSoles
 import javax.inject.Inject
 
@@ -78,7 +78,7 @@ fun OrderConfirmedScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { MvSnackbarHost(snackbarHostState) },
     ) { padding ->
         if (cargando) {
             Box(

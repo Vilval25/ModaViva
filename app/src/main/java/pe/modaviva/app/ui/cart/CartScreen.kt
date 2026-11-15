@@ -33,7 +33,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
@@ -62,6 +61,7 @@ import kotlinx.coroutines.launch
 import pe.modaviva.app.R
 import pe.modaviva.app.ui.components.MvEmptyState
 import pe.modaviva.app.ui.components.MvPrimaryButton
+import pe.modaviva.app.ui.components.MvSnackbarHost
 import pe.modaviva.app.ui.format.formatearSoles
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -106,7 +106,7 @@ fun CartScreen(
                 )
             }
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { MvSnackbarHost(snackbarHostState) },
     ) { padding ->
         Box(
             modifier = Modifier

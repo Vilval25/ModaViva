@@ -48,7 +48,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -78,6 +77,7 @@ import pe.modaviva.app.domain.model.HitoPedido
 import pe.modaviva.app.domain.model.ItemPedido
 import pe.modaviva.app.domain.model.Pedido
 import pe.modaviva.app.domain.model.TipoMedioPago
+import pe.modaviva.app.ui.components.MvSnackbarHost
 import pe.modaviva.app.ui.format.formatearSoles
 import pe.modaviva.app.ui.orders.components.ChipEstadoPedido
 import java.time.Instant
@@ -128,7 +128,7 @@ fun OrderDetailScreen(
                 },
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { MvSnackbarHost(snackbarHostState) },
     ) { padding ->
         if (state.cargando) {
             Box(

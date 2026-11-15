@@ -62,8 +62,8 @@ import pe.modaviva.app.ui.session.dialogs.PersonalDataDialog
 import pe.modaviva.app.ui.session.dialogs.ResetPasswordDialog
 import pe.modaviva.app.ui.fitting.components.HeightDialog
 
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import pe.modaviva.app.ui.components.MvSnackbarHost
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 
@@ -295,7 +295,7 @@ fun SessionScreen(
             }
         }
 
-        SnackbarHost(
+        MvSnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)

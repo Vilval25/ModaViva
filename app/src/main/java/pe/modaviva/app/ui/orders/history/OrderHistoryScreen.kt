@@ -34,7 +34,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,6 +55,7 @@ import pe.modaviva.app.domain.model.Pedido
 import pe.modaviva.app.ui.analytics.AnalyticsDashboardContent
 import pe.modaviva.app.ui.components.MvEmptyState
 import pe.modaviva.app.ui.components.MvScreen
+import pe.modaviva.app.ui.components.MvSnackbarHost
 import pe.modaviva.app.ui.format.formatearSoles
 import pe.modaviva.app.ui.orders.components.ChipEstadoPedido
 import java.time.Instant
@@ -82,7 +82,7 @@ fun OrderHistoryScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets(0),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { MvSnackbarHost(snackbarHostState) },
         modifier = modifier,
     ) { innerPadding ->
         MvScreen(

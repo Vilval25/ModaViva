@@ -31,7 +31,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -70,6 +69,7 @@ import pe.modaviva.app.ui.components.MvGarmentCard
 import pe.modaviva.app.ui.components.MvGarmentCardSkeleton
 import pe.modaviva.app.ui.components.MvOfflineBanner
 import pe.modaviva.app.ui.components.MvOfflineState
+import pe.modaviva.app.ui.components.MvSnackbarHost
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -121,7 +121,7 @@ fun HomeScreen(
                 cartItemCount = conteoCarrito,
             )
         },
-        snackbarHost = { SnackbarHost(snackbar) },
+        snackbarHost = { MvSnackbarHost(snackbar) },
     ) { padding ->
         HomeContent(
             state = state,
