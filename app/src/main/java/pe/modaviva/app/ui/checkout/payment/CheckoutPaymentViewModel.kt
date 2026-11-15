@@ -15,6 +15,7 @@ import pe.modaviva.app.domain.model.ItemPedido
 import pe.modaviva.app.domain.model.Pedido
 import pe.modaviva.app.domain.model.TarjetaGuardada
 import pe.modaviva.app.domain.model.TipoMedioPago
+import pe.modaviva.app.domain.repository.AnalyticsRepository
 import pe.modaviva.app.domain.repository.CatalogoRepository
 import pe.modaviva.app.domain.repository.OrderRepository
 import pe.modaviva.app.domain.repository.SessionRepository
@@ -48,6 +49,7 @@ class CheckoutPaymentViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val tiendaRepository: TiendaRepository,
     private val catalogoRepository: CatalogoRepository,
+    private val analyticsRepository: AnalyticsRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CheckoutPaymentUiState())
@@ -190,6 +192,12 @@ class CheckoutPaymentViewModel @Inject constructor(
                 val tiendas = tiendaRepository.observarTiendas().first()
                 val tiendaSeleccionada = tiendas.firstOrNull { it.id == tiendaId }
 
+                val codigosProbados = runCatching {
+                    analyticsRepository.observarPruebasVirtuales().first()
+                        .map { it.prendaCodigo }
+                        .toSet()
+                }.getOrDefault(emptySet())
+
                 val itemsCalculados = checkoutSessionRepository.itemsCalculados.value
                 val itemsPedido = itemsCalculados.map {
                     ItemPedido(
@@ -201,7 +209,7 @@ class CheckoutPaymentViewModel @Inject constructor(
                         cantidad = it.cantidadAprobada,
                         precioUnitario = it.precioUnitario,
                         subtotal = it.subtotal,
-                        usoProbadorVirtual = false,
+                        usoProbadorVirtual = it.codigo in codigosProbados,
                     )
                 }
 

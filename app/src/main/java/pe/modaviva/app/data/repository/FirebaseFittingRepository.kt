@@ -299,6 +299,23 @@ class FirebaseFittingRepository @Inject constructor(
                     borrarSiExiste(storage.reference.child("clientes/${user.uid}/probador/$archivo"))
                 }
 
+                // Borrar también imágenes generadas por Genlook en resultados/ y su caché en Firestore (HU-17)
+                runCatching {
+                    val resultados = storage.reference
+                        .child("clientes/${user.uid}/probador/resultados")
+                        .listAll()
+                        .await()
+                    resultados.items.forEach { borrarSiExiste(it) }
+                }
+                runCatching {
+                    val cacheDocs = firestore.collection("clientes")
+                        .document(user.uid)
+                        .collection("probadorCache")
+                        .get()
+                        .await()
+                    cacheDocs.documents.forEach { it.reference.delete().await() }
+                }
+
                 val cambios = buildMap<String, Any> {
                     EliminacionFotoFirestore.CAMPOS_BORRADOS.forEach { put(it, FieldValue.delete()) }
                     put(EliminacionFotoFirestore.CAMPO_REGISTRO, FieldValue.serverTimestamp())

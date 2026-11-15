@@ -10,9 +10,13 @@ import pe.modaviva.app.data.repository.FirebaseAuthRepository
 import pe.modaviva.app.data.repository.FirestoreAnalyticsRepository
 import pe.modaviva.app.data.repository.FirebaseBackendRepository
 import pe.modaviva.app.data.repository.FirestoreCatalogoRepository
+import pe.modaviva.app.data.repository.FirebaseChatAssistantRepository
 import pe.modaviva.app.data.repository.FirebaseFittingConfigRepository
 import pe.modaviva.app.data.repository.FirebaseFittingRepository
+import pe.modaviva.app.data.repository.FirebaseTryOnRepository
+import pe.modaviva.app.domain.repository.ChatAssistantRepository
 import pe.modaviva.app.domain.repository.FittingRepository
+import pe.modaviva.app.domain.repository.TryOnRepository
 import pe.modaviva.app.data.repository.FirestoreDireccionRepository
 import pe.modaviva.app.data.repository.FirestoreOrderRepository
 import pe.modaviva.app.domain.repository.OrderRepository
@@ -125,4 +129,16 @@ abstract class RepositoryModule {
     abstract fun bindAnalyticsRepository(
         impl: FirestoreAnalyticsRepository,
     ): AnalyticsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTryOnRepository(
+        impl: FirebaseTryOnRepository,
+    ): TryOnRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindChatAssistantRepository(
+        impl: FirebaseChatAssistantRepository,
+    ): ChatAssistantRepository
 }
