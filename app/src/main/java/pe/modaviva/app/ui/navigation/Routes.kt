@@ -8,7 +8,6 @@ object Routes {
     const val LOGIN = "login"
     const val REGISTER = "register"
     const val EMAIL_VERIFY = "email_verify/{email}"
-    const val SEARCH = "search"
     const val FAVORITES = "favorites"
     const val NOTIFICATIONS = "notifications"
     const val CART = "cart"

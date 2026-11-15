@@ -42,7 +42,6 @@ import pe.modaviva.app.ui.auth.login.LoginScreen
 import pe.modaviva.app.ui.auth.register.RegisterScreen
 import pe.modaviva.app.ui.auth.verify.EmailVerifyScreen
 import pe.modaviva.app.ui.cart.CartScreen
-import pe.modaviva.app.ui.categories.CategoriesScreen
 import pe.modaviva.app.ui.checkout.confirmed.OrderConfirmedScreen
 import pe.modaviva.app.ui.checkout.delivery.CheckoutDeliveryScreen
 import pe.modaviva.app.ui.checkout.payment.CheckoutPaymentScreen
@@ -200,7 +199,6 @@ private fun NavGraphBuilder.topLevelGraph(
                     navController.navigate(Routes.NOTIFICATIONS)
                 }
             },
-            onSearchClick = { navController.navigate(Routes.SEARCH) },
             onFavoritesClick = {
                 requireAuth(favoritesPrompt) {
                     navController.navigate(Routes.FAVORITES)
@@ -210,27 +208,25 @@ private fun NavGraphBuilder.topLevelGraph(
                 navController.navigate(Routes.CART)
             },
             onPrendaClick = { codigo -> navController.navigate(Routes.prenda(codigo)) },
-            // La portada abre la búsqueda filtrada por su marca o, si no
-            // tiene, Categorías en su categoría. Mujer/Hombre/Niños abren
-            // Categorías en ese público, como tocar su tarjeta allí.
+            // La portada abre Buscar filtrada por marca o categoría; Mujer/Hombre/Niños
+            // abren Buscar filtrada por ese público.
             onPortadaClick = { portada ->
                 val marca = portada.marca
                 if (marca != null) {
-                    navController.navigate(Routes.SEARCH)
-                    navController.currentBackStackEntry?.savedStateHandle?.set(FILTRO_MARCA, marca)
+                    navController.abrirBusqueda(FILTRO_MARCA, marca)
                 } else {
-                    navController.abrirCategorias(FILTRO_CATEGORIA, portada.categoria)
+                    navController.abrirBusqueda(FILTRO_CATEGORIA, portada.categoria)
                 }
             },
             onAudienciaClick = { genero ->
-                navController.abrirCategorias(FILTRO_GENERO, genero)
+                navController.abrirBusqueda(FILTRO_GENERO, genero)
             },
         )
     }
-    composable(TopLevelDestination.CATEGORIES.route) { entry ->
+    composable(TopLevelDestination.SEARCH.route) { entry ->
         val viewModel: SearchViewModel = hiltViewModel()
         AplicarFiltroInicial(entry, viewModel)
-        CategoriesScreen(
+        SearchScreen(
             onPrendaClick = { codigo ->
                 navController.navigate(Routes.prenda(codigo))
             },
@@ -272,17 +268,6 @@ private fun NavGraphBuilder.overlayGraph(
     requireAuth: (String, () -> Unit) -> Unit,
     cartPrompt: String,
 ) {
-    composable(Routes.SEARCH) { entry ->
-        val viewModel: SearchViewModel = hiltViewModel()
-        AplicarFiltroInicial(entry, viewModel)
-        SearchScreen(
-            onBack = { navController.popBackStack() },
-            onPrendaClick = { codigo ->
-                navController.navigate(Routes.prenda(codigo))
-            },
-            viewModel = viewModel,
-        )
-    }
     composable(Routes.FAVORITES) {
         FavoritesScreen(
             onBack = { navController.popBackStack() },
@@ -508,10 +493,10 @@ private fun AplicarFiltroInicial(entry: NavBackStackEntry, viewModel: SearchView
     }
 }
 
-/** Abre la pestaña Categorías con un filtro ya aplicado (ver AplicarFiltroInicial). */
-private fun NavHostController.abrirCategorias(filtro: String, valor: String) {
-    navigateToTab(TopLevelDestination.CATEGORIES)
-    getBackStackEntry(TopLevelDestination.CATEGORIES.route).savedStateHandle[filtro] = valor
+/** Abre la pestaña Buscar con un filtro ya aplicado (ver AplicarFiltroInicial). */
+private fun NavHostController.abrirBusqueda(filtro: String, valor: String) {
+    navigateToTab(TopLevelDestination.SEARCH)
+    getBackStackEntry(TopLevelDestination.SEARCH.route).savedStateHandle[filtro] = valor
 }
 
 /**

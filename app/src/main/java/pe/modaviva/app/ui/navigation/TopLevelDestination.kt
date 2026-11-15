@@ -4,21 +4,21 @@ import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
-import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Checkroom
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.ui.graphics.vector.ImageVector
 import pe.modaviva.app.R
 
 /**
- * Pestañas de la barra inferior, en el orden de HT-01 CA-04: el Probador,
- * propuesta central de la app, va al medio y Perfil al final. El ícono
- * relleno marca la pestaña actual y el delineado las demás.
+ * Pestañas de la barra inferior: Inicio, Buscar (explorar + categorías),
+ * Probador (al centro), Pedidos y Perfil. El ícono relleno marca la pestaña
+ * actual y el delineado las demás.
  */
 enum class TopLevelDestination(
     val route: String,
@@ -32,11 +32,11 @@ enum class TopLevelDestination(
         Icons.Filled.Home,
         Icons.Outlined.Home,
     ),
-    CATEGORIES(
-        "categories",
-        R.string.tab_categories,
-        Icons.Filled.GridView,
-        Icons.Outlined.GridView,
+    SEARCH(
+        "search",
+        R.string.tab_search,
+        Icons.Filled.Search,
+        Icons.Outlined.Search,
     ),
     FITTING(
         "fitting",

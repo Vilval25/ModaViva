@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.stateIn
 import pe.modaviva.app.domain.model.Prenda
 import pe.modaviva.app.domain.repository.CatalogoRepository
 import java.text.Normalizer
+import java.time.Instant
 
 private data class FiltrosA(
     val texto: String,
@@ -20,6 +21,7 @@ private data class FiltrosA(
     val subcategoria: String?,
     val genero: String?,
     val marca: String?,
+    val soloOfertas: Boolean = false,
 )
 
 private data class FiltrosB(
@@ -79,6 +81,9 @@ class SearchViewModel @Inject constructor(
 
     private val _ordenSeleccionado = MutableStateFlow("Relevancia")
     val ordenSeleccionado: StateFlow<String> = _ordenSeleccionado
+
+    private val _soloOfertas = MutableStateFlow(false)
+    val soloOfertas: StateFlow<Boolean> = _soloOfertas
 
     val precioMinimo: StateFlow<Double> = catalogo.prendas
         .map { prendas -> prendas.minOfOrNull { it.precio } ?: 0.0 }
@@ -162,6 +167,8 @@ class SearchViewModel @Inject constructor(
         _marcaSeleccionada,
     ) { texto, categoria, subcategoria, genero, marca ->
         FiltrosA(texto, categoria, subcategoria, genero, marca)
+    }.combine(_soloOfertas) { filtros, soloOfertas ->
+        filtros.copy(soloOfertas = soloOfertas)
     }
 
     private val filtrosB = combine(
@@ -182,6 +189,7 @@ class SearchViewModel @Inject constructor(
     ) { prendas, a, b, orden, pagina ->
 
         val consulta = normalizarTexto(a.texto.trim())
+        val ahora = Instant.now()
 
         val filtradas = prendas.filter { prenda ->
 
@@ -210,6 +218,8 @@ class SearchViewModel @Inject constructor(
             val coincideMarca = a.marca == null ||
                     prenda.marca.equals(a.marca, ignoreCase = true)
 
+            val coincideOferta = !a.soloOfertas || prenda.enPromocion(ahora)
+
             val coincidePrecio =
                 (b.precioMin == null || prenda.precio >= b.precioMin) &&
                         (b.precioMax == null || prenda.precio <= b.precioMax)
@@ -225,6 +235,7 @@ class SearchViewModel @Inject constructor(
                     coincideSubcategoria &&
                     coincideGenero &&
                     coincideMarca &&
+                    coincideOferta &&
                     coincidePrecio &&
                     coincideTalla &&
                     coincideColor
@@ -306,6 +317,11 @@ class SearchViewModel @Inject constructor(
         _hayMasResultados.value = true
     }
 
+    fun seleccionarSoloOfertas(activo: Boolean) {
+        _soloOfertas.value = activo
+        reiniciarPaginacion()
+    }
+
     fun limpiarFiltros() {
         _categoriaSeleccionada.value = null
         _subcategoriaSeleccionada.value = null
@@ -315,6 +331,8 @@ class SearchViewModel @Inject constructor(
         _colorSeleccionado.value = null
         _precioMinSeleccionado.value = null
         _precioMaxSeleccionado.value = null
+        _soloOfertas.value = false
+        reiniciarPaginacion()
     }
 
     fun seleccionarOrden(orden: String) {

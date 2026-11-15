@@ -1,39 +1,41 @@
 package pe.modaviva.app.ui.search
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.SearchOff
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -43,23 +45,27 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import pe.modaviva.app.domain.model.Prenda
+import pe.modaviva.app.ui.components.GarmentImagePlaceholder
+import pe.modaviva.app.ui.components.MvEmptyState
 import pe.modaviva.app.ui.components.MvGarmentCard
 import pe.modaviva.app.ui.favorites.LocalFavoritos
 import pe.modaviva.app.ui.format.formatearSoles
+import pe.modaviva.app.ui.search.components.ExploreQuickAccess
+import pe.modaviva.app.ui.search.components.SearchControlsSection
+import pe.modaviva.app.ui.search.components.SearchEditorialBar
+import pe.modaviva.app.ui.search.components.SearchFiltersSheet
+import pe.modaviva.app.ui.search.components.SearchSortSheet
 import java.time.Clock
 import java.time.Instant
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.material3.RangeSlider
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.material3.CircularProgressIndicator
 
-
+/**
+ * Pestaña unificada de búsqueda y exploración por categorías/públicos.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
-    onBack: () -> Unit,
     onPrendaClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val textoBusqueda by viewModel.textoBusqueda.collectAsStateWithLifecycle()
@@ -75,18 +81,30 @@ fun SearchScreen(
     val marcas by viewModel.marcas.collectAsStateWithLifecycle()
     val marcaSeleccionada by viewModel.marcaSeleccionada.collectAsStateWithLifecycle()
     val tallas by viewModel.tallas.collectAsStateWithLifecycle()
-
     val tallaSeleccionada by viewModel.tallaSeleccionada.collectAsStateWithLifecycle()
-
     val colores by viewModel.colores.collectAsStateWithLifecycle()
     val colorSeleccionado by viewModel.colorSeleccionado.collectAsStateWithLifecycle()
-
     val precioMinimo by viewModel.precioMinimo.collectAsStateWithLifecycle()
     val precioMaximo by viewModel.precioMaximo.collectAsStateWithLifecycle()
+    val precioMinSeleccionado by viewModel.precioMinSeleccionado.collectAsStateWithLifecycle()
+    val precioMaxSeleccionado by viewModel.precioMaxSeleccionado.collectAsStateWithLifecycle()
+    val ordenSeleccionado by viewModel.ordenSeleccionado.collectAsStateWithLifecycle()
+    val soloOfertas by viewModel.soloOfertas.collectAsStateWithLifecycle()
 
+    var verTodo by rememberSaveable { mutableStateOf(false) }
     var mostrarFiltros by remember { mutableStateOf(false) }
+    var mostrarOrden by remember { mutableStateOf(false) }
+    var rangoPrecio by remember { mutableStateOf(0f..0f) }
+
     val gridState = rememberLazyGridState()
     var usuarioDesplazo by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    LaunchedEffect(precioMinimo, precioMaximo) {
+        if (precioMaximo > precioMinimo) {
+            rangoPrecio = precioMinimo.toFloat()..precioMaximo.toFloat()
+        }
+    }
 
     LaunchedEffect(resultados, cargandoMas) {
         if (cargandoMas) {
@@ -97,14 +115,9 @@ fun SearchScreen(
     LaunchedEffect(gridState) {
         snapshotFlow {
             gridState.firstVisibleItemIndex to
-                    gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
+                gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
         }.collect { (primerIndice, ultimoIndice) ->
-
-            if (primerIndice > 0) {
-                usuarioDesplazo = true
-            }
-
-
+            if (primerIndice > 0) usuarioDesplazo = true
             if (
                 usuarioDesplazo &&
                 hayMasResultados &&
@@ -115,443 +128,224 @@ fun SearchScreen(
             ) {
                 viewModel.cargarSiguientePagina()
             }
-
         }
     }
 
-    var rangoPrecio by remember {
-        mutableStateOf(0f..0f)
+    val cantidadFiltrosAvanzados = listOfNotNull(
+        marcaSeleccionada,
+        tallaSeleccionada,
+        colorSeleccionado,
+        precioMinSeleccionado ?: precioMaxSeleccionado,
+    ).size
+
+    val hayFiltrosActivos = soloOfertas ||
+        categoriaSeleccionada != null ||
+        subcategoriaSeleccionada != null ||
+        generoSeleccionado != null ||
+        cantidadFiltrosAvanzados > 0
+
+    val mostrarResultados = verTodo ||
+        textoBusqueda.isNotBlank() ||
+        hayFiltrosActivos ||
+        ordenSeleccionado != "Relevancia"
+
+    fun limpiarTodo() {
+        viewModel.actualizarBusqueda("")
+        viewModel.limpiarFiltros()
+        viewModel.seleccionarOrden("Relevancia")
+        verTodo = false
     }
 
-    LaunchedEffect(precioMinimo, precioMaximo) {
-        if (precioMaximo > precioMinimo) {
-            rangoPrecio = precioMinimo.toFloat()..precioMaximo.toFloat()
-        }
+    BackHandler(enabled = mostrarResultados) {
+        limpiarTodo()
     }
 
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-    )
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .statusBarsPadding(),
+    ) {
+        SearchEditorialBar(
+            query = textoBusqueda,
+            onQueryChange = viewModel::actualizarBusqueda,
+            onClearQuery = { viewModel.actualizarBusqueda("") },
+            modifier = Modifier.padding(top = 8.dp, bottom = 10.dp),
+        )
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    OutlinedTextField(
-                        value = textoBusqueda,
-                        onValueChange = viewModel::actualizarBusqueda,
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = {
-                            Text("Buscar prendas")
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Search,
-                                contentDescription = null,
-                            )
-                        },
-                        singleLine = true,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = "Volver",
-                        )
-                    }
-                },
+        SearchControlsSection(
+            mostrarVolverExplorar = mostrarResultados,
+            onBackToExplore = ::limpiarTodo,
+            cantidadFiltrosActivos = cantidadFiltrosAvanzados,
+            ordenSeleccionado = ordenSeleccionado,
+            hayFiltrosOBusqueda = textoBusqueda.isNotBlank() || hayFiltrosActivos || ordenSeleccionado != "Relevancia",
+            onOpenFilters = { mostrarFiltros = true },
+            onOpenSort = { mostrarOrden = true },
+            onClearAll = ::limpiarTodo,
+            categorias = categorias,
+            categoriaSeleccionada = categoriaSeleccionada,
+            subcategorias = subcategorias,
+            subcategoriaSeleccionada = subcategoriaSeleccionada,
+            onSelectCategoria = viewModel::seleccionarCategoria,
+            onSelectSubcategoria = viewModel::seleccionarSubcategoria,
+        )
+
+        ActiveExtraFilterChips(
+            soloOfertas = soloOfertas,
+            generoSeleccionado = generoSeleccionado,
+            marcaSeleccionada = marcaSeleccionada,
+            tallaSeleccionada = tallaSeleccionada,
+            colorSeleccionado = colorSeleccionado,
+            onClearOfertas = { viewModel.seleccionarSoloOfertas(false) },
+            onClearGenero = { viewModel.seleccionarGenero(null) },
+            onClearMarca = { viewModel.seleccionarMarca(null) },
+            onClearTalla = { viewModel.seleccionarTalla(null) },
+            onClearColor = { viewModel.seleccionarColor(null) },
+        )
+
+        if (!mostrarResultados) {
+            ExploreQuickAccess(
+                generos = generos,
+                categorias = categorias,
+                onOfertasClick = { viewModel.seleccionarSoloOfertas(true) },
+                onGeneroClick = { genero -> viewModel.seleccionarGenero(genero) },
+                onVerTodoClick = { verTodo = true },
             )
-        },
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-
-        ) {
-
-            var mostrarOrden by remember { mutableStateOf(false) }
-
-            Row(
+        } else if (resultados.isEmpty()) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    .fillMaxSize()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                Button(
-                    onClick = { mostrarFiltros = true },
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text("Filtros")
-                }
-
-                Button(
-                    onClick = { mostrarOrden = true },
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text("Ordenar")
-                }
-            }
-
-            if (mostrarOrden) {
-                ModalBottomSheet(
-                    onDismissRequest = { mostrarOrden = false },
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Text(
-                            text = "Ordenar por",
-                            style = MaterialTheme.typography.titleLarge,
-                        )
-
-                        Button(
-                            onClick = {
-                                viewModel.seleccionarOrden("Precio menor a mayor")
-                                mostrarOrden = false
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text("Precio: menor a mayor")
-                        }
-
-                        Button(
-                            onClick = {
-                                viewModel.seleccionarOrden("Precio mayor a menor")
-                                mostrarOrden = false
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text("Precio: mayor a menor")
-                        }
-
-                        Button(
-                            onClick = {
-                                viewModel.seleccionarOrden("Más recientes")
-                                mostrarOrden = false
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text("Más recientes")
-                        }
-                    }
-                }
-            }
-
-            if (
-                categoriaSeleccionada != null ||
-                subcategoriaSeleccionada != null ||
-                generoSeleccionado != null ||
-                marcaSeleccionada != null ||
-                tallaSeleccionada != null ||
-                colorSeleccionado != null
-            ) {
-
-                Button(
-                    onClick = {
-                        viewModel.limpiarFiltros()
+                MvEmptyState(
+                    icon = Icons.Outlined.SearchOff,
+                    title = "Sin resultados",
+                    message = if (textoBusqueda.isNotBlank()) {
+                        "No encontramos prendas para \"$textoBusqueda\"."
+                    } else {
+                        "No encontramos prendas con los filtros seleccionados."
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                ) {
-                    Text("Limpiar filtros")
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-
-                    if (categoriaSeleccionada != null) {
-                        FilterChip(
-                            selected = true,
-                            onClick = {
-                                viewModel.seleccionarCategoria(null)
-                            },
-                            label = {
-                                Text("Categoría: $categoriaSeleccionada")
-                            },
-                        )
-                    }
-
-                    if (subcategoriaSeleccionada != null) {
-                        FilterChip(
-                            selected = true,
-                            onClick = {
-                                viewModel.seleccionarSubcategoria(null)
-                            },
-                            label = {
-                                Text("Subcategoría: $subcategoriaSeleccionada")
-                            },
-                        )
-                    }
-
-                    if (generoSeleccionado != null) {
-                        FilterChip(
-                            selected = true,
-                            onClick = {
-                                viewModel.seleccionarGenero(null)
-                            },
-                            label = {
-                                Text("Género: $generoSeleccionado")
-                            },
-                        )
-                    }
-
-                    if (marcaSeleccionada != null) {
-                        FilterChip(
-                            selected = true,
-                            onClick = {
-                                viewModel.seleccionarMarca(null)
-                            },
-                            label = {
-                                Text("Marca: $marcaSeleccionada")
-                            },
-                        )
-                    }
-
-                    if (tallaSeleccionada != null) {
-                        FilterChip(
-                            selected = true,
-                            onClick = {
-                                viewModel.seleccionarTalla(null)
-                            },
-                            label = {
-                                Text("Talla: $tallaSeleccionada")
-                            },
-                        )
-                    }
-
-                    if (colorSeleccionado != null) {
-                        FilterChip(
-                            selected = true,
-                            onClick = {
-                                viewModel.seleccionarColor(null)
-                            },
-                            label = {
-                                Text("Color: $colorSeleccionado")
-                            },
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
+                )
             }
-
-            if (resultados.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    verticalArrangement = Arrangement.Center,
-                ) {
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                state = gridState,
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 28.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     Text(
-                        text = if (textoBusqueda.isNotBlank()) {
-                            "No encontramos prendas para \"$textoBusqueda\""
-                        } else {
-                            "No encontramos prendas con los filtros seleccionados"
-                        },
-                        style = MaterialTheme.typography.titleMedium,
+                        text = "${resultados.size} prenda${if (resultados.size == 1) "" else "s"}",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-            } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 160.dp),
-                    state = gridState,
-                    contentPadding = PaddingValues(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    items(
-                        items = resultados,
-                        key = { it.codigo },
-                    ) { prenda ->
-                        TarjetaResultado(
-                            prenda = prenda,
-                            onClick = {
-                                onPrendaClick(prenda.codigo)
-                            },
-                        )
-                    }
 
-                    if (cargandoMas) {
-                        item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.Center,
-                            ) {
-                                CircularProgressIndicator()
-                            }
+                items(items = resultados, key = { it.codigo }) { prenda ->
+                    TarjetaResultado(
+                        prenda = prenda,
+                        onClick = { onPrendaClick(prenda.codigo) },
+                    )
+                }
+
+                if (cargandoMas) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            CircularProgressIndicator()
                         }
                     }
                 }
             }
         }
+    }
+
+    if (mostrarOrden) {
+        SearchSortSheet(
+            ordenSeleccionado = ordenSeleccionado,
+            onSelectOrden = { orden ->
+                viewModel.seleccionarOrden(orden)
+                mostrarOrden = false
+            },
+            onDismiss = { mostrarOrden = false },
+        )
     }
 
     if (mostrarFiltros) {
-        ModalBottomSheet(
-            onDismissRequest = {
-                mostrarFiltros = false
-            },
+        SearchFiltersSheet(
             sheetState = sheetState,
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                Text(
-                    text = "Marca",
-                    style = MaterialTheme.typography.titleMedium,
+            marcas = marcas,
+            marcaSeleccionada = marcaSeleccionada,
+            onSelectMarca = viewModel::seleccionarMarca,
+            precioMinimo = precioMinimo,
+            precioMaximo = precioMaximo,
+            rangoPrecio = rangoPrecio,
+            onRangoPrecioChange = { nuevoRango ->
+                rangoPrecio = nuevoRango
+                viewModel.seleccionarRangoPrecio(
+                    nuevoRango.start.toDouble(),
+                    nuevoRango.endInclusive.toDouble(),
                 )
+            },
+            tallas = tallas,
+            tallaSeleccionada = tallaSeleccionada,
+            onSelectTalla = viewModel::seleccionarTalla,
+            colores = colores,
+            colorSeleccionado = colorSeleccionado,
+            onSelectColor = viewModel::seleccionarColor,
+            onDismiss = { mostrarFiltros = false },
+        )
+    }
+}
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    FilterChip(
-                        selected = marcaSeleccionada == null,
-                        onClick = {
-                            viewModel.seleccionarMarca(null)
-                        },
-                        label = {
-                            Text("Todas")
-                        },
+@Composable
+private fun ActiveExtraFilterChips(
+    soloOfertas: Boolean,
+    generoSeleccionado: String?,
+    marcaSeleccionada: String?,
+    tallaSeleccionada: String?,
+    colorSeleccionado: String?,
+    onClearOfertas: () -> Unit,
+    onClearGenero: () -> Unit,
+    onClearMarca: () -> Unit,
+    onClearTalla: () -> Unit,
+    onClearColor: () -> Unit,
+) {
+    val filtros = listOfNotNull(
+        if (soloOfertas) "Ofertas" to onClearOfertas else null,
+        generoSeleccionado?.let { "Público: ${it.replaceFirstChar(Char::uppercase)}" to onClearGenero },
+        marcaSeleccionada?.let { "Marca: $it" to onClearMarca },
+        tallaSeleccionada?.let { "Talla: $it" to onClearTalla },
+        colorSeleccionado?.let { "Color: $it" to onClearColor },
+    )
+    if (filtros.isEmpty()) return
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        filtros.forEach { (etiqueta, onClear) ->
+            FilterChip(
+                selected = true,
+                onClick = onClear,
+                label = { Text(etiqueta) },
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = "Quitar $etiqueta",
                     )
-
-                    marcas.forEach { marca ->
-                        FilterChip(
-                            selected = marcaSeleccionada == marca,
-                            onClick = {
-                                viewModel.seleccionarMarca(marca)
-                            },
-                            label = {
-                                Text(marca)
-                            },
-                        )
-                    }
-                }
-
-                Text(
-                    text = "Rango de precio",
-                    style = MaterialTheme.typography.titleMedium,
-                )
-
-                Text(
-                    text = "S/ ${"%.2f".format(rangoPrecio.start)} - S/ ${"%.2f".format(rangoPrecio.endInclusive)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-
-                RangeSlider(
-                    value = rangoPrecio,
-                    onValueChange = { nuevoRango ->
-                        rangoPrecio = nuevoRango
-
-                        viewModel.seleccionarRangoPrecio(
-                            nuevoRango.start.toDouble(),
-                            nuevoRango.endInclusive.toDouble(),
-                        )
-                    },
-                    valueRange = precioMinimo.toFloat()..precioMaximo.toFloat(),
-                )
-
-                Text(
-                    text = "Talla",
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    FilterChip(
-                        selected = tallaSeleccionada == null,
-                        onClick = {
-                            viewModel.seleccionarTalla(null)
-                        },
-                        label = {
-                            Text("Todas")
-                        },
-                    )
-
-                    tallas.forEach { talla ->
-                        FilterChip(
-                            selected = tallaSeleccionada == talla,
-                            onClick = {
-                                viewModel.seleccionarTalla(talla)
-                            },
-                            label = {
-                                Text(talla)
-                            },
-                        )
-                    }
-                }
-                Text(
-                    text = "Color",
-                    style = MaterialTheme.typography.titleMedium,
-                )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    FilterChip(
-                        selected = colorSeleccionado == null,
-                        onClick = {
-                            viewModel.seleccionarColor(null)
-                        },
-                        label = {
-                            Text("Todos")
-                        },
-                    )
-
-                    colores.forEach { color ->
-                        FilterChip(
-                            selected = colorSeleccionado == color,
-                            onClick = {
-                                viewModel.seleccionarColor(color)
-                            },
-                            label = {
-                                Text(color)
-                            },
-                        )
-                    }
-                }
-
-
-                Spacer(
-                    modifier = Modifier.height(8.dp),
-                )
-
-                Button(
-                    onClick = {
-                        mostrarFiltros = false
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Aplicar filtros")
-                }
-            }
+                },
+            )
         }
     }
 }
@@ -568,24 +362,26 @@ private fun TarjetaResultado(
         name = prenda.nombre,
         brand = prenda.marca,
         price = formatearSoles(prenda.precioVigente(ahora)),
-        originalPrice = if (prenda.enPromocion(ahora)) {
-            formatearSoles(prenda.precio)
-        } else {
-            null
-        },
+        originalPrice = if (prenda.enPromocion(ahora)) formatearSoles(prenda.precio) else null,
         isSoldOut = prenda.agotada,
         isFavorite = favoritos?.contiene(prenda.codigo),
         onFavoriteClick = { favoritos?.alternar(prenda.codigo) },
         onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
         image = {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(prenda.fotos.firstOrNull())
-                    .build(),
-                contentDescription = prenda.nombre,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
+            val foto = prenda.fotos.firstOrNull()
+            if (foto.isNullOrBlank()) {
+                GarmentImagePlaceholder(modifier = Modifier.fillMaxSize())
+            } else {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(foto)
+                        .build(),
+                    contentDescription = prenda.nombre,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         },
     )
 }

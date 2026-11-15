@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.material3.Badge
@@ -44,8 +43,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
@@ -81,8 +78,7 @@ import pe.modaviva.app.ui.favorites.LocalFavoritos
 /**
  * Pestaña Inicio: la vitrina de la tienda (HU-04). De arriba abajo: portada de
  * campaña, accesos por público (Mujer, Hombre, Niños), Ofertas y Novedades.
- * Inicio nunca muestra resultados de búsqueda: el buscador, los accesos y la
- * portada llevan a otras pantallas.
+ * El buscador y exploración por categorías viven en la pestaña Buscar.
  *
  * Se abre sin pedir sesión (CA-01) y muestra la copia local, que se mantiene
  * al día con el servidor mientras la pantalla está abierta.
@@ -90,7 +86,6 @@ import pe.modaviva.app.ui.favorites.LocalFavoritos
 @Composable
 fun HomeScreen(
     onNotificationsClick: () -> Unit,
-    onSearchClick: () -> Unit,
     onFavoritesClick: () -> Unit,
     onCartClick: () -> Unit,
     onPrendaClick: (String) -> Unit,
@@ -120,7 +115,6 @@ fun HomeScreen(
         topBar = {
             HomeTopBar(
                 onNotificationsClick = onNotificationsClick,
-                onSearchClick = onSearchClick,
                 onFavoritesClick = onFavoritesClick,
                 onCartClick = onCartClick,
                 unreadNotifications = unreadNotifications,
@@ -423,15 +417,13 @@ private fun MensajeHome.texto(): Int = when (this) {
 private val FORMATO_FECHA = DateTimeFormatter.ofPattern("dd/MM HH:mm")
 
 /**
- * Barra superior de Inicio (HT-01 CA-05): Notificaciones, el nombre de la
- * tienda al centro, Favoritos y Carrito; debajo, el buscador a lo ancho. El
- * buscador es un acceso a la pantalla de búsqueda, no un campo editable.
+ * Barra superior de Inicio: Notificaciones a la izquierda, el nombre de la tienda
+ * al centro, Favoritos y Carrito a la derecha.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeTopBar(
     onNotificationsClick: () -> Unit,
-    onSearchClick: () -> Unit,
     onFavoritesClick: () -> Unit,
     onCartClick: () -> Unit,
     unreadNotifications: Int,
@@ -470,7 +462,6 @@ fun HomeTopBar(
                 )
             },
         )
-        SearchEntry(onClick = onSearchClick)
     }
 }
 
@@ -494,42 +485,5 @@ private fun BadgedIconButton(
         ) {
             Icon(imageVector = icon, contentDescription = contentDescription)
         }
-    }
-}
-
-/** Buscador subrayado y a lo ancho, como en la maqueta editorial. */
-@Composable
-private fun SearchEntry(onClick: () -> Unit) {
-    val linea = MaterialTheme.colorScheme.outline
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .height(48.dp)
-            .clickable(onClick = onClick, role = Role.Button)
-            .drawBehind {
-                val grosor = 1.dp.toPx()
-                drawLine(
-                    color = linea,
-                    start = Offset(0f, size.height - grosor / 2),
-                    end = Offset(size.width, size.height - grosor / 2),
-                    strokeWidth = grosor,
-                )
-            },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Search,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            text = stringResource(R.string.home_search_hint).uppercase(),
-            style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 1.5.sp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
