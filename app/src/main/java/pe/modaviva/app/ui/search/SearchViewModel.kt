@@ -86,11 +86,11 @@ class SearchViewModel @Inject constructor(
     val soloOfertas: StateFlow<Boolean> = _soloOfertas
 
     val precioMinimo: StateFlow<Double> = catalogo.prendas
-        .map { prendas -> prendas.minOfOrNull { it.precio } ?: 0.0 }
+        .map { prendas -> prendas.minOfOrNull { it.precioVigente(Instant.now()) } ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0.0)
 
     val precioMaximo: StateFlow<Double> = catalogo.prendas
-        .map { prendas -> prendas.maxOfOrNull { it.precio } ?: 0.0 }
+        .map { prendas -> prendas.maxOfOrNull { it.precioVigente(Instant.now()) } ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0.0)
 
     val categorias: StateFlow<List<String>> = catalogo.prendas
@@ -220,9 +220,11 @@ class SearchViewModel @Inject constructor(
 
             val coincideOferta = !a.soloOfertas || prenda.enPromocion(ahora)
 
+            // HU-06 CA-02: el rango de precio considera el precio vigente (con promoción).
+            val precioActual = prenda.precioVigente(ahora)
             val coincidePrecio =
-                (b.precioMin == null || prenda.precio >= b.precioMin) &&
-                        (b.precioMax == null || prenda.precio <= b.precioMax)
+                (b.precioMin == null || precioActual >= b.precioMin) &&
+                        (b.precioMax == null || precioActual <= b.precioMax)
 
             val coincideTalla = b.talla == null ||
                     prenda.tallas.any { it.equals(b.talla, ignoreCase = true) }
@@ -242,10 +244,10 @@ class SearchViewModel @Inject constructor(
         }
         val ordenadas = when (orden) {
             "Precio menor a mayor" ->
-                filtradas.sortedBy { it.precio }
+                filtradas.sortedBy { it.precioVigente(ahora) }
 
             "Precio mayor a menor" ->
-                filtradas.sortedByDescending { it.precio }
+                filtradas.sortedByDescending { it.precioVigente(ahora) }
 
             "Más recientes" ->
                 filtradas.sortedByDescending { it.creadaEn }
