@@ -134,11 +134,19 @@ fun ChatAssistantScreen(
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp),
                         )
-                        Text(
-                            text = "Asistente ModaViva",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                        )
+                        Column {
+                            Text(
+                                text = "Asistente ModaViva",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            // HU-27: aviso de que responde un asistente automático (no una persona).
+                            Text(
+                                text = "Asistente automático · respuestas generadas por IA",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 },
             )
