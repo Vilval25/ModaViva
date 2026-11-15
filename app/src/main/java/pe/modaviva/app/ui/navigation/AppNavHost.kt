@@ -1,5 +1,8 @@
 package pe.modaviva.app.ui.navigation
 
+import pe.modaviva.app.push.AvisoPush
+import pe.modaviva.app.ui.notifications.NotificationsViewModel
+import pe.modaviva.app.ui.notifications.SolicitudPermisoNotificaciones
 import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -72,7 +75,6 @@ import pe.modaviva.app.ui.notifications.NotificationsScreen
 import pe.modaviva.app.ui.fitting.deletion.ConstanciaEliminacionScreen
 import pe.modaviva.app.ui.components.MvScreen
 import pe.modaviva.app.domain.model.ConstanciaEliminacionFoto
-import pe.modaviva.app.domain.model.Notificacion
 import pe.modaviva.app.domain.model.TipoNotificacion
 import java.time.Instant
 import pe.modaviva.app.ui.orders.detail.OrderDetailScreen
@@ -95,8 +97,11 @@ import pe.modaviva.app.ui.theme.ModaVivaTheme
  */
 @Composable
 fun AppNavHost(
+    avisoPush: AvisoPush? = null,
+    onAvisoPushAtendido: () -> Unit = {},
     sessionViewModel: SessionViewModel = hiltViewModel(),
     marcarFavorito: MarcarFavoritoViewModel = hiltViewModel(),
+    notificaciones: NotificationsViewModel = hiltViewModel(),
 ) {
     val currentUser by sessionViewModel.currentUser.collectAsStateWithLifecycle()
     val codigosFavoritos by marcarFavorito.codigos.collectAsStateWithLifecycle()
@@ -136,6 +141,7 @@ fun AppNavHost(
 
     ModaVivaTheme {
         val navController = rememberNavController()
+
         val backStackEntry by navController.currentBackStackEntryAsState()
         val currentTab = TopLevelDestination.entries.firstOrNull { tab ->
             backStackEntry?.destination?.hierarchy?.any { it.route == tab.route } == true
@@ -196,6 +202,23 @@ fun AppNavHost(
                 }
             }
         }
+
+        // HU-18 CA-04/CA-05: al tocar un push se abre la pantalla del aviso y se marca como leído.
+        LaunchedEffect(avisoPush) {
+            val aviso = avisoPush ?: return@LaunchedEffect
+            if (currentUser != null) {
+                notificaciones.marcarLeidaPorId(aviso.avisoId)
+                if (!navController.abrirDestinoDeAviso(aviso.tipo, aviso.refId)) {
+                    navController.navigate(Routes.NOTIFICATIONS)
+                }
+            }
+            onAvisoPushAtendido()
+        }
+
+        // HU-18 CA-06: explicación previa al permiso de notificaciones (Android 13+).
+        SolicitudPermisoNotificaciones(
+            habilitado = currentUser != null && currentTab == TopLevelDestination.HOME,
+        )
 
         if (showAuthPrompt) {
             MvAuthPromptBottomSheet(
@@ -334,7 +357,7 @@ private fun NavGraphBuilder.overlayGraph(
         NotificationsScreen(
             onBack = { navController.popBackStack() },
             // HU-18 CA-04: cada aviso abre su pantalla relacionada.
-            onAvisoClick = { aviso -> navController.abrirDestinoDeAviso(aviso) },
+            onAvisoClick = { aviso -> navController.abrirDestinoDeAviso(aviso.tipo, aviso.refId) },
         )
     }
     composable(
@@ -593,14 +616,16 @@ private fun NavHostController.abrirBusqueda(filtro: String, valor: String) {
  * el botón atrás desde cualquier pestaña vuelve a Inicio y luego sale.
  */
 /** HU-18 CA-04: pantalla que abre cada tipo de aviso. */
-private fun NavHostController.abrirDestinoDeAviso(aviso: Notificacion) {
-    val ref = aviso.refId?.takeIf { it.isNotBlank() } ?: return
-    when (aviso.tipo) {
-        TipoNotificacion.PRUEBA_VIRTUAL -> navigate(Routes.prenda(ref))
-        TipoNotificacion.PEDIDO, TipoNotificacion.SOLICITUD -> navigate(Routes.orderDetail(ref))
-        TipoNotificacion.ELIMINACION_FOTO -> ref.toLongOrNull()?.let { navigate(Routes.constanciaFoto(it)) }
-        TipoNotificacion.GENERAL -> Unit
-    }
+private fun NavHostController.abrirDestinoDeAviso(tipo: TipoNotificacion, refId: String?): Boolean {
+    val ref = refId?.takeIf { it.isNotBlank() } ?: return false
+    val ruta = when (tipo) {
+        TipoNotificacion.PRUEBA_VIRTUAL -> Routes.prenda(ref)
+        TipoNotificacion.PEDIDO, TipoNotificacion.SOLICITUD -> Routes.orderDetail(ref)
+        TipoNotificacion.ELIMINACION_FOTO -> ref.toLongOrNull()?.let { Routes.constanciaFoto(it) }
+        TipoNotificacion.GENERAL -> null
+    } ?: return false
+    navigate(ruta)
+    return true
 }
 
 private fun NavHostController.navigateToTab(tab: TopLevelDestination) {

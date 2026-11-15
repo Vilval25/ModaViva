@@ -1,5 +1,7 @@
 package pe.modaviva.app.di
 
+import pe.modaviva.app.data.repository.FirebasePushTokenRepository
+import pe.modaviva.app.domain.repository.PushTokenRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -143,6 +145,12 @@ abstract class RepositoryModule {
     abstract fun bindNotificacionRepository(
         impl: FirestoreNotificacionRepository,
     ): NotificacionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPushTokenRepository(
+        impl: FirebasePushTokenRepository,
+    ): PushTokenRepository
 
     @Binds
     @Singleton

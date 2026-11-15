@@ -87,6 +87,7 @@ dependencies {
     implementation(libs.firebase.functions)
     implementation(libs.firebase.config)
     implementation(libs.firebase.storage)
+    implementation(libs.firebase.messaging)
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)

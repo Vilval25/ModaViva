@@ -1,5 +1,7 @@
 package pe.modaviva.app
 
+import pe.modaviva.app.domain.repository.PushTokenRepository
+import pe.modaviva.app.push.NotificacionesSistema
 import android.app.Application
 import android.util.Log
 import dagger.hilt.android.HiltAndroidApp
@@ -14,10 +16,14 @@ class ModaVivaApp : Application() {
 
     @Inject lateinit var backendRepository: BackendRepository
 
+    /** HU-18 CA-05: se crea al arrancar para registrar el token de FCM al iniciar sesión. */
+    @Inject lateinit var pushTokens: PushTokenRepository
+
     private val appScope = CoroutineScope(SupervisorJob())
 
     override fun onCreate() {
         super.onCreate()
+        NotificacionesSistema.crearCanal(this)
         if (BuildConfig.DEBUG) checkBackend()
     }
 

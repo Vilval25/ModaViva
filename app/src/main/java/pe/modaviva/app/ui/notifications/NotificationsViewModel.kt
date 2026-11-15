@@ -34,6 +34,11 @@ class NotificationsViewModel @Inject constructor(
         viewModelScope.launch { repository.marcarLeida(aviso.id) }
     }
 
+    /** Al abrir la app desde un push (CA-04/CA-05). */
+    fun marcarLeidaPorId(id: String) {
+        viewModelScope.launch { repository.marcarLeida(id) }
+    }
+
     /** CA-03. */
     fun marcarTodoLeido() {
         viewModelScope.launch { repository.marcarTodasLeidas() }

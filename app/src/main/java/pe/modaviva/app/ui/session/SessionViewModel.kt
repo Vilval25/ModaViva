@@ -1,5 +1,6 @@
 package pe.modaviva.app.ui.session
 
+import pe.modaviva.app.domain.repository.PushTokenRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,6 +19,7 @@ class SessionViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val authRepository: AuthRepository,
     private val fittingRepository: FittingRepository,
+    private val pushTokens: PushTokenRepository,
 ) : ViewModel() {
 
     val currentUser: StateFlow<UserProfile?> = sessionRepository.currentUser
@@ -126,6 +128,8 @@ class SessionViewModel @Inject constructor(
 
     fun signOut() {
         viewModelScope.launch {
+            // HU-18: este dispositivo deja de recibir los avisos de la cuenta.
+            pushTokens.desregistrar()
             authRepository.signOut()
             sessionRepository.signOut()
         }
