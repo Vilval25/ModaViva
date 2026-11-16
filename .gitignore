@@ -19,3 +19,6 @@ ui-debug.log
 # Claves de cuentas de servicio: nunca al repositorio (HT-02 CA-06)
 *service-account*.json
 *-firebase-adminsdk-*.json
+
+# Apuntes locales de exposición
+2daEva.md

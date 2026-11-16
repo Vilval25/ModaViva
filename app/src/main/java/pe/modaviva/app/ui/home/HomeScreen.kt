@@ -23,7 +23,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.material3.Badge
@@ -96,7 +95,6 @@ fun HomeScreen(
     onPortadaClick: (Portada) -> Unit,
     onAudienciaClick: (genero: String) -> Unit,
     onChatClick: () -> Unit = {},
-    onSearchClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     cartItemCount: Int = 0,
     viewModel: HomeViewModel = hiltViewModel(),
@@ -123,7 +121,6 @@ fun HomeScreen(
                 onNotificationsClick = onNotificationsClick,
                 onFavoritesClick = onFavoritesClick,
                 onCartClick = onCartClick,
-                onSearchClick = onSearchClick,
                 unreadNotifications = unreadNotifications,
                 cartItemCount = conteoCarrito,
             )
@@ -451,7 +448,6 @@ fun HomeTopBar(
     unreadNotifications: Int,
     cartItemCount: Int,
     modifier: Modifier = Modifier,
-    onSearchClick: () -> Unit = {},
 ) {
     Column(modifier = modifier.background(MaterialTheme.colorScheme.surface)) {
         CenterAlignedTopAppBar(
@@ -471,10 +467,6 @@ fun HomeTopBar(
                 )
             },
             actions = {
-                // HU-06 CA-03: buscador desde la barra superior de Inicio.
-                IconButton(onClick = onSearchClick) {
-                    Icon(imageVector = Icons.Outlined.Search, contentDescription = "Buscar prendas")
-                }
                 IconButton(onClick = onFavoritesClick) {
                     Icon(
                         imageVector = Icons.Outlined.FavoriteBorder,

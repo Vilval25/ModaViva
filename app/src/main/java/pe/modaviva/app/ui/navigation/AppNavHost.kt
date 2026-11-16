@@ -307,11 +307,6 @@ private fun NavGraphBuilder.topLevelGraph(
                     navController.navigate(Routes.chat())
                 }
             },
-            onSearchClick = {
-                navController.navigateToTab(TopLevelDestination.SEARCH)
-                navController.getBackStackEntry(TopLevelDestination.SEARCH.route)
-                    .savedStateHandle[ENFOCAR_BUSQUEDA] = true
-            },
         )
     }
     composable(TopLevelDestination.SEARCH.route) { entry ->
