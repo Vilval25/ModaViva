@@ -30,6 +30,7 @@ class FirebaseTryOnRepository @Inject constructor(
         color: String,
         mock: Boolean,
         forzarRegeneracion: Boolean,
+        soloHistorial: Boolean,
     ): Result<ResultadoPruebaVirtual> = runCatching {
         val payload = hashMapOf<String, Any>(
             "prendaId" to prendaId,
@@ -37,6 +38,7 @@ class FirebaseTryOnRepository @Inject constructor(
             "color" to color,
             "mock" to mock,
             "forzarRegeneracion" to forzarRegeneracion,
+            "soloHistorial" to soloHistorial,
         )
 
         val res = try {
@@ -66,12 +68,24 @@ class FirebaseTryOnRepository @Inject constructor(
             cached = res["cached"] as? Boolean ?: false,
             isMock = res["isMock"] as? Boolean ?: false,
             mensaje = res["mensaje"] as? String ?: "",
+            guardada = res["guardada"] as? Boolean ?: false,
             talla = res["talla"] as? String ?: talla,
             color = res["color"] as? String ?: color,
             restantesHoy = (res["restantesHoy"] as? Number)?.toInt(),
             limiteDiario = (res["limiteDiario"] as? Number)?.toInt(),
             duracionMs = (res["duracionMs"] as? Number)?.toLong(),
         )
+    }
+
+    override suspend fun gestionarResultado(prendaId: String, guardar: Boolean): Result<Unit> = runCatching {
+        try {
+            functions.getHttpsCallable(GESTIONAR_PRUEBA)
+                .call(mapOf("prendaId" to prendaId, "accion" to if (guardar) "guardar" else "descartar"))
+                .await()
+        } catch (e: FirebaseFunctionsException) {
+            throw IllegalStateException(e.message ?: "No se pudo completar la acción.", e)
+        }
+        Unit
     }
 
     override fun observarUsoHoy(): Flow<UsoProbadorHoy?> = callbackFlow {
@@ -99,6 +113,7 @@ class FirebaseTryOnRepository @Inject constructor(
 
     private companion object {
         const val PROBAR_PRENDA = "probarPrenda"
+        const val GESTIONAR_PRUEBA = "gestionarPruebaVirtual"
         const val TIMEOUT_SEGUNDOS = 90L
     }
 }

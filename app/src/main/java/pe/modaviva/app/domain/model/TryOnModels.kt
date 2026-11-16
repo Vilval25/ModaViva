@@ -10,6 +10,8 @@ data class ResultadoPruebaVirtual(
     /** HU-12 CA-02: talla y color con los que se generó la prueba. */
     val talla: String = "",
     val color: String = "",
+    /** HU-12 CA-06: true si el cliente ya eligió Guardar (o es una prueba anterior a esa opción). */
+    val guardada: Boolean = false,
     /** HU-12 CA-07: pruebas que quedan hoy (null si la respuesta vino del historial). */
     val restantesHoy: Int? = null,
     val limiteDiario: Int? = null,
