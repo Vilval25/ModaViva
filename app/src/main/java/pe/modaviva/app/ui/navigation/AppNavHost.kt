@@ -30,6 +30,10 @@ import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.res.painterResource
+import androidx.compose.material3.Icon
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -177,6 +181,23 @@ fun AppNavHost(
                                 }
                             },
                         )
+                    }
+                },
+                // HU-27 CA-01: chat desde cualquier pantalla principal. Inicio tiene su propio botón
+                // extendido; al cerrar el chat se vuelve a la pestaña donde se estaba.
+                floatingActionButton = {
+                    if (currentTab != null && currentTab != TopLevelDestination.HOME) {
+                        SmallFloatingActionButton(
+                            onClick = {
+                                requireAuth(defaultPrompt) { navController.navigate(Routes.chat()) }
+                            },
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_bot_assistant),
+                                contentDescription = "Abrir el asistente de ModaViva",
+                                modifier = Modifier.size(22.dp),
+                            )
+                        }
                     }
                 },
             ) { innerPadding ->
