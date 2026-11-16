@@ -285,7 +285,7 @@ fun OrderCardItem(
                 )
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
-                    contentDescription = "Ver detalle",
+                    contentDescription = null,
                     tint = MaterialTheme.colorScheme.outline,
                 )
             }
