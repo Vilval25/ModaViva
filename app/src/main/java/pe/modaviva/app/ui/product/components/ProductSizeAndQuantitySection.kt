@@ -30,6 +30,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material.icons.outlined.PhotoCamera
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -56,12 +58,18 @@ fun ProductSizeAndQuantitySection(
     onDecreaseQty: () -> Unit,
     onIncreaseQty: () -> Unit,
     modifier: Modifier = Modifier,
+    onRegistrarFoto: () -> Unit = {},
+    onComoCalculamos: () -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        SizeRecommendationBanner(recomendacionTalla = recomendacionTalla)
+        SizeRecommendationBanner(
+            recomendacionTalla = recomendacionTalla,
+            onRegistrarFoto = onRegistrarFoto,
+            onComoCalculamos = onComoCalculamos,
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -233,7 +241,11 @@ private fun SizePill(
 }
 
 @Composable
-private fun SizeRecommendationBanner(recomendacionTalla: RecomendacionTalla) {
+private fun SizeRecommendationBanner(
+    recomendacionTalla: RecomendacionTalla,
+    onRegistrarFoto: () -> Unit,
+    onComoCalculamos: () -> Unit,
+) {
     when (recomendacionTalla) {
         is RecomendacionTalla.TallaExacta, is RecomendacionTalla.EntreDosTallas -> {
             Card(
@@ -277,11 +289,21 @@ private fun SizeRecommendationBanner(recomendacionTalla: RecomendacionTalla) {
                             fontStyle = FontStyle.Italic,
                             color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
                         )
+                        Text(
+                            text = "¿Cómo calculamos tu talla?",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .padding(top = 6.dp)
+                                .clickable(onClick = onComoCalculamos),
+                        )
                     }
                 }
             }
         }
 
+        // HU-15 CA-05: la foto no permitió detectar el cuerpo → registrar otra y tabla genérica.
         is RecomendacionTalla.FotoInvalidaParaMedidas -> {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -290,22 +312,28 @@ private fun SizeRecommendationBanner(recomendacionTalla: RecomendacionTalla) {
                 ),
                 shape = RoundedCornerShape(12.dp),
             ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Warning,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(20.dp),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "No se pudieron calcular tus medidas con exactitud. Registra una nueva foto en el Probador.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                    )
+                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "En tu foto no pudimos detectar bien tus hombros y caderas, así que no podemos " +
+                                "recomendarte una talla. Registra otra foto de cuerpo completo o guíate por la tabla genérica.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                        )
+                    }
+                    OutlinedButton(onClick = onRegistrarFoto, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Outlined.PhotoCamera, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Registrar otra foto")
+                    }
+                    TablaTallasGenerica()
                 }
             }
         }

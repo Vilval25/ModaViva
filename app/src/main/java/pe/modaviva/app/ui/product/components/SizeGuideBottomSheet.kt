@@ -72,11 +72,12 @@ fun SizeGuideBottomSheet(
 
             if (filasOrdenadas.isEmpty() || columnasActivas.isEmpty()) {
                 Text(
-                    text = "Esta prenda aún no cuenta con tabla de medidas detallada.",
+                    text = "Esta prenda aún no cuenta con tabla de medidas detallada. Puedes guiarte por la tabla genérica:",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = 8.dp),
                 )
+                TablaTallasGenerica()
             } else {
                 Card(
                     modifier = Modifier.fillMaxWidth(),

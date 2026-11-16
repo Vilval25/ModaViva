@@ -65,6 +65,7 @@ import pe.modaviva.app.ui.product.components.ProductHeroGallery
 import pe.modaviva.app.ui.product.components.ProductHeroTopBar
 import pe.modaviva.app.ui.product.components.ProductSizeAndQuantitySection
 import pe.modaviva.app.ui.product.components.SizeGuideBottomSheet
+import pe.modaviva.app.ui.product.components.ComoCalculamosTallaSheet
 import pe.modaviva.app.ui.product.components.VirtualTryOnSheet
 import pe.modaviva.app.ui.stock.StockViewModel
 import java.time.Instant
@@ -113,6 +114,7 @@ fun ProductDetailScreen(
     var tallaSeleccionada by remember { mutableStateOf<String?>(null) }
     var cantidad by remember { mutableIntStateOf(1) }
     var mostrarMedidas by remember { mutableStateOf(false) }
+    var mostrarComoCalculamos by remember { mutableStateOf(false) }
     var mostrarGaleria by remember { mutableStateOf(false) }
     var fotoSeleccionada by remember { mutableIntStateOf(0) }
 
@@ -237,6 +239,8 @@ fun ProductDetailScreen(
                     codigoPrenda = codigo,
                     prenda = item,
                     recomendacionTalla = recomendacionTalla,
+                    onRegistrarFoto = onFittingClick,
+                    onComoCalculamos = { mostrarComoCalculamos = true },
                     tallaSeleccionada = tallaSeleccionada,
                     cantidad = cantidad,
                     maxStock = maxStock,
@@ -319,6 +323,13 @@ fun ProductDetailScreen(
             medidas = item.medidas,
             tallasOrdenadas = item.tallas,
             onDismiss = { mostrarMedidas = false },
+        )
+    }
+
+    if (mostrarComoCalculamos) {
+        ComoCalculamosTallaSheet(
+            recomendacion = recomendacionTalla,
+            onDismiss = { mostrarComoCalculamos = false },
         )
     }
 
