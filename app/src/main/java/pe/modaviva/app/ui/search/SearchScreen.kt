@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
@@ -34,9 +37,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -53,6 +57,7 @@ import pe.modaviva.app.ui.format.formatearSoles
 import pe.modaviva.app.ui.search.components.ExploreQuickAccess
 import pe.modaviva.app.ui.search.components.SearchControlsSection
 import pe.modaviva.app.ui.search.components.SearchEditorialBar
+import pe.modaviva.app.ui.search.components.BusquedasRecientes
 import pe.modaviva.app.ui.search.components.SearchFiltersSheet
 import pe.modaviva.app.ui.search.components.SearchSortSheet
 import java.time.Clock
@@ -67,11 +72,24 @@ fun SearchScreen(
     onPrendaClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SearchViewModel = hiltViewModel(),
+    enfocarBusqueda: Boolean = false,
+    onBusquedaEnfocada: () -> Unit = {},
 ) {
+    val focoBuscador = remember { FocusRequester() }
+    val teclado = LocalSoftwareKeyboardController.current
+    LaunchedEffect(enfocarBusqueda) {
+        if (enfocarBusqueda) {
+            focoBuscador.requestFocus()
+            teclado?.show()
+            onBusquedaEnfocada()
+        }
+    }
+
     val textoBusqueda by viewModel.textoBusqueda.collectAsStateWithLifecycle()
     val resultados by viewModel.resultados.collectAsStateWithLifecycle()
-    val cargandoMas by viewModel.cargandoMas.collectAsStateWithLifecycle()
-    val hayMasResultados by viewModel.hayMasResultados.collectAsStateWithLifecycle()
+    // HU-06 CA-05: los resultados llegan en páginas de 20 con Paging 3.
+    val paginas = viewModel.paginas.collectAsLazyPagingItems()
+    val recientes by viewModel.recientes.collectAsStateWithLifecycle()
     val categorias by viewModel.categorias.collectAsStateWithLifecycle()
     val categoriaSeleccionada by viewModel.categoriaSeleccionada.collectAsStateWithLifecycle()
     val subcategorias by viewModel.subcategorias.collectAsStateWithLifecycle()
@@ -97,37 +115,11 @@ fun SearchScreen(
     var rangoPrecio by remember { mutableStateOf(0f..0f) }
 
     val gridState = rememberLazyGridState()
-    var usuarioDesplazo by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(precioMinimo, precioMaximo) {
         if (precioMaximo > precioMinimo) {
             rangoPrecio = precioMinimo.toFloat()..precioMaximo.toFloat()
-        }
-    }
-
-    LaunchedEffect(resultados, cargandoMas) {
-        if (cargandoMas) {
-            viewModel.finalizarCarga()
-        }
-    }
-
-    LaunchedEffect(gridState) {
-        snapshotFlow {
-            gridState.firstVisibleItemIndex to
-                gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
-        }.collect { (primerIndice, ultimoIndice) ->
-            if (primerIndice > 0) usuarioDesplazo = true
-            if (
-                usuarioDesplazo &&
-                hayMasResultados &&
-                !cargandoMas &&
-                resultados.isNotEmpty() &&
-                ultimoIndice != null &&
-                ultimoIndice >= gridState.layoutInfo.totalItemsCount - 1
-            ) {
-                viewModel.cargarSiguientePagina()
-            }
         }
     }
 
@@ -169,8 +161,22 @@ fun SearchScreen(
             query = textoBusqueda,
             onQueryChange = viewModel::actualizarBusqueda,
             onClearQuery = { viewModel.actualizarBusqueda("") },
+            onSearch = viewModel::guardarBusquedaActual,
+            focusRequester = focoBuscador,
             modifier = Modifier.padding(top = 8.dp, bottom = 10.dp),
         )
+
+        if (textoBusqueda.isBlank() && !mostrarResultados) {
+            BusquedasRecientes(
+                recientes = recientes,
+                onSeleccionar = { texto ->
+                    viewModel.actualizarBusqueda(texto)
+                    viewModel.guardarBusquedaActual()
+                },
+                onBorrar = viewModel::borrarRecientes,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+        }
 
         SearchControlsSection(
             mostrarVolverExplorar = mostrarResultados,
@@ -244,14 +250,22 @@ fun SearchScreen(
                     )
                 }
 
-                items(items = resultados, key = { it.codigo }) { prenda ->
-                    TarjetaResultado(
-                        prenda = prenda,
-                        onClick = { onPrendaClick(prenda.codigo) },
-                    )
+                items(
+                    count = paginas.itemCount,
+                    key = paginas.itemKey { it.codigo },
+                ) { indice ->
+                    paginas[indice]?.let { prenda ->
+                        TarjetaResultado(
+                            prenda = prenda,
+                            onClick = {
+                                viewModel.guardarBusquedaActual()
+                                onPrendaClick(prenda.codigo)
+                            },
+                        )
+                    }
                 }
 
-                if (cargandoMas) {
+                if (paginas.loadState.append is LoadState.Loading) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         Row(
                             modifier = Modifier

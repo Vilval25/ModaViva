@@ -4,7 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -12,6 +19,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import pe.modaviva.app.domain.model.Prenda
 import pe.modaviva.app.domain.repository.CatalogoRepository
+import pe.modaviva.app.data.repository.BusquedasRecientesRepository
+import kotlinx.coroutines.launch
 import java.text.Normalizer
 import java.time.Instant
 
@@ -41,16 +50,22 @@ private fun normalizarTexto(texto: String): String {
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val catalogo: CatalogoRepository,
+    private val busquedasRecientes: BusquedasRecientesRepository,
 ) : ViewModel() {
 
-    private val tamanoPagina = 20
-    private val _paginaActual = MutableStateFlow(1)
+    /** HU-06: búsquedas recientes (DataStore) para sugerir mientras el buscador está vacío. */
+    val recientes: StateFlow<List<String>> = busquedasRecientes.recientes
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    private val _hayMasResultados = MutableStateFlow(true)
-    val hayMasResultados: StateFlow<Boolean> = _hayMasResultados
+    /** Guarda la búsqueda actual al confirmarla o al abrir uno de sus resultados. */
+    fun guardarBusquedaActual() {
+        val texto = _textoBusqueda.value
+        viewModelScope.launch { busquedasRecientes.agregar(texto) }
+    }
 
-    private val _cargandoMas = MutableStateFlow(false)
-    val cargandoMas: StateFlow<Boolean> = _cargandoMas
+    fun borrarRecientes() {
+        viewModelScope.launch { busquedasRecientes.borrar() }
+    }
 
     private val _textoBusqueda = MutableStateFlow("")
     val textoBusqueda: StateFlow<String> = _textoBusqueda
@@ -185,8 +200,7 @@ class SearchViewModel @Inject constructor(
         filtrosA,
         filtrosB,
         _ordenSeleccionado,
-        _paginaActual,
-    ) { prendas, a, b, orden, pagina ->
+    ) { prendas, a, b, orden ->
 
         val consulta = normalizarTexto(a.texto.trim())
         val ahora = Instant.now()
@@ -257,71 +271,67 @@ class SearchViewModel @Inject constructor(
         }
 
 
-        val cantidadMostrada = pagina * tamanoPagina
-
-        _hayMasResultados.value = ordenadas.size > cantidadMostrada
-
-        ordenadas.take(cantidadMostrada)
-
-
+        ordenadas
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
         emptyList(),
     )
 
+    /**
+     * HU-06 CA-05: los resultados en páginas de 20 con Paging 3. Cada cambio de búsqueda, filtro u
+     * orden reinicia la paginación desde la primera página.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val paginas: Flow<PagingData<Prenda>> = resultados
+        .flatMapLatest { lista ->
+            Pager(
+                config = PagingConfig(
+                    pageSize = ResultadosPagingSource.TAMANO_PAGINA,
+                    initialLoadSize = ResultadosPagingSource.TAMANO_PAGINA,
+                    prefetchDistance = 2,
+                    enablePlaceholders = false,
+                ),
+                pagingSourceFactory = { ResultadosPagingSource(lista) },
+            ).flow
+        }
+        .cachedIn(viewModelScope)
+
     fun actualizarBusqueda(texto: String) {
         _textoBusqueda.value = texto
-        _paginaActual.value = 1
-        _hayMasResultados.value = true
     }
 
     fun seleccionarCategoria(categoria: String?) {
         _categoriaSeleccionada.value = categoria
         _subcategoriaSeleccionada.value = null
-        _paginaActual.value = 1
-        _hayMasResultados.value = true
     }
     fun seleccionarSubcategoria(subcategoria: String?) {
         _subcategoriaSeleccionada.value = subcategoria
-        _paginaActual.value = 1
-        _hayMasResultados.value = true
     }
 
     fun seleccionarGenero(genero: String?) {
         _generoSeleccionado.value = genero
-        _paginaActual.value = 1
-        _hayMasResultados.value = true
     }
 
     fun seleccionarMarca(marca: String?) {
         _marcaSeleccionada.value = marca
-        _paginaActual.value = 1
-        _hayMasResultados.value = true
     }
 
     fun seleccionarTalla(talla: String?) {
         _tallaSeleccionada.value = talla
-        _paginaActual.value = 1
-        _hayMasResultados.value = true
     }
 
     fun seleccionarColor(color: String?) {
         _colorSeleccionado.value = color
-        _paginaActual.value = 1
-        _hayMasResultados.value = true
     }
 
     fun seleccionarRangoPrecio(minimo: Double, maximo: Double) {
         _precioMinSeleccionado.value = minimo
         _precioMaxSeleccionado.value = maximo
-        _paginaActual.value = 1
-        _hayMasResultados.value = true
     }
 
     fun seleccionarSoloOfertas(activo: Boolean) {
         _soloOfertas.value = activo
-        reiniciarPaginacion()
     }
 
     fun limpiarFiltros() {
@@ -334,36 +344,9 @@ class SearchViewModel @Inject constructor(
         _precioMinSeleccionado.value = null
         _precioMaxSeleccionado.value = null
         _soloOfertas.value = false
-        reiniciarPaginacion()
     }
 
     fun seleccionarOrden(orden: String) {
         _ordenSeleccionado.value = orden
-        _paginaActual.value = 1
-        _hayMasResultados.value = true
     }
-
-
-
-    fun cargarSiguientePagina() {
-        if (_hayMasResultados.value && !_cargandoMas.value) {
-            _cargandoMas.value = true
-            _paginaActual.value++
-        }
-    }
-
-    fun finalizarCarga() {
-        if (_cargandoMas.value) {
-            _cargandoMas.value = false
-        }
-    }
-
-
-
-
-    private fun reiniciarPaginacion() {
-        _paginaActual.value = 1
-        _hayMasResultados.value = true
-    }
-
 }

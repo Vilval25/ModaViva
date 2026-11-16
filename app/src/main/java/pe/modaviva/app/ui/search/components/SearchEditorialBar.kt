@@ -30,12 +30,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
@@ -59,6 +68,8 @@ fun SearchEditorialBar(
     onQueryChange: (String) -> Unit,
     onClearQuery: () -> Unit,
     modifier: Modifier = Modifier,
+    onSearch: () -> Unit = {},
+    focusRequester: FocusRequester? = null,
 ) {
     val focusManager = LocalFocusManager.current
     var isFocused by remember { mutableStateOf(false) }
@@ -114,9 +125,13 @@ fun SearchEditorialBar(
                 ),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+                keyboardActions = KeyboardActions(onSearch = {
+                    onSearch()
+                    focusManager.clearFocus()
+                }),
                 modifier = Modifier
                     .fillMaxWidth()
+                    .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
                     .onFocusChanged { isFocused = it.isFocused },
             )
         }
@@ -273,3 +288,37 @@ fun SearchControlsSection(
 private fun String.paraMostrar(): String =
     replace("-", " ").replaceFirstChar { it.uppercase() }
 
+/** HU-06: chips con las búsquedas recientes; al tocar una se vuelve a buscar. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun BusquedasRecientes(
+    recientes: List<String>,
+    onSeleccionar: (String) -> Unit,
+    onBorrar: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (recientes.isEmpty()) return
+    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Outlined.History,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(16.dp),
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = "Búsquedas recientes",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = onBorrar) { Text("Borrar") }
+        }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            recientes.forEach { texto ->
+                SuggestionChip(onClick = { onSeleccionar(texto) }, label = { Text(texto) })
+            }
+        }
+    }
+}
