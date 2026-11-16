@@ -55,6 +55,8 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import pe.modaviva.app.R
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -222,7 +224,7 @@ fun CheckoutPaymentScreen(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { viewModel.onMedioPagoChanged(medio) },
+                        .selectable(selected = esElegido, role = Role.RadioButton) { viewModel.onMedioPagoChanged(medio) },
                     shape = RoundedCornerShape(10.dp),
                     color = if (esElegido) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
                     border = BorderStroke(
@@ -275,7 +277,7 @@ fun CheckoutPaymentScreen(
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { viewModel.onSeleccionarTarjetaGuardada(tarjeta.id) },
+                                    .selectable(selected = elegida, role = Role.RadioButton) { viewModel.onSeleccionarTarjetaGuardada(tarjeta.id) },
                                 shape = RoundedCornerShape(8.dp),
                                 color = if (elegida) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
                                 border = BorderStroke(

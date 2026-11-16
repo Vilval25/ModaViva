@@ -340,7 +340,7 @@ private fun PrendaOpcion(item: ItemPedido, elegida: Boolean, yaSolicitada: Boole
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = !yaSolicitada, onClick = onClick),
+            .selectable(selected = elegida, enabled = !yaSolicitada, role = Role.RadioButton, onClick = onClick),
         shape = RoundedCornerShape(10.dp),
         color = if (elegida) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         border = BorderStroke(
@@ -384,7 +384,7 @@ private fun PrendaOpcion(item: ItemPedido, elegida: Boolean, yaSolicitada: Boole
                 }
             }
             if (elegida) {
-                Icon(Icons.Default.Check, contentDescription = "Elegida", tint = MaterialTheme.colorScheme.primary)
+                Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             }
         }
     }

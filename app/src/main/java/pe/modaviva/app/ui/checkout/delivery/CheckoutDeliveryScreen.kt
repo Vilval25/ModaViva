@@ -48,6 +48,8 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import pe.modaviva.app.R
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -188,7 +190,7 @@ fun CheckoutDeliveryScreen(
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { viewModel.onSeleccionarDireccionRegistrada(dir) },
+                                    .selectable(selected = esElegida, role = Role.RadioButton) { viewModel.onSeleccionarDireccionRegistrada(dir) },
                                 shape = RoundedCornerShape(10.dp),
                                 color = if (esElegida) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
                                 border = BorderStroke(
