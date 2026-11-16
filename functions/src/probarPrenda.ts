@@ -269,6 +269,7 @@ export const probarPrenda = onCall(
       forzarRegeneracion = false,
       talla = "",
       color = "",
+      soloHistorial = false,
     } = (request.data ?? {}) as {
       prendaId?: string;
       categoria?: string;
@@ -277,6 +278,8 @@ export const probarPrenda = onCall(
       /** HU-12 CA-02: talla y color elegidos por el cliente. */
       talla?: string;
       color?: string;
+      /** HU-12 CA-04: abrir el resultado desde un aviso sin generar uno nuevo. */
+      soloHistorial?: boolean;
     };
     const tallaElegida = String(talla).trim().slice(0, 10);
     const colorElegido = String(color).trim().slice(0, 40);
@@ -395,11 +398,18 @@ export const probarPrenda = onCall(
           generationId: String(cacheData.generationId || ""),
           cached: true,
           isMock: false,
-          talla: tallaElegida,
-          color: colorElegido,
+          // Al abrir el resultado desde un aviso no llegan talla ni color: se usan los de la generación.
+          talla: tallaElegida || String(cacheData.talla ?? ""),
+          color: colorElegido || String(cacheData.color ?? ""),
+          // Las pruebas anteriores a Guardar/Descartar (HU-12 CA-06) se consideran guardadas.
+          guardada: cacheData.guardada !== false,
           mensaje: "Prueba virtual recuperada de tu historial guardado.",
         };
       }
+    }
+
+    if (soloHistorial) {
+      throw new HttpsError("not-found", "Esta prueba virtual ya no está disponible.");
     }
 
     // 5. Reservar una prueba del límite diario (las del historial y las de demostración no cuentan).
@@ -505,6 +515,10 @@ export const probarPrenda = onCall(
           fotoUsuarioUrl: fotoProbadorUrl,
           resultadoUrl: finalUrl,
           generationId: genlookJson.generationId || "",
+          talla: tallaElegida,
+          color: colorElegido,
+          // HU-12 CA-06: queda pendiente hasta que el cliente elija Guardar o Descartar.
+          guardada: false,
           generadoEn: FieldValue.serverTimestamp(),
         });
 
@@ -524,6 +538,7 @@ export const probarPrenda = onCall(
         isMock: Boolean(mock),
         talla: tallaElegida,
         color: colorElegido,
+        guardada: false,
         restantesHoy,
         limiteDiario,
         duracionMs,
