@@ -62,6 +62,8 @@ import pe.modaviva.app.domain.model.RecomendacionTalla
 import pe.modaviva.app.ui.component.MvImageGalleryDialog
 import pe.modaviva.app.ui.components.MvPrimaryButton
 import pe.modaviva.app.ui.product.TryOnUiState
+import androidx.compose.ui.res.stringResource
+import pe.modaviva.app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -255,14 +257,14 @@ fun VirtualTryOnSheet(
                             .aspectRatio(3f / 4f)
                             .clip(RoundedCornerShape(18.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .clickable { mostrarZoom = true },
+                            .clickable(onClickLabel = stringResource(R.string.cd_action_enlarge_image)) { mostrarZoom = true },
                     ) {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(imageToShow)
                                 .crossfade(true)
                                 .build(),
-                            contentDescription = "Resultado del probador virtual (toca para hacer zoom)",
+                            contentDescription = stringResource(R.string.cd_tryon_result),
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize(),
                         )
@@ -276,7 +278,7 @@ fun VirtualTryOnSheet(
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.ZoomIn,
-                                contentDescription = "Ampliar imagen",
+                                contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier
                                     .padding(6.dp)
