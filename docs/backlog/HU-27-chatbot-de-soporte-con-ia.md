@@ -32,11 +32,11 @@ Un botón flotante abre el chat de soporte. El asistente (un LLM llamado a trav�
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que estoy en cualquier pantalla principal, cuando toco el botón de chat, entonces se abre el chat y al cerrarlo vuelvo a la pantalla donde estaba.
+- [x] **CA-01** Dado que estoy en cualquier pantalla principal, cuando toco el botón de chat, entonces se abre el chat y al cerrarlo vuelvo a la pantalla donde estaba.
 - [ ] **CA-02** Dado el set de 10 preguntas de prueba sobre tallas, envíos y devoluciones, cuando se las hago al asistente, entonces al menos 9 respuestas son coherentes con las políticas cargadas de la tienda.
-- [ ] **CA-03** Dado que pregunto algo fuera de esos temas o que el asistente no sabe, cuando responde, entonces lo indica y no inventa datos de pedidos, precios o stock.
-- [ ] **CA-04** Dado que estoy en una conversación, cuando salgo y vuelvo al chat en la misma sesión, entonces veo el historial de la conversación.
-- [ ] **CA-05** Dado que el servicio del LLM no responde, cuando envío un mensaje, entonces veo un error y puedo reintentar.
+- [x] **CA-03** Dado que pregunto algo fuera de esos temas o que el asistente no sabe, cuando responde, entonces lo indica y no inventa datos de pedidos, precios o stock.
+- [x] **CA-04** Dado que estoy en una conversación, cuando salgo y vuelvo al chat en la misma sesión, entonces veo el historial de la conversación.
+- [x] **CA-05** Dado que el servicio del LLM no responde, cuando envío un mensaje, entonces veo un error y puedo reintentar.
 
 ## Tecnologías
 
