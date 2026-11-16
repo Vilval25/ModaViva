@@ -395,7 +395,7 @@ private fun Miniatura(uri: Uri, onQuitar: () -> Unit, habilitada: Boolean) {
     Box(modifier = Modifier.size(96.dp)) {
         AsyncImage(
             model = uri,
-            contentDescription = "Foto adjunta",
+            contentDescription = stringResource(R.string.cd_attached_photo),
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxSize()
@@ -413,7 +413,7 @@ private fun Miniatura(uri: Uri, onQuitar: () -> Unit, habilitada: Boolean) {
                     .clickable(onClick = onQuitar),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Default.Close, contentDescription = "Quitar foto", tint = MaterialTheme.colorScheme.surface, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_attached_photo_remove), tint = MaterialTheme.colorScheme.surface, modifier = Modifier.size(16.dp))
             }
         }
     }

@@ -310,4 +310,9 @@
 
     <!-- Accesibilidad: pedidos -->
     <string name="cd_order_copy_tracking">Copiar número de guía</string>
+
+    <!-- Accesibilidad: cambios y devoluciones -->
+    <string name="cd_attached_photo">Foto adjunta</string>
+    <string name="cd_attached_photo_enlarged">Foto adjunta ampliada</string>
+    <string name="cd_attached_photo_remove">Quitar foto adjunta</string>
 </resources>
