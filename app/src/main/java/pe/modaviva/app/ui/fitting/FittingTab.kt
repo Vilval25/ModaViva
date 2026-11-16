@@ -696,11 +696,11 @@ private fun FittingActivePhotoScreen(
                         .fillMaxWidth()
                         .aspectRatio(3f / 4f)
                         .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
-                        .clickable { showPhotoZoom = true },
+                        .clickable(onClickLabel = stringResource(R.string.cd_action_enlarge_photo)) { showPhotoZoom = true },
                 ) {
                     AsyncImage(
                         model = photoUrl,
-                        contentDescription = "Foto registrada (toca para hacer zoom)",
+                        contentDescription = stringResource(R.string.cd_fitting_registered_photo),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -714,7 +714,7 @@ private fun FittingActivePhotoScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.ZoomIn,
-                            contentDescription = "Ampliar foto",
+                            contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier
                                 .padding(6.dp)
