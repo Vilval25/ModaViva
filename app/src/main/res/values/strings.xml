@@ -285,4 +285,10 @@
     <string name="cd_cart_decrease">Quitar una unidad de %1$s</string>
     <string name="cd_cart_increase">Agregar una unidad de %1$s</string>
     <string name="cd_cart_remove">Quitar %1$s del carrito</string>
+
+    <!-- Accesibilidad: direcciones -->
+    <string name="cd_address_add">Agregar dirección</string>
+    <string name="cd_address_edit">Editar dirección %1$s</string>
+    <string name="cd_address_delete">Eliminar dirección %1$s</string>
+    <string name="address_default_alias">Dirección</string>
 </resources>

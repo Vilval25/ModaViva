@@ -108,7 +108,7 @@ fun AddressesScreen(
                     showFormDialog = true
                 },
             ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Agregar dirección")
+                Icon(imageVector = Icons.Default.Add, contentDescription = stringResource(R.string.cd_address_add))
             }
         },
         snackbarHost = { MvSnackbarHost(snackbarHostState) },
@@ -253,10 +253,10 @@ private fun DireccionCard(
 
                 Row {
                     IconButton(onClick = onEdit) {
-                        Icon(imageVector = Icons.Default.Edit, contentDescription = "Editar", modifier = Modifier.size(20.dp))
+                        Icon(imageVector = Icons.Default.Edit, contentDescription = stringResource(R.string.cd_address_edit, direccion.alias.ifBlank { stringResource(R.string.address_default_alias) }), modifier = Modifier.size(20.dp))
                     }
                     IconButton(onClick = onDelete) {
-                        Icon(imageVector = Icons.Default.Delete, contentDescription = "Eliminar", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.error)
+                        Icon(imageVector = Icons.Default.Delete, contentDescription = stringResource(R.string.cd_address_delete, direccion.alias.ifBlank { stringResource(R.string.address_default_alias) }), modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.error)
                     }
                 }
             }
