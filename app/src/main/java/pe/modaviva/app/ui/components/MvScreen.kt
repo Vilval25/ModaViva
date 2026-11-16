@@ -14,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import pe.modaviva.app.R
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 
 /**
  * Estructura de una pantalla con barra superior de título. Las pestañas
@@ -34,7 +36,7 @@ fun MvScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text(text = title) },
+                title = { Text(text = title, modifier = Modifier.semantics { heading() }) },
                 navigationIcon = {
                     if (onBack != null) {
                         IconButton(onClick = onBack) {
