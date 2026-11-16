@@ -335,4 +335,7 @@
     <!-- Accesibilidad: resultado del probador -->
     <string name="cd_tryon_result">Resultado del probador virtual</string>
     <string name="cd_action_enlarge_image">ampliar la imagen</string>
+
+    <!-- Accesibilidad: selector de talla -->
+    <string name="cd_size_sold_out">Agotada</string>
 </resources>

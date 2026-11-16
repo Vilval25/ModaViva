@@ -41,6 +41,11 @@ import pe.modaviva.app.domain.model.RecomendacionTalla
 import pe.modaviva.app.domain.model.Stock
 import androidx.compose.ui.res.stringResource
 import pe.modaviva.app.R
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 
 /** Sección de recomendación de talla IA, selector de tallas y control de cantidad. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -102,7 +107,7 @@ fun ProductSizeAndQuantitySection(
         if (prenda.tallas.size <= 6) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().selectableGroup(),
             ) {
                 prenda.tallas.forEach { talla ->
                     SizePill(
@@ -118,7 +123,7 @@ fun ProductSizeAndQuantitySection(
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().selectableGroup(),
             ) {
                 prenda.tallas.forEach { talla ->
                     SizePill(
@@ -207,7 +212,9 @@ private fun SizePill(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val agotada = stringResource(R.string.cd_size_sold_out)
     Surface(
+        selected = isSelected,
         onClick = { if (!esAgotada) onClick() },
         shape = RoundedCornerShape(14.dp),
         color = when {
@@ -224,7 +231,12 @@ private fun SizePill(
             },
         ),
         enabled = !esAgotada,
-        modifier = modifier.height(48.dp),
+        modifier = modifier
+            .height(48.dp)
+            .semantics {
+                role = Role.RadioButton
+                if (esAgotada) stateDescription = agotada
+            },
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
