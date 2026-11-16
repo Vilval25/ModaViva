@@ -286,16 +286,24 @@ private fun NavGraphBuilder.topLevelGraph(
                     navController.navigate(Routes.chat())
                 }
             },
+            onSearchClick = {
+                navController.navigateToTab(TopLevelDestination.SEARCH)
+                navController.getBackStackEntry(TopLevelDestination.SEARCH.route)
+                    .savedStateHandle[ENFOCAR_BUSQUEDA] = true
+            },
         )
     }
     composable(TopLevelDestination.SEARCH.route) { entry ->
         val viewModel: SearchViewModel = hiltViewModel()
         AplicarFiltroInicial(entry, viewModel)
+        val enfocar by entry.savedStateHandle.getStateFlow(ENFOCAR_BUSQUEDA, false).collectAsStateWithLifecycle()
         SearchScreen(
             onPrendaClick = { codigo ->
                 navController.navigate(Routes.prenda(codigo))
             },
             viewModel = viewModel,
+            enfocarBusqueda = enfocar,
+            onBusquedaEnfocada = { entry.savedStateHandle[ENFOCAR_BUSQUEDA] = false },
         )
     }
     composable(TopLevelDestination.PROFILE.route) {
@@ -619,6 +627,8 @@ private fun NavGraphBuilder.authGraph(
  * así que no pisa lo que el usuario elija después.
  */
 private const val FILTRO_GENERO = "filtroGenero"
+/** La lupa de Inicio abre Buscar con el cursor en el buscador (HU-06 CA-03). */
+private const val ENFOCAR_BUSQUEDA = "enfocarBusqueda"
 private const val FILTRO_MARCA = "filtroMarca"
 private const val FILTRO_CATEGORIA = "filtroCategoria"
 
