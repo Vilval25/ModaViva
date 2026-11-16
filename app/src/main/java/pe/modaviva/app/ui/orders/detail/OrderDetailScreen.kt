@@ -332,7 +332,7 @@ fun OrderDetailScreen(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.ContentCopy,
-                                        contentDescription = "Copiar seguimiento",
+                                        contentDescription = stringResource(R.string.cd_order_copy_tracking),
                                         tint = Color(0xFF0284C7),
                                     )
                                 }
