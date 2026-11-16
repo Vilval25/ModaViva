@@ -22,9 +22,11 @@ import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.ShoppingBag
+import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -51,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import pe.modaviva.app.domain.model.RecomendacionTalla
 import pe.modaviva.app.ui.components.MvPrimaryButton
 import pe.modaviva.app.ui.product.TryOnUiState
 
@@ -60,6 +63,7 @@ fun VirtualTryOnSheet(
     state: TryOnUiState,
     prendaNombre: String,
     tallaSeleccionada: String?,
+    recomendacion: RecomendacionTalla = RecomendacionTalla.SinDatosSuficientes,
     onDismiss: () -> Unit,
     onRetry: () -> Unit,
     onRegenerate: () -> Unit,
@@ -131,8 +135,9 @@ fun VirtualTryOnSheet(
                                 fontWeight = FontWeight.SemiBold,
                                 textAlign = TextAlign.Center,
                             )
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth(0.8f))
                             Text(
-                                text = "Esto suele tomar alrededor de 10 segundos.",
+                                text = "Suele tomar menos de 30 segundos. Si pasa de 60, se cancela sin descontar tu prueba.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center,
@@ -259,6 +264,22 @@ fun VirtualTryOnSheet(
                         }
                     }
 
+                    // HU-12 CA-02: talla y color con los que se generó.
+                    val detalle = listOfNotNull(
+                        resultado.talla.takeIf { it.isNotBlank() }?.let { "Talla $it" },
+                        resultado.color.takeIf { it.isNotBlank() }?.let { "Color $it" },
+                    ).joinToString(" · ")
+                    if (detalle.isNotEmpty()) {
+                        Text(
+                            text = detalle,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+
+                    // HU-15 CA-02: talla recomendada para esta prenda junto al resultado.
+                    RecomendacionEnResultado(recomendacion)
+
                     // HU-12 CA-05: leyenda obligatoria y siempre visible en el resultado.
                     Text(
                         text = "Simulación referencial generada por IA",
@@ -268,6 +289,14 @@ fun VirtualTryOnSheet(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),
                     )
+
+                    resultado.restantesHoy?.let { restantes ->
+                        Text(
+                            text = "Te quedan $restantes de ${resultado.limiteDiario ?: restantes} pruebas virtuales hoy.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
 
                     MvPrimaryButton(
                         text = if (tallaSeleccionada != null) {
@@ -311,3 +340,40 @@ fun VirtualTryOnSheet(
     }
 }
 
+@Composable
+private fun RecomendacionEnResultado(recomendacion: RecomendacionTalla) {
+    val texto = when (recomendacion) {
+        is RecomendacionTalla.TallaExacta -> "Talla recomendada para ti: ${recomendacion.talla}"
+        is RecomendacionTalla.EntreDosTallas ->
+            "Talla recomendada para ti: entre ${recomendacion.tallaMenor} y ${recomendacion.tallaMayor}"
+        else -> return
+    }
+    Surface(
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Outlined.Straighten,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = texto,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            }
+            Text(
+                text = "Recomendación aproximada, no garantiza el ajuste exacto.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
+        }
+    }
+}
