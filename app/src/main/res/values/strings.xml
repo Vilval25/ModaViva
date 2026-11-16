@@ -328,4 +328,7 @@
     <!-- Accesibilidad: búsqueda -->
     <string name="cd_search_clear">Borrar lo escrito</string>
     <string name="cd_search_back_explore">Volver a explorar</string>
+
+    <!-- Accesibilidad: foto del probador -->
+    <string name="cd_fitting_registered_photo">Tu foto registrada</string>
 </resources>
