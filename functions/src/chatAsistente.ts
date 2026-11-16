@@ -2,7 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
-import { cargarPoliticas } from "./politicasTienda.js";
+import { cargarPoliticas, politicasParaConsulta } from "./politicasTienda.js";
 
 if (!getApps().length) {
   initializeApp();
@@ -247,6 +247,9 @@ export const chatAsistente = onCall(
       ? `ENVÍOS LIMA (Recojo en tienda GRATIS): Con cobertura: ${distritosConCobertura.join(", ")}. Sin cobertura delivery: ${distritosSinCobertura.join(", ") || "ninguno"}.`
       : "ENVÍOS: Recojo gratis en tienda; delivery en distritos habilitados de Lima.";
 
+    // Solo van completas las políticas del tema de la pregunta (mismo criterio que el catálogo).
+    const seccionPoliticas = politicasParaConsulta(politicas, qNorm);
+
     const mencionaPedidos = /\b(pedido|pedidos|compra|compras|orden|estado|enviado|entregado)\b/.test(qNorm);
     const resumenPedidos = !mencionaPedidos || pedidosSnap.empty
       ? ""
@@ -280,7 +283,7 @@ REGLAS:
 - Al recomendar una prenda escribe su código entre corchetes ej. [MV-101].
 - Si un distrito no tiene cobertura o es S/0, indica que no hay delivery y sugiere el recojo gratis en tienda.
 POLÍTICAS:
-${politicas}
+${seccionPoliticas}
 CLIENTE: ${nombreCliente || "Cliente"} | Altura: ${alturaCm} | Foto probador: ${tieneFotoProbador ? "Sí" : "No"}${resumenPedidos}
 ${seccionEnvios}${contextoPrendaActual}
 CATÁLOGO RELEVANTE (${prendasSeleccionadas.length} de ${catalogo.length}):
