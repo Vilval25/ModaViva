@@ -10,8 +10,12 @@ if (!getApps().length) {
 const groqApiKey = defineSecret("GROQ_API_KEY");
 
 const GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_PRIMARY_MODEL = "qwen/qwen3.8-27b";
-const GROQ_FALLBACK_MODEL = "openai/gpt-oss-20b";
+
+const GROQ_MODELS: Array<{ id: string; reasoning: boolean }> = [
+  { id: "qwen/qwen3.8-27b", reasoning: false },
+  { id: "openai/gpt-oss-20b", reasoning: true },
+  { id: "openai/gpt-oss-120b", reasoning: true },
+];
 
 interface ChatTurnInput {
   role?: string;
@@ -45,6 +49,14 @@ interface GroqResponse {
   };
 }
 
+function normalizar(texto: string): string {
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 function precioVigente(p: PrendaCatalogoResumen): number {
   if (p.precioPromocional !== null && p.precioPromocional > 0 && p.precioPromocional < p.precio) {
     return p.precioPromocional;
@@ -52,10 +64,43 @@ function precioVigente(p: PrendaCatalogoResumen): number {
   return p.precio;
 }
 
+function tieneOferta(p: PrendaCatalogoResumen): boolean {
+  return p.precioPromocional !== null && p.precioPromocional > 0 && p.precioPromocional < p.precio;
+}
+
+function seleccionarPrendasRelevantes(
+  catalogo: PrendaCatalogoResumen[],
+  consulta: string,
+  prendaActual?: PrendaCatalogoResumen,
+  limite = 12
+): PrendaCatalogoResumen[] {
+  const q = normalizar(consulta);
+  const tokens = q.split(/[^a-z0-9]+/).filter((t) => t.length >= 3);
+  const pideOfertas = /\b(oferta|ofertas|descuento|promo|promocion|rebaja|barato|economico)\b/.test(q);
+
+  const puntuadas = catalogo.map((p) => {
+    let score = 0;
+    if (prendaActual && p.codigo === prendaActual.codigo) score += 100;
+    if (pideOfertas && tieneOferta(p)) score += 10;
+    if (p.stockTotal > 0) score += 1;
+
+    const haystack = normalizar(
+      `${p.codigo} ${p.nombre} ${p.marca} ${p.categoria} ${p.subcategoria} ${p.color} ${p.descripcion}`
+    );
+    for (const tok of tokens) {
+      if (haystack.includes(tok)) score += 4;
+    }
+    return { p, score };
+  });
+
+  puntuadas.sort((a, b) => b.score - a.score);
+  return puntuadas.slice(0, limite).map((item) => item.p);
+}
+
 /**
- * Asistente virtual de ModaViva impulsado por Groq (Llama 3.3 70B).
- * Inyecta catálogo vivo de Firestore, tarifas de envío en Lima y perfil del
- * cliente para responder sobre tallas, outfits, precios y cobertura.
+ * Asistente virtual de ModaViva impulsado por Groq.
+ * Filtra el contexto relevante de Firestore por consulta para minimizar tokens
+ * (TPM) y aplica respaldo automático entre modelos ante límites 429.
  */
 export const chatAsistente = onCall(
   {
@@ -92,10 +137,10 @@ export const chatAsistente = onCall(
     const db = getFirestore();
 
     const [prendasSnap, tarifasSnap, clienteSnap, pedidosSnap] = await Promise.all([
-      db.collection("prendas").limit(40).get(),
+      db.collection("prendas").limit(60).get(),
       db.collection("tarifasEnvio").get(),
       db.collection("clientes").doc(uid).get(),
-      db.collection("clientes").doc(uid).collection("pedidos").limit(20).get(),
+      db.collection("clientes").doc(uid).collection("pedidos").limit(10).get(),
     ]);
 
     const catalogo: PrendaCatalogoResumen[] = prendasSnap.docs.map((doc) => {
@@ -121,98 +166,96 @@ export const chatAsistente = onCall(
       };
     });
 
-    const resumenCatalogo = catalogo
+    const prendaActual = prendaCodigo
+      ? catalogo.find((p) => p.codigo.toLowerCase() === prendaCodigo.toLowerCase())
+      : undefined;
+
+    const historialSeguro = Array.isArray(historial) ? historial.slice(-4) : [];
+    const textoContextoConsulta = [
+      textoUsuario,
+      ...historialSeguro.slice(-2).map((h) => String(h.content || "")),
+    ].join(" ");
+
+    const prendasSeleccionadas = seleccionarPrendasRelevantes(
+      catalogo,
+      textoContextoConsulta,
+      prendaActual,
+      12
+    );
+
+    const resumenCatalogo = prendasSeleccionadas
       .map((p) => {
         const pv = precioVigente(p);
-        const promoTag =
-          p.precioPromocional && p.precioPromocional < p.precio
-            ? ` (antes S/ ${p.precio.toFixed(2)}, en oferta)`
-            : "";
-        return `- [${p.codigo}] ${p.nombre} | ${p.marca} | ${p.categoria}/${p.subcategoria} | Color: ${p.color} | S/ ${pv.toFixed(2)}${promoTag} | Tallas: ${p.tallas.join(", ")} | Stock: ${p.stockTotal}`;
+        const promo = tieneOferta(p) ? ` (oferta, antes S/${p.precio.toFixed(2)})` : "";
+        return `[${p.codigo}] ${p.nombre} | ${p.categoria}/${p.subcategoria} | ${p.color} | S/${pv.toFixed(2)}${promo} | Tallas:${p.tallas.join(",")} | Stock:${p.stockTotal}`;
       })
       .join("\n");
 
     const distritosConCobertura: string[] = [];
     const distritosSinCobertura: string[] = [];
+    const nombresDistritosNorm: string[] = [];
     for (const doc of tarifasSnap.docs) {
       const d = doc.data() ?? {};
       const nombre = String(d.nombre || d.distrito || doc.id);
       const precio = Number(d.precio ?? d.costo ?? 0);
       const activo = d.activo !== false;
+      nombresDistritosNorm.push(normalizar(nombre));
       if (activo && precio > 0) {
-        distritosConCobertura.push(`${nombre}: S/ ${precio.toFixed(2)}`);
+        distritosConCobertura.push(`${nombre}: S/${precio.toFixed(2)}`);
       } else {
         distritosSinCobertura.push(nombre);
       }
     }
 
+    const qNorm = normalizar(textoContextoConsulta);
+    const mencionaEnvio =
+      /\b(envio|envios|delivery|distrito|distritos|lima|recojo|tienda|costo|tarifa|cobertura|llega|llegan)\b/.test(qNorm) ||
+      nombresDistritosNorm.some((d) => d.length >= 4 && qNorm.includes(d));
+
+    const seccionEnvios = mencionaEnvio
+      ? `ENVÍOS LIMA (Recojo en tienda GRATIS): Con cobertura: ${distritosConCobertura.join(", ")}. Sin cobertura delivery: ${distritosSinCobertura.join(", ") || "ninguno"}.`
+      : "ENVÍOS: Recojo gratis en tienda; delivery en distritos habilitados de Lima.";
+
+    const mencionaPedidos = /\b(pedido|pedidos|compra|compras|orden|estado|enviado|entregado)\b/.test(qNorm);
+    const resumenPedidos = !mencionaPedidos || pedidosSnap.empty
+      ? ""
+      : "\nPEDIDOS RECIENTES:\n" +
+        pedidosSnap.docs
+          .map((doc) => doc.data() ?? {})
+          .sort((a, b) => Number(b.creadoEnMillis || 0) - Number(a.creadoEnMillis || 0))
+          .slice(0, 3)
+          .map((p) => `- ${p.numeroPedido || "?"}: ${p.estado || "?"}, ${p.tipoEntrega || "?"}, S/${Number(p.total || 0).toFixed(2)}`)
+          .join("\n");
+
     const clienteData = clienteSnap.data() ?? {};
     const nombreCliente = String(clienteData.nombres || "").trim();
-    const alturaCm = clienteData.alturaCm ? `${clienteData.alturaCm} cm` : "no registrada";
+    const alturaCm = clienteData.alturaCm ? `${clienteData.alturaCm}cm` : "no reg.";
     const tieneFotoProbador = Boolean(
       (clienteData.probador as { fotoUrl?: string } | undefined)?.fotoUrl ||
         clienteData.fotoProbadorUrl
     );
 
-    const resumenPedidos = pedidosSnap.empty
-      ? "Sin pedidos recientes."
-      : pedidosSnap.docs
-          .map((doc) => doc.data() ?? {})
-          .sort((a, b) => Number(b.creadoEnMillis || 0) - Number(a.creadoEnMillis || 0))
-          .slice(0, 3)
-          .map((p) => {
-            return `- Pedido ${p.numeroPedido || "?"}: estado=${p.estado || "?"}, entrega=${p.tipoEntrega || "?"}, total=S/ ${Number(p.total || 0).toFixed(2)}`;
-          })
-          .join("\n");
-
-    const prendaActual = prendaCodigo
-      ? catalogo.find((p) => p.codigo.toLowerCase() === prendaCodigo.toLowerCase())
-      : undefined;
-
     const contextoPrendaActual = prendaActual
-      ? `\nPRENDA QUE EL CLIENTE ESTÁ VIENDO AHORA:\n` +
-        `Código: ${prendaActual.codigo}\n` +
-        `Nombre: ${prendaActual.nombre} (${prendaActual.marca})\n` +
-        `Descripción: ${prendaActual.descripcion}\n` +
-        `Precio vigente: S/ ${precioVigente(prendaActual).toFixed(2)}\n` +
-        `Tallas: ${prendaActual.tallas.join(", ")} | Stock total: ${prendaActual.stockTotal}\n` +
-        (prendaActual.medidas ? `Medidas (cm): ${JSON.stringify(prendaActual.medidas)}\n` : "")
+      ? `\nPRENDA ACTUAL: [${prendaActual.codigo}] ${prendaActual.nombre} (${prendaActual.marca}) - ${prendaActual.descripcion} | S/${precioVigente(prendaActual).toFixed(2)} | Tallas: ${prendaActual.tallas.join(",")}` +
+        (prendaActual.medidas ? ` | Medidas: ${JSON.stringify(prendaActual.medidas)}` : "")
       : "";
 
-    const systemPrompt = `Eres el Asistente Virtual oficial de ModaViva (tienda de moda en Lima, Perú).
-Responde siempre en español claro, cordial, breve y práctico (máximo 140 palabras salvo que te pidan comparar varias opciones).
-
-REGLAS ESTRICTAS:
-1. Usa ÚNICAMENTE los productos, códigos, precios (en S/), tallas y distritos del contexto real provisto abajo. Nunca inventes prendas, precios ni coberturas.
-2. Cuando recomiendes una prenda del catálogo, incluye su código entre corchetes tal como aparece en la lista, por ejemplo [MV-101], para que la app muestre su tarjeta directa.
-3. Si preguntan por un distrito sin cobertura o con tarifa S/ 0.00, indica claramente que no hay cobertura de envío a domicilio para ese distrito y sugiere recojo gratis en tienda.
-4. Si preguntan cómo ver cómo les queda una prenda, indícales que pueden usar el botón "Probarme" con el Probador Virtual IA (requiere aceptar privacidad y subir su foto de cuerpo completo en la pestaña Probador).
-
-PERFIL DEL CLIENTE:
-- Nombre: ${nombreCliente || "Cliente"}
-- Estatura registrada: ${alturaCm}
-- Foto en Probador Virtual: ${tieneFotoProbador ? "Sí registrada" : "Aún no registrada"}
-
-PEDIDOS RECIENTES DEL CLIENTE:
-${resumenPedidos}
-
-ENVÍOS EN LIMA (Recojo en tienda es GRATIS):
-- Con cobertura: ${distritosConCobertura.join(" | ") || "Consultar en Checkout"}
-- Sin cobertura de delivery: ${distritosSinCobertura.join(", ") || "Ninguno"}
-${contextoPrendaActual}
-CATÁLOGO ACTUAL DE MODAVIVA:
+    const systemPrompt = `Eres el Asistente Virtual de ModaViva (Lima, Perú). Responde en español, breve y práctico (máx 120 palabras).
+REGLAS: Usa SOLO datos del catálogo/envíos abajo; nunca inventes precios ni prendas. Al recomendar una prenda escribe su código entre corchetes ej. [MV-101]. Si un distrito no tiene cobertura o es S/0, indica que no hay delivery y sugiere recojo gratis en tienda. Para probar ropa, menciona el botón "Probarme" (requiere foto en Probador).
+CLIENTE: ${nombreCliente || "Cliente"} | Altura: ${alturaCm} | Foto probador: ${tieneFotoProbador ? "Sí" : "No"}${resumenPedidos}
+${seccionEnvios}${contextoPrendaActual}
+CATÁLOGO RELEVANTE (${prendasSeleccionadas.length} de ${catalogo.length}):
 ${resumenCatalogo}`;
 
     const mensajesApi: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
       { role: "system", content: systemPrompt },
     ];
 
-    const historialSeguro = Array.isArray(historial) ? historial.slice(-8) : [];
     for (const turn of historialSeguro) {
       const content = typeof turn.content === "string" ? turn.content.trim() : "";
       if (!content) continue;
       const role = turn.role === "assistant" ? "assistant" : "user";
-      mensajesApi.push({ role, content: content.slice(0, 1000) });
+      mensajesApi.push({ role, content: content.slice(0, 400) });
     }
     mensajesApi.push({ role: "user", content: textoUsuario });
 
@@ -224,14 +267,14 @@ ${resumenCatalogo}`;
       );
     }
 
-    async function llamarGroq(modelo: string, esReasoning: boolean): Promise<Response> {
+    async function llamarGroq(modelo: { id: string; reasoning: boolean }): Promise<Response> {
       const payload: Record<string, unknown> = {
-        model: modelo,
+        model: modelo.id,
         messages: mensajesApi,
         temperature: 0.35,
-        max_tokens: esReasoning ? 1200 : 650,
+        max_tokens: modelo.reasoning ? 800 : 400,
       };
-      if (esReasoning) {
+      if (modelo.reasoning) {
         payload.reasoning_effort = "low";
       }
       return fetch(GROQ_CHAT_URL, {
@@ -244,9 +287,18 @@ ${resumenCatalogo}`;
       });
     }
 
-    let groqRes = await llamarGroq(GROQ_PRIMARY_MODEL, false);
-    if (groqRes.status === 400 || groqRes.status === 404) {
-      groqRes = await llamarGroq(GROQ_FALLBACK_MODEL, true);
+    let groqRes: Response | null = null;
+    for (const modelo of GROQ_MODELS) {
+      const res = await llamarGroq(modelo);
+      groqRes = res;
+      if (res.ok) break;
+      if (res.status !== 400 && res.status !== 404 && res.status !== 429 && res.status !== 413) {
+        break;
+      }
+    }
+
+    if (!groqRes) {
+      throw new HttpsError("internal", "No se pudo contactar con el asistente.");
     }
 
     const groqJson = (await groqRes.json().catch(() => ({}))) as GroqResponse;
@@ -254,7 +306,7 @@ ${resumenCatalogo}`;
       if (groqRes.status === 429) {
         throw new HttpsError(
           "resource-exhausted",
-          "El asistente está atendiendo muchas consultas. Intenta en unos segundos."
+          "Límite temporal de tokens alcanzado. Espera unos segundos e intenta de nuevo."
         );
       }
       throw new HttpsError(
