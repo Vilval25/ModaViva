@@ -331,4 +331,8 @@
 
     <!-- Accesibilidad: foto del probador -->
     <string name="cd_fitting_registered_photo">Tu foto registrada</string>
+
+    <!-- Accesibilidad: resultado del probador -->
+    <string name="cd_tryon_result">Resultado del probador virtual</string>
+    <string name="cd_action_enlarge_image">ampliar la imagen</string>
 </resources>
