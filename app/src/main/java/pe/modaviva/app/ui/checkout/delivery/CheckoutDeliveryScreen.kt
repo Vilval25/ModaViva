@@ -44,6 +44,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,6 +64,7 @@ fun CheckoutDeliveryScreen(
                         Text(
                             text = if (state.esDelivery) "Dirección de entrega" else "Confirmación de recojo",
                             style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.semantics { heading() },
                         )
                         Text(
                             text = "Paso 2 de 3: Datos de entrega",

@@ -78,6 +78,8 @@ import pe.modaviva.app.domain.model.ItemPedidoCalculado
 import pe.modaviva.app.domain.model.TarifaEnvio
 import pe.modaviva.app.domain.usecase.TiendaCartConDistancia
 import pe.modaviva.app.ui.format.formatearSoles
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -96,6 +98,7 @@ fun CheckoutSummaryScreen(
                         Text(
                             text = "Resumen del pedido",
                             style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.semantics { heading() },
                         )
                         Text(
                             text = "Paso 1 de 3: Confirmación de importes",
