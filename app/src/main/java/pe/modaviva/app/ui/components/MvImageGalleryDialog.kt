@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
+import androidx.compose.ui.res.stringResource
+import pe.modaviva.app.R
 
 @Composable
 fun MvImageGalleryDialog(
@@ -73,7 +75,7 @@ fun MvImageGalleryDialog(
 
                 AsyncImage(
                     model = fotos[pagina],
-                    contentDescription = "Foto ${pagina + 1} de ${fotos.size}",
+                    contentDescription = stringResource(R.string.cd_gallery_photo, pagina + 1, fotos.size),
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
                         .fillMaxSize()
@@ -115,7 +117,7 @@ fun MvImageGalleryDialog(
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Cerrar galería",
+                    contentDescription = stringResource(R.string.cd_gallery_close),
                 )
             }
         }
