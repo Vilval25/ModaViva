@@ -388,7 +388,7 @@ private fun SuggestedGarmentCard(
                         .data(prenda.fotoUrl)
                         .crossfade(true)
                         .build(),
-                    contentDescription = prenda.nombre,
+                    contentDescription = null, // el nombre ya está escrito al lado
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(48.dp)

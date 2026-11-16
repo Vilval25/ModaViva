@@ -545,7 +545,7 @@ private fun ItemPedidoRow(item: ItemPedido) {
         ) {
             AsyncImage(
                 model = item.fotoUrl,
-                contentDescription = item.nombre,
+                contentDescription = null, // el nombre ya está escrito al lado
                 modifier = Modifier
                     .size(50.dp)
                     .clip(RoundedCornerShape(6.dp))

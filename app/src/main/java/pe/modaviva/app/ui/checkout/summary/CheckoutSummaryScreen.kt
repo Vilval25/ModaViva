@@ -678,7 +678,7 @@ private fun ItemCheckoutRow(item: ItemPedidoCalculado) {
         ) {
             AsyncImage(
                 model = item.fotoUrl,
-                contentDescription = item.nombre,
+                contentDescription = null, // el nombre ya está escrito al lado
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(6.dp))
