@@ -35,13 +35,13 @@ Desde un pedido entregado (hasta 7 días después), el cliente registra la solic
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que mi pedido pasó a 'Entregado' hace 7 días o menos, cuando lo abro, entonces puedo iniciar una solicitud; pasados los 7 días la opción no aparece.
-- [ ] **CA-02** Dado que inicio la solicitud, cuando la completo, entonces debo elegir prenda, tipo (cambio o devolución) y un motivo de la lista para poder enviarla.
-- [ ] **CA-03** Dado que elijo el motivo 'Otro', cuando intento enviar sin escribir el detalle, entonces no puedo continuar.
-- [ ] **CA-04** Dado que ya adjunté 3 fotos, cuando intento agregar otra, entonces se me indica que el máximo es 3.
-- [ ] **CA-05** Dado que envío la solicitud, cuando se registra, entonces recibo un número de solicitud y su estado es 'En evaluación'.
-- [ ] **CA-06** Dado que existe una prueba virtual previa de esa prenda, cuando se registra la solicitud, entonces queda marcado en el registro que hubo prueba virtual.
-- [ ] **CA-07** Dado que la solicitud fue resuelta en el back-office, cuando la consulto, entonces veo su estado y la resolución; la app no permite aprobar ni rechazar solicitudes.
+- [x] **CA-01** Dado que mi pedido pasó a 'Entregado' hace 7 días o menos, cuando lo abro, entonces puedo iniciar una solicitud; pasados los 7 días la opción no aparece.
+- [x] **CA-02** Dado que inicio la solicitud, cuando la completo, entonces debo elegir prenda, tipo (cambio o devolución) y un motivo de la lista para poder enviarla.
+- [x] **CA-03** Dado que elijo el motivo 'Otro', cuando intento enviar sin escribir el detalle, entonces no puedo continuar.
+- [x] **CA-04** Dado que ya adjunté 3 fotos, cuando intento agregar otra, entonces se me indica que el máximo es 3.
+- [x] **CA-05** Dado que envío la solicitud, cuando se registra, entonces recibo un número de solicitud y su estado es 'En evaluación'.
+- [x] **CA-06** Dado que existe una prueba virtual previa de esa prenda, cuando se registra la solicitud, entonces queda marcado en el registro que hubo prueba virtual.
+- [x] **CA-07** Dado que la solicitud fue resuelta en el back-office, cuando la consulto, entonces veo su estado y la resolución; la app no permite aprobar ni rechazar solicitudes.
 
 ## Tecnologías
 
