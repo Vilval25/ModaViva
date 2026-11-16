@@ -34,11 +34,11 @@ Al tocar una prenda se abre su ficha: galería de fotos, nombre, código, precio
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que abro una prenda, cuando carga la ficha, entonces veo fotos, nombre, código, precio, descripción, color y tallas.
-- [ ] **CA-02** Dado que toco una foto, cuando se abre la galería a pantalla completa, entonces puedo deslizar entre fotos y hacer zoom.
-- [ ] **CA-03** Dado que toco 'Tabla de medidas', cuando se abre, entonces veo las medidas en cm por talla sin salir de la ficha.
-- [ ] **CA-04** Dado que no he elegido talla, cuando veo el botón de compra, entonces está deshabilitado con el texto 'Elige tu talla'.
-- [ ] **CA-05** Dado que elijo una talla disponible, cuando la selecciono, entonces veo el plazo estimado de entrega y las tiendas con stock (ver HU-05).
+- [x] **CA-01** Dado que abro una prenda, cuando carga la ficha, entonces veo fotos, nombre, código, precio, descripción, color y tallas.
+- [x] **CA-02** Dado que toco una foto, cuando se abre la galería a pantalla completa, entonces puedo deslizar entre fotos y hacer zoom.
+- [x] **CA-03** Dado que toco 'Tabla de medidas', cuando se abre, entonces veo las medidas en cm por talla sin salir de la ficha.
+- [x] **CA-04** Dado que no he elegido talla, cuando veo el botón de compra, entonces está deshabilitado con el texto 'Elige tu talla'.
+- [x] **CA-05** Dado que elijo una talla disponible, cuando la selecciono, entonces veo el plazo estimado de entrega y las tiendas con stock (ver HU-05).
 
 ## Tecnologías
 
