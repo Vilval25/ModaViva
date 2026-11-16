@@ -25,8 +25,9 @@ import pe.modaviva.app.domain.model.MedidasPrenda
         CartEntity::class,
         PortadaEntity::class,
         FavoritoEntity::class,
+        StockEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true,
 )
 @TypeConverters(Convertidores::class)
@@ -35,6 +36,7 @@ abstract class ModaVivaDatabase : RoomDatabase() {
     abstract fun cartDao(): CartDao
     abstract fun portadaDao(): PortadaDao
     abstract fun favoritoDao(): FavoritoDao
+    abstract fun stockDao(): StockDao
 }
 
 class Convertidores {

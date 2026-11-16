@@ -42,5 +42,18 @@ object Migraciones {
         }
     }
 
-    val TODAS: Array<Migration> = arrayOf(DE_5_A_6, DE_6_A_7, DE_7_A_8)
+    /** 8 → 9: copia local del stock por talla y tienda (HU-05 CA-03). No toca el carrito. */
+    val DE_8_A_9 = object : Migration(8, 9) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `stock` (`varianteId` TEXT NOT NULL, " +
+                    "`prendaId` TEXT NOT NULL, `talla` TEXT NOT NULL, `porTienda` TEXT NOT NULL, " +
+                    "`total` INTEGER NOT NULL, `actualizadoEnMillis` INTEGER NOT NULL, " +
+                    "PRIMARY KEY(`varianteId`))",
+            )
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_stock_prendaId` ON `stock` (`prendaId`)")
+        }
+    }
+
+    val TODAS: Array<Migration> = arrayOf(DE_5_A_6, DE_6_A_7, DE_7_A_8, DE_8_A_9)
 }

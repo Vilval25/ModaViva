@@ -95,9 +95,35 @@ class MigracionesTest {
     }
 
     @Test
+    fun de8a9CreaLaTablaDeStockSinTocarElCarrito() {
+        helper.createDatabase(BASE, 8).use { db ->
+            db.execSQL(
+                "INSERT INTO carrito (varianteId, prendaId, talla, colorNombre, colorHex, cantidad, " +
+                    "precioAlAgregar, agregadoEnMillis) VALUES ('AB-1002_M', 'AB-1002', 'M', 'Negro', " +
+                    "'#000000', 2, 89.9, 1700000000000)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(BASE, 9, true, Migraciones.DE_8_A_9).use { db ->
+            db.execSQL(
+                "INSERT INTO stock (varianteId, prendaId, talla, porTienda, total, actualizadoEnMillis) " +
+                    "VALUES ('AB-1002_M', 'AB-1002', 'M', 'T01:2;T02:0', 2, 1700000000000)",
+            )
+            db.query("SELECT SUM(total) FROM stock WHERE prendaId = 'AB-1002'").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(2, cursor.getInt(0))
+            }
+            db.query("SELECT COUNT(*) FROM carrito").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(1, cursor.getInt(0))
+            }
+        }
+    }
+
+    @Test
     fun todasLasMigracionesLleganALaVersionActual() {
         helper.createDatabase(BASE, 5).close()
-        helper.runMigrationsAndValidate(BASE, 8, true, *Migraciones.TODAS).close()
+        helper.runMigrationsAndValidate(BASE, 9, true, *Migraciones.TODAS).close()
     }
 
     private companion object {

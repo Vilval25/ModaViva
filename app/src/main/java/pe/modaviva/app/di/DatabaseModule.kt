@@ -13,6 +13,7 @@ import pe.modaviva.app.data.local.FavoritoDao
 import pe.modaviva.app.data.local.Migraciones
 import pe.modaviva.app.data.local.ModaVivaDatabase
 import pe.modaviva.app.data.local.PortadaDao
+import pe.modaviva.app.data.local.StockDao
 import java.time.Clock
 import javax.inject.Singleton
 
@@ -43,6 +44,9 @@ object DatabaseModule {
 
     @Provides
     fun provideFavoritoDao(database: ModaVivaDatabase): FavoritoDao = database.favoritoDao()
+
+    @Provides
+    fun provideStockDao(database: ModaVivaDatabase): StockDao = database.stockDao()
 
     @Provides
     @Singleton
