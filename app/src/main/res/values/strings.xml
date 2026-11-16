@@ -301,4 +301,10 @@
     <string name="cd_gallery_photo">Foto %1$d de %2$d</string>
     <string name="cd_gallery_close">Cerrar galería</string>
     <string name="cd_close">Cerrar</string>
+
+    <!-- Accesibilidad: cámara del probador -->
+    <string name="cd_camera_close">Cerrar la cámara</string>
+    <string name="cd_camera_switch">Cambiar entre cámara frontal y trasera</string>
+    <string name="cd_camera_capture">Tomar foto</string>
+    <string name="cd_fitting_captured_photo">Foto que acabas de tomar</string>
 </resources>

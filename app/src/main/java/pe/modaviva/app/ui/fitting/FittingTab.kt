@@ -502,7 +502,7 @@ private fun FittingPhotoPreviewScreen(
         ) {
             Image(
                 bitmap = bitmap.asImageBitmap(),
-                contentDescription = "Foto capturada",
+                contentDescription = stringResource(R.string.cd_fitting_captured_photo),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
             )
