@@ -53,6 +53,8 @@ import pe.modaviva.app.ui.checkout.rejected.PaymentRejectedScreen
 import pe.modaviva.app.ui.format.formatearSoles
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.res.stringResource
+import pe.modaviva.app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,7 +102,7 @@ fun CheckoutPaymentScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver a entrega",
+                            contentDescription = stringResource(R.string.cd_checkout_back_delivery),
                         )
                     }
                 },

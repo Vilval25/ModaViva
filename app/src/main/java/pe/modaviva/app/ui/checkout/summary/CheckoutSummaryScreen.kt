@@ -80,6 +80,8 @@ import pe.modaviva.app.domain.usecase.TiendaCartConDistancia
 import pe.modaviva.app.ui.format.formatearSoles
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.res.stringResource
+import pe.modaviva.app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,7 +113,7 @@ fun CheckoutSummaryScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver al carrito",
+                            contentDescription = stringResource(R.string.cd_checkout_back_cart),
                         )
                     }
                 },
@@ -317,7 +319,7 @@ private fun AvisosRevalidacionCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Cerrar alerta",
+                            contentDescription = stringResource(R.string.cd_close_alert),
                             modifier = Modifier.size(16.dp),
                         )
                     }
@@ -882,7 +884,7 @@ private fun CuponSection(
                             trailingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "Quitar cupón",
+                                    contentDescription = stringResource(R.string.cd_remove_coupon, cupon.codigo),
                                     modifier = Modifier
                                         .size(16.dp)
                                         .clickable { onRemover(cupon.codigo) },
