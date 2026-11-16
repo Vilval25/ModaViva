@@ -52,6 +52,7 @@ fun ProductAccordionSections(
     tallaSeleccionada: String?,
     stock: Stock?,
     tiendas: List<Tienda>,
+    envioEstimado: EnvioEstimado? = null,
     modifier: Modifier = Modifier,
 ) {
     var detailsExpanded by remember { mutableStateOf(false) }
@@ -140,13 +141,22 @@ fun ProductAccordionSections(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.padding(bottom = 14.dp),
             ) {
-                InfoSummaryCard(
-                    titulo = "Opciones de entrega (se eligen al pagar)",
-                    lineas = listOf(
-                        "• Envío a domicilio en Lima Metropolitana (tarifa y plazo según tu distrito en Checkout).",
-                        "• Recojo gratis en tienda: disponible hoy o entre 24 y 48 h según disponibilidad en la sede elegida.",
-                    ),
-                )
+                if (tallaSeleccionada != null && stock != null && stock.total > 0) {
+                    EntregaEstimadaCard(
+                        talla = tallaSeleccionada,
+                        stock = stock,
+                        tiendas = tiendas,
+                        envio = envioEstimado,
+                    )
+                } else {
+                    InfoSummaryCard(
+                        titulo = "Opciones de entrega (se eligen al pagar)",
+                        lineas = listOf(
+                            "• Envío a domicilio en Lima Metropolitana (tarifa y plazo según tu distrito en Checkout).",
+                            "• Recojo gratis en tienda: disponible hoy o entre 24 y 48 h según disponibilidad en la sede elegida.",
+                        ),
+                    )
+                }
 
                 when {
                     tallaSeleccionada == null -> {

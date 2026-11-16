@@ -276,18 +276,6 @@ fun ProductDetailScreen(
                     onIncreaseQty = { if (cantidad < maxStock) cantidad++ },
                 )
 
-                // HU-07 CA-05: con una talla disponible elegida se ve el plazo y las tiendas con stock.
-                val talla = tallaSeleccionada
-                val stockTalla = stock
-                if (talla != null && stockTalla != null && stockTalla.total > 0) {
-                    EntregaEstimadaCard(
-                        talla = talla,
-                        stock = stockTalla,
-                        tiendas = tiendas,
-                        envio = envioEstimado,
-                    )
-                }
-
                 Spacer(modifier = Modifier.height(4.dp))
 
                 ProductAccordionSections(
@@ -295,6 +283,7 @@ fun ProductDetailScreen(
                     tallaSeleccionada = tallaSeleccionada,
                     stock = stock,
                     tiendas = tiendas,
+                    envioEstimado = envioEstimado,
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
