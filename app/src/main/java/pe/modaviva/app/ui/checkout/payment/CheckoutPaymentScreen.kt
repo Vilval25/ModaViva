@@ -51,6 +51,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pe.modaviva.app.domain.model.TipoMedioPago
 import pe.modaviva.app.ui.checkout.rejected.PaymentRejectedScreen
 import pe.modaviva.app.ui.format.formatearSoles
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,6 +87,7 @@ fun CheckoutPaymentScreen(
                         Text(
                             text = "Medio de pago",
                             style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.semantics { heading() },
                         )
                         Text(
                             text = "Paso 3 de 3: Confirmación y pago",
