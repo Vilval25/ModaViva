@@ -348,4 +348,11 @@
     <!-- Accesibilidad: acciones al tocar -->
     <string name="cd_action_open_garment">ver la prenda</string>
     <string name="cd_action_open_categories">ver sus categorías</string>
+
+    <!-- Accesibilidad: acciones de otras tarjetas -->
+    <string name="cd_action_open_notice">abrir el aviso</string>
+    <string name="cd_action_open_order">ver el detalle del pedido</string>
+    <string name="cd_action_open_request">ver la solicitud</string>
+    <string name="cd_action_open_offers">ver las ofertas</string>
+    <string name="cd_action_explore">explorar</string>
 </resources>

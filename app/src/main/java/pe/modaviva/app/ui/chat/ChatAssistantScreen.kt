@@ -372,7 +372,7 @@ private fun SuggestedGarmentCard(
     Card(
         modifier = Modifier
             .width(190.dp)
-            .clickable(onClick = onClick),
+            .clickable(onClickLabel = stringResource(R.string.cd_action_open_garment), onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(14.dp),

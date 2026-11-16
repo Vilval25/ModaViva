@@ -45,6 +45,8 @@ import pe.modaviva.app.ui.components.MvScreen
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.compose.ui.res.stringResource
+import pe.modaviva.app.R
 
 /**
  * Centro de notificaciones (HU-18): lista de avisos del más reciente al más
@@ -110,7 +112,7 @@ private fun FilaAviso(aviso: Notificacion, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .background(fondo)
-            .clickable(onClick = onClick)
+            .clickable(onClickLabel = stringResource(R.string.cd_action_open_notice), onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp)
             .semantics {
                 contentDescription = buildString {

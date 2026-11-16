@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import pe.modaviva.app.R
+import androidx.compose.ui.res.stringResource
 
 /**
  * Vista inicial de exploración por colecciones y públicos cuando el usuario aún
@@ -88,7 +89,7 @@ private fun BannerOferta(onClick: () -> Unit) {
             .height(120.dp)
             .clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.primaryContainer)
-            .clickable(onClick = onClick),
+            .clickable(onClickLabel = stringResource(R.string.cd_action_open_offers), onClick = onClick),
     ) {
         Column(
             modifier = Modifier
@@ -137,7 +138,7 @@ private fun TarjetaGenero(
             .height(170.dp)
             .clip(MaterialTheme.shapes.large)
             .background(containerColor)
-            .clickable(onClick = onClick),
+            .clickable(onClickLabel = stringResource(R.string.cd_action_explore), onClick = onClick),
     ) {
         val ladoImagen = if (imagenALaIzquierda) Alignment.CenterStart else Alignment.CenterEnd
 

@@ -116,7 +116,7 @@ fun MisSolicitudesScreen(
 @Composable
 private fun SolicitudCard(sol: SolicitudPostventa, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth().clickable(onClickLabel = stringResource(R.string.cd_action_open_request), onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
