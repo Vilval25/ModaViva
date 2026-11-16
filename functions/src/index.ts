@@ -21,3 +21,4 @@ export { chatAsistente } from "./chatAsistente.js";
 export { enviarPush } from "./enviarPush.js";
 export { crearPedido } from "./crearPedido.js";
 export { registrarTarjeta } from "./pasarela.js";
+export { avisarCambioSolicitud } from "./avisos.js";
