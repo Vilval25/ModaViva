@@ -125,10 +125,29 @@ fun ProductDetailScreen(
         viewModel.mensajes.collect { snackbarHostState.showSnackbar(it) }
     }
 
+    LaunchedEffect(codigo) { stockViewModel.escucharPrenda(codigo) }
+
     LaunchedEffect(tallaSeleccionada) {
         cantidad = 1
         tallaSeleccionada?.let { talla ->
             stockViewModel.observeStock(prendaId = codigo, talla = talla)
+        }
+    }
+
+    // HU-05 CA-05: si la talla elegida se agota mientras se ve la prenda, se deshabilita y se
+    // avisa sin cerrar la pantalla.
+    val totalTallaElegida = tallaSeleccionada?.let { allStocks["${codigo}_$it"]?.total }
+    var totalAnterior by remember(tallaSeleccionada) { mutableStateOf<Int?>(null) }
+    LaunchedEffect(tallaSeleccionada, totalTallaElegida) {
+        val talla = tallaSeleccionada ?: return@LaunchedEffect
+        val antes = totalAnterior
+        totalAnterior = totalTallaElegida
+        if (antes != null && antes > 0 && totalTallaElegida != null && totalTallaElegida <= 0) {
+            tallaSeleccionada = null
+            snackbarHostState.showSnackbar(
+                message = "La talla $talla se acaba de agotar. Elige otra talla.",
+                duration = SnackbarDuration.Long,
+            )
         }
     }
 

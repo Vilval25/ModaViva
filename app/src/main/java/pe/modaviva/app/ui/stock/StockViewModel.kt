@@ -40,6 +40,20 @@ class StockViewModel @Inject constructor(
             initialValue = emptyMap(),
         )
 
+    private var prendaEscuchada: String? = null
+
+    /**
+     * HU-05 CA-03 y CA-05: mientras la ficha está abierta, el stock de todas sus tallas llega en
+     * tiempo real y se guarda en la copia local, que alimenta [stocksMap].
+     */
+    fun escucharPrenda(prendaId: String) {
+        if (prendaEscuchada == prendaId) return
+        prendaEscuchada = prendaId
+        viewModelScope.launch {
+            stockRepository.observeStocksDePrenda(prendaId).collect { }
+        }
+    }
+
     fun observeStock(
         prendaId: String,
         talla: String,
