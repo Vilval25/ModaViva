@@ -273,4 +273,11 @@
     <string name="cd_favorite_add">Agregar a favoritos</string>
     <string name="cd_favorite_remove">Quitar de favoritos</string>
     <string name="cd_remove_filter">Quitar filtro %1$s</string>
+
+    <!-- Accesibilidad: checkout -->
+    <string name="cd_checkout_back_cart">Volver al carrito</string>
+    <string name="cd_checkout_back_summary">Volver al resumen</string>
+    <string name="cd_checkout_back_delivery">Volver a entrega</string>
+    <string name="cd_close_alert">Cerrar alerta</string>
+    <string name="cd_remove_coupon">Quitar cupón %1$s</string>
 </resources>
