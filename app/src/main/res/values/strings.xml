@@ -315,4 +315,7 @@
     <string name="cd_attached_photo">Foto adjunta</string>
     <string name="cd_attached_photo_enlarged">Foto adjunta ampliada</string>
     <string name="cd_attached_photo_remove">Quitar foto adjunta</string>
+
+    <!-- Accesibilidad: métodos de pago -->
+    <string name="cd_card_delete">Eliminar tarjeta %1$s</string>
 </resources>
