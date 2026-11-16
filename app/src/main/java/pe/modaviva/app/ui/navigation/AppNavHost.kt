@@ -194,7 +194,7 @@ fun AppNavHost(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_bot_assistant),
-                                contentDescription = "Abrir el asistente de ModaViva",
+                                contentDescription = stringResource(R.string.cd_chat_open),
                                 modifier = Modifier.size(22.dp),
                             )
                         }
