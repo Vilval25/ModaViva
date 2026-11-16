@@ -296,4 +296,9 @@
     <string name="cd_chat_open">Abrir el asistente de ModaViva</string>
     <string name="cd_chat_new">Nueva conversación</string>
     <string name="cd_chat_send">Enviar mensaje</string>
+
+    <!-- Accesibilidad: componentes compartidos -->
+    <string name="cd_gallery_photo">Foto %1$d de %2$d</string>
+    <string name="cd_gallery_close">Cerrar galería</string>
+    <string name="cd_close">Cerrar</string>
 </resources>
