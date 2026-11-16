@@ -48,6 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
+import pe.modaviva.app.R
 
 /**
  * Vista de cámara nativa con CameraX y silueta guía para cuerpo completo (HU-11 CA-01).
@@ -181,7 +183,7 @@ fun FittingCameraView(
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Cerrar",
+                    contentDescription = stringResource(R.string.cd_camera_close),
                     tint = Color.White,
                 )
             }
@@ -212,7 +214,7 @@ fun FittingCameraView(
             ) {
                 Icon(
                     imageVector = Icons.Default.FlipCameraAndroid,
-                    contentDescription = "Cambiar cámara",
+                    contentDescription = stringResource(R.string.cd_camera_switch),
                     tint = Color.White,
                 )
             }
@@ -268,7 +270,7 @@ fun FittingCameraView(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.PhotoCamera,
-                    contentDescription = "Tomar foto",
+                    contentDescription = stringResource(R.string.cd_camera_capture),
                     modifier = Modifier.size(36.dp),
                 )
             }
