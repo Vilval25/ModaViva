@@ -30,11 +30,11 @@ Cada prenda es única y tiene un solo color; cada combinación prenda–talla ti
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que una talla tiene stock 0 en todas las tiendas, cuando la veo, entonces aparece deshabilitada con la etiqueta 'Agotado'.
-- [ ] **CA-02** Dado que todas las tallas de una prenda están agotadas, cuando navego el catálogo, entonces su tarjeta muestra 'Agotado' y no permite agregarla al carrito.
-- [ ] **CA-03** Dado que el stock cambia en el back-office, cuando pasan como máximo 15 min, entonces la app refleja el nuevo stock; si estoy viendo esa prenda, el cambio se ve de inmediato.
-- [ ] **CA-04** Dado que elijo una talla, cuando consulto la disponibilidad, entonces veo cuáles de las 5 tiendas tienen stock para recojo.
-- [ ] **CA-05** Dado que estoy viendo una prenda, cuando la talla seleccionada se agota, entonces la opción se deshabilita y aparece un aviso sin cerrar la pantalla.
+- [x] **CA-01** Dado que una talla tiene stock 0 en todas las tiendas, cuando la veo, entonces aparece deshabilitada con la etiqueta 'Agotado'.
+- [x] **CA-02** Dado que todas las tallas de una prenda están agotadas, cuando navego el catálogo, entonces su tarjeta muestra 'Agotado' y no permite agregarla al carrito.
+- [x] **CA-03** Dado que el stock cambia en el back-office, cuando pasan como máximo 15 min, entonces la app refleja el nuevo stock; si estoy viendo esa prenda, el cambio se ve de inmediato.
+- [x] **CA-04** Dado que elijo una talla, cuando consulto la disponibilidad, entonces veo cuáles de las 5 tiendas tienen stock para recojo.
+- [x] **CA-05** Dado que estoy viendo una prenda, cuando la talla seleccionada se agota, entonces la opción se deshabilita y aparece un aviso sin cerrar la pantalla.
 
 ## Tecnologías
 
