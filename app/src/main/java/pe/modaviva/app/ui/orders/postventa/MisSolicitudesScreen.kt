@@ -44,6 +44,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import pe.modaviva.app.domain.model.SolicitudPostventa
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 
 /** HU-24 CA-07 — Mis solicitudes: todas las solicitudes del cliente con su estado. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,7 +60,7 @@ fun MisSolicitudesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mis solicitudes") },
+                title = { Text("Mis solicitudes", modifier = Modifier.semantics { heading() }) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
