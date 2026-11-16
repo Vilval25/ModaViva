@@ -65,6 +65,11 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import pe.modaviva.app.R
+import pe.modaviva.app.ui.components.MvConfirmDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.DeleteSweep
 import pe.modaviva.app.domain.model.MensajeChat
 import pe.modaviva.app.domain.model.PrendaSugeridaChat
 import pe.modaviva.app.ui.format.formatearSoles
@@ -79,6 +84,7 @@ fun ChatAssistantScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var inputTexto by remember { mutableStateOf("") }
+    var confirmarNueva by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
 
     val sugerenciasRapidas = remember(prendaCodigoContexto) {
@@ -110,6 +116,20 @@ fun ChatAssistantScreen(
             inputTexto = ""
             viewModel.enviarMensaje(limpio, prendaCodigoContexto)
         }
+    }
+
+    if (confirmarNueva) {
+        MvConfirmDialog(
+            title = "Nueva conversación",
+            message = "Se borrará la conversación actual con el asistente.",
+            confirmLabel = "Borrar",
+            destructive = true,
+            onConfirm = {
+                confirmarNueva = false
+                viewModel.nuevaConversacion()
+            },
+            onDismiss = { confirmarNueva = false },
+        )
     }
 
     Scaffold(
@@ -149,6 +169,13 @@ fun ChatAssistantScreen(
                         }
                     }
                 },
+                actions = {
+                    if (state.hayConversacion) {
+                        IconButton(onClick = { confirmarNueva = true }) {
+                            Icon(Icons.Outlined.DeleteSweep, contentDescription = "Nueva conversación")
+                        }
+                    }
+                },
             )
         },
         bottomBar = {
@@ -178,15 +205,6 @@ fun ChatAssistantScreen(
                     }
                 }
 
-                state.error?.let { err ->
-                    Text(
-                        text = err,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                    )
-                }
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -196,10 +214,7 @@ fun ChatAssistantScreen(
                 ) {
                     OutlinedTextField(
                         value = inputTexto,
-                        onValueChange = {
-                            inputTexto = it
-                            if (state.error != null) viewModel.limpiarError()
-                        },
+                        onValueChange = { inputTexto = it },
                         placeholder = { Text("Pregunta sobre tallas, outfits o envíos…") },
                         singleLine = false,
                         maxLines = 3,
@@ -235,6 +250,10 @@ fun ChatAssistantScreen(
                 ChatBubbleItem(
                     mensaje = msg,
                     onPrendaClick = onPrendaClick,
+                    // HU-27 CA-05: el mensaje que no se pudo enviar muestra el error y Reintentar.
+                    error = state.error.takeIf { msg.id == state.mensajeFallidoId },
+                    reintentando = state.enviando,
+                    onReintentar = viewModel::reintentar,
                 )
             }
 
@@ -265,6 +284,9 @@ fun ChatAssistantScreen(
 private fun ChatBubbleItem(
     mensaje: MensajeChat,
     onPrendaClick: (String) -> Unit,
+    error: String? = null,
+    reintentando: Boolean = false,
+    onReintentar: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -294,6 +316,32 @@ private fun ChatBubbleItem(
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
             )
+        }
+
+        if (error != null) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 4.dp).widthIn(max = 300.dp),
+            ) {
+                Icon(
+                    Icons.Outlined.ErrorOutline,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = error,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                TextButton(onClick = onReintentar, enabled = !reintentando) {
+                    Icon(Icons.Outlined.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Reintentar")
+                }
+            }
         }
 
         if (mensaje.prendasSugeridas.isNotEmpty()) {
