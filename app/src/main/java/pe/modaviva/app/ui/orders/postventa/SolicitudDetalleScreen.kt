@@ -120,7 +120,7 @@ fun SolicitudDetalleScreen(
                     .clickable { fotoAmpliada = null },
                 contentAlignment = Alignment.Center,
             ) {
-                AsyncImage(model = url, contentDescription = "Foto ampliada", contentScale = ContentScale.Fit, modifier = Modifier.fillMaxWidth())
+                AsyncImage(model = url, contentDescription = stringResource(R.string.cd_attached_photo_enlarged), contentScale = ContentScale.Fit, modifier = Modifier.fillMaxWidth())
             }
         }
     }
@@ -227,7 +227,7 @@ private fun Contenido(
                 sol.fotosUrls.forEach { url ->
                     AsyncImage(
                         model = url,
-                        contentDescription = "Foto adjunta",
+                        contentDescription = stringResource(R.string.cd_attached_photo),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .size(96.dp)
