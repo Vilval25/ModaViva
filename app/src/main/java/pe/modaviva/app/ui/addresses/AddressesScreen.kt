@@ -61,6 +61,8 @@ import pe.modaviva.app.ui.components.MvConfirmDialog
 import pe.modaviva.app.ui.components.MvPrimaryButton
 import pe.modaviva.app.ui.components.MvSnackbarHost
 import pe.modaviva.app.ui.format.formatearSoles
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,7 +91,7 @@ fun AddressesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mis direcciones de entrega") },
+                title = { Text("Mis direcciones de entrega", modifier = Modifier.semantics { heading() }) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")

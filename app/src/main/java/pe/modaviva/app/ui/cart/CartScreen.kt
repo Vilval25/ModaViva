@@ -63,6 +63,8 @@ import pe.modaviva.app.ui.components.MvEmptyState
 import pe.modaviva.app.ui.components.MvPrimaryButton
 import pe.modaviva.app.ui.components.MvSnackbarHost
 import pe.modaviva.app.ui.format.formatearSoles
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,6 +85,7 @@ fun CartScreen(
                     Text(
                         text = stringResource(R.string.cart_title),
                         style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.semantics { heading() },
                     )
                 },
                 navigationIcon = {
