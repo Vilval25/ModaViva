@@ -64,6 +64,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import pe.modaviva.app.R
+import androidx.compose.ui.semantics.Role
 
 /** HU-21 — Perfil > Métodos de pago: lista, agregar y eliminar tarjetas (CA-04, CA-05, CA-06). */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -249,14 +250,14 @@ private fun TarjetaCard(
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .padding(top = 6.dp)
-                            .clickable(onClick = onPredeterminada),
+                            .clickable(onClick = onPredeterminada, role = Role.Button),
                     )
                 }
             }
             IconButton(onClick = onEliminar) {
                 Icon(
                     imageVector = Icons.Outlined.Delete,
-                    contentDescription = "Eliminar ${tarjeta.etiquetaResumen}",
+                    contentDescription = stringResource(R.string.cd_card_delete, tarjeta.etiquetaResumen),
                     tint = MaterialTheme.colorScheme.error,
                 )
             }
