@@ -78,6 +78,8 @@ import pe.modaviva.app.ui.orders.components.ChipEstadoPedido
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,6 +110,7 @@ fun OrderDetailScreen(
                             text = state.pedido?.numeroPedido ?: "Detalle del pedido",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
+                            modifier = Modifier.semantics { heading() },
                         )
                         state.pedido?.let {
                             Text(

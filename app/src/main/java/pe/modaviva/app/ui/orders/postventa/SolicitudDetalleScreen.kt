@@ -52,6 +52,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import pe.modaviva.app.domain.model.EstadoSolicitud
 import pe.modaviva.app.domain.model.SolicitudPostventa
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 
 /**
  * HU-24 CA-07 — Detalle de una solicitud: estado y resolución del back-office. Es solo de
@@ -71,7 +73,10 @@ fun SolicitudDetalleScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text((estado as? DetalleEstado.Lista)?.solicitud?.numeroSolicitud ?: "Solicitud")
+                    Text(
+                        (estado as? DetalleEstado.Lista)?.solicitud?.numeroSolicitud ?: "Solicitud",
+                        modifier = Modifier.semantics { heading() },
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
