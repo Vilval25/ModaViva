@@ -82,6 +82,8 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import pe.modaviva.app.R
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -612,7 +614,7 @@ private fun ModalidadEntregaCard(
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier.selectable(selected = seleccionada, role = Role.RadioButton, onClick = onClick),
         shape = RoundedCornerShape(8.dp),
         color = if (seleccionada) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         border = androidx.compose.foundation.BorderStroke(
