@@ -71,7 +71,11 @@ fun MvGarmentCard(
     Column(
         modifier = modifier
             .clip(MaterialTheme.shapes.large)
-            .clickable(onClick = onClick, role = Role.Button),
+            .clickable(
+                onClickLabel = stringResource(R.string.cd_action_open_garment),
+                role = Role.Button,
+                onClick = onClick,
+            ),
     ) {
         Box(
             modifier = Modifier

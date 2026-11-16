@@ -362,7 +362,10 @@ private fun Audiencias(onClick: (String) -> Unit, modifier: Modifier = Modifier)
             Box(
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.small)
-                    .clickable(role = Role.Button) { onClick(genero) }
+                    .clickable(
+                        onClickLabel = stringResource(R.string.cd_action_open_categories),
+                        role = Role.Button,
+                    ) { onClick(genero) }
                     .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
                     .padding(horizontal = 12.dp),
                 contentAlignment = Alignment.Center,
