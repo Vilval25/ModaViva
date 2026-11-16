@@ -36,13 +36,13 @@ Desde la pestaña Categorías el cliente navega por categoría y subcategoría. 
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que elijo una categoría y subcategoría, cuando se cargan los resultados, entonces solo veo prendas de esa subcategoría.
-- [ ] **CA-02** Dado que aplico varios filtros a la vez, cuando los confirmo, entonces todos los resultados cumplen todos los filtros y los filtros activos se muestran como chips removibles.
-- [ ] **CA-03** Dado que toco el buscador de la barra superior de Inicio y escribo al menos 2 caracteres, cuando busco, entonces veo prendas cuyo nombre, marca o categoría contienen el texto, sin distinguir mayúsculas ni tildes.
-- [ ] **CA-04** Dado que elijo ordenar por precio (ascendente o descendente) o por novedades, cuando se aplica, entonces el listado respeta ese orden.
-- [ ] **CA-05** Dado que llego al final de la lista y hay más resultados, cuando hago scroll, entonces se cargan los siguientes 20 con un indicador de carga.
-- [ ] **CA-06** Dado que no hay coincidencias, cuando termina la búsqueda, entonces veo 'No encontramos prendas para …' con la opción de limpiar filtros.
-- [ ] **CA-07** Dado que una prenda tiene promoción vigente, cuando aparece en el listado, entonces muestra el precio promocional destacado y el precio original tachado.
+- [x] **CA-01** Dado que elijo una categoría y subcategoría, cuando se cargan los resultados, entonces solo veo prendas de esa subcategoría.
+- [x] **CA-02** Dado que aplico varios filtros a la vez, cuando los confirmo, entonces todos los resultados cumplen todos los filtros y los filtros activos se muestran como chips removibles.
+- [x] **CA-03** Dado que toco el buscador de la barra superior de Inicio y escribo al menos 2 caracteres, cuando busco, entonces veo prendas cuyo nombre, marca o categoría contienen el texto, sin distinguir mayúsculas ni tildes.
+- [x] **CA-04** Dado que elijo ordenar por precio (ascendente o descendente) o por novedades, cuando se aplica, entonces el listado respeta ese orden.
+- [x] **CA-05** Dado que llego al final de la lista y hay más resultados, cuando hago scroll, entonces se cargan los siguientes 20 con un indicador de carga.
+- [x] **CA-06** Dado que no hay coincidencias, cuando termina la búsqueda, entonces veo 'No encontramos prendas para …' con la opción de limpiar filtros.
+- [x] **CA-07** Dado que una prenda tiene promoción vigente, cuando aparece en el listado, entonces muestra el precio promocional destacado y el precio original tachado.
 
 ## Tecnologías
 
