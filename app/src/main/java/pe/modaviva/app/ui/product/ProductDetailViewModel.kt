@@ -22,6 +22,11 @@ import pe.modaviva.app.domain.repository.CatalogoRepository
 import pe.modaviva.app.domain.repository.FittingConfigRepository
 import pe.modaviva.app.domain.repository.SessionRepository
 import pe.modaviva.app.domain.repository.TryOnRepository
+import pe.modaviva.app.domain.model.UsoProbadorHoy
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import pe.modaviva.app.domain.usecase.RecommendSizeUseCase
 import java.time.Instant
 import javax.inject.Inject
@@ -56,6 +61,14 @@ class ProductDetailViewModel @Inject constructor(
     private val _tryOnState = MutableStateFlow<TryOnUiState>(TryOnUiState.Idle)
     val tryOnState: StateFlow<TryOnUiState> = _tryOnState.asStateFlow()
 
+    /** HU-12 CA-07: pruebas usadas hoy; se vuelve a leer al iniciar o cerrar sesión. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val usoProbadorHoy: StateFlow<UsoProbadorHoy?> = sessionRepository.currentUser
+        .map { it?.uid?.ifBlank { null } }
+        .distinctUntilChanged()
+        .flatMapLatest { uid -> if (uid == null) flowOf(null) else tryOnRepository.observarUsoHoy() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
     fun calcularRecomendacionTalla(prenda: Prenda): RecomendacionTalla {
         return recommendSizeUseCase(prenda, currentUser.value)
     }
@@ -79,15 +92,20 @@ class ProductDetailViewModel @Inject constructor(
      * Ejecuta la prueba virtual con Genlook (reutiliza caché en backend si ya fue generada).
      */
     fun iniciarPruebaVirtual(
-        prendaCodigo: String,
-        prendaNombre: String = prendaCodigo,
+        prenda: Prenda,
+        talla: String,
         forzarRegeneracion: Boolean = false,
     ) {
         if (_tryOnState.value is TryOnUiState.Loading) return
+        val prendaCodigo = prenda.codigo
+        val prendaNombre = prenda.nombre
         viewModelScope.launch {
             _tryOnState.value = TryOnUiState.Loading
+            // HU-12 CA-02: se envían la talla y el color elegidos.
             tryOnRepository.probarPrenda(
                 prendaId = prendaCodigo,
+                talla = talla,
+                color = prenda.color.nombre,
                 mock = false,
                 forzarRegeneracion = forzarRegeneracion,
             ).onSuccess { resultado ->

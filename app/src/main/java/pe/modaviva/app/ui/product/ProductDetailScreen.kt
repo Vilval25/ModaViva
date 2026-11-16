@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,6 +53,7 @@ import kotlinx.coroutines.launch
 import pe.modaviva.app.R
 import pe.modaviva.app.domain.model.Prenda
 import pe.modaviva.app.domain.model.RecomendacionTalla
+import pe.modaviva.app.domain.model.UsoProbadorHoy
 import pe.modaviva.app.ui.component.MvImageGalleryDialog
 import pe.modaviva.app.ui.components.MvSnackbarHost
 import pe.modaviva.app.ui.format.formatearSoles
@@ -71,6 +73,7 @@ fun ProductDetailScreen(
     onBack: () -> Unit,
     onCartClick: () -> Unit = {},
     onFittingClick: () -> Unit = {},
+    onLoginClick: () -> Unit = {},
     onChatClick: (String) -> Unit = {},
     viewModel: ProductDetailViewModel = hiltViewModel(),
     stockViewModel: StockViewModel = hiltViewModel(),
@@ -87,6 +90,7 @@ fun ProductDetailScreen(
     }
     val cartItemCount by viewModel.cartItemCount.collectAsStateWithLifecycle()
     val tryOnState by viewModel.tryOnState.collectAsStateWithLifecycle()
+    val usoProbadorHoy by viewModel.usoProbadorHoy.collectAsStateWithLifecycle()
     val allStocks by stockViewModel.stocksMap.collectAsStateWithLifecycle()
     val tiendas by stockViewModel.tiendas.collectAsStateWithLifecycle()
     val stock by stockViewModel.stock.collectAsState()
@@ -243,39 +247,30 @@ fun ProductDetailScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // HU-12 CA-01: 'Probarme' se deshabilita con el motivo y un acceso para resolverlo.
+                val bloqueo = when {
+                    currentUser == null -> BloqueoProbador(
+                        "Inicia sesión para probarte prendas con IA.", "Iniciar sesión", onLoginClick,
+                    )
+                    !tieneConsentimiento -> BloqueoProbador(
+                        "Acepta el consentimiento de uso de tu fotografía (Ley N° 29733).", "Ir al probador", onFittingClick,
+                    )
+                    currentUser?.fotoProbadorUrl.isNullOrBlank() -> BloqueoProbador(
+                        "Registra tu foto de cuerpo completo para usar el probador.", "Registrar foto", onFittingClick,
+                    )
+                    usoProbadorHoy?.agotado == true -> BloqueoProbador(
+                        "Usaste tus ${usoProbadorHoy?.limite} pruebas virtuales de hoy. Se renuevan a medianoche.",
+                    )
+                    tallaSeleccionada == null -> BloqueoProbador("Elige una talla para probarte la prenda.")
+                    else -> null
+                }
+
                 VirtualFittingSection(
                     prendaHabilitada = prendaHabilitada,
-                    tieneConsentimiento = tieneConsentimiento,
+                    bloqueo = bloqueo,
+                    usoHoy = usoProbadorHoy,
                     onTryOnClick = {
-                        when {
-                            !tieneConsentimiento -> {
-                                scope.launch {
-                                    val res = snackbarHostState.showSnackbar(
-                                        message = "El probador virtual requiere consentimiento de fotografía (Ley N° 29733)",
-                                        actionLabel = "Ir al probador",
-                                        duration = SnackbarDuration.Long,
-                                    )
-                                    if (res == SnackbarResult.ActionPerformed) {
-                                        onFittingClick()
-                                    }
-                                }
-                            }
-                            currentUser?.fotoProbadorUrl.isNullOrBlank() -> {
-                                scope.launch {
-                                    val res = snackbarHostState.showSnackbar(
-                                        message = "Registra tu fotografía de cuerpo completo en el Probador",
-                                        actionLabel = "Ir al probador",
-                                        duration = SnackbarDuration.Long,
-                                    )
-                                    if (res == SnackbarResult.ActionPerformed) {
-                                        onFittingClick()
-                                    }
-                                }
-                            }
-                            else -> {
-                                viewModel.iniciarPruebaVirtual(item.codigo, item.nombre)
-                            }
-                        }
+                        tallaSeleccionada?.let { talla -> viewModel.iniciarPruebaVirtual(item, talla) }
                     },
                 )
 
@@ -325,8 +320,9 @@ fun ProductDetailScreen(
         prendaNombre = item.nombre,
         tallaSeleccionada = tallaSeleccionada,
         onDismiss = viewModel::cerrarPruebaVirtual,
-        onRetry = { viewModel.iniciarPruebaVirtual(item.codigo, item.nombre) },
-        onRegenerate = { viewModel.iniciarPruebaVirtual(item.codigo, item.nombre, forzarRegeneracion = true) },
+        recomendacion = recomendacionTalla,
+        onRetry = { tallaSeleccionada?.let { viewModel.iniciarPruebaVirtual(item, it) } },
+        onRegenerate = { tallaSeleccionada?.let { viewModel.iniciarPruebaVirtual(item, it, forzarRegeneracion = true) } },
         onAddToCartClick = {
             val talla = tallaSeleccionada
             viewModel.cerrarPruebaVirtual()
@@ -398,7 +394,8 @@ private fun ProductEditorialHeader(
 @Composable
 private fun VirtualFittingSection(
     prendaHabilitada: Boolean,
-    tieneConsentimiento: Boolean,
+    bloqueo: BloqueoProbador?,
+    usoHoy: UsoProbadorHoy?,
     onTryOnClick: () -> Unit,
 ) {
     if (!prendaHabilitada) {
@@ -439,6 +436,7 @@ private fun VirtualFittingSection(
 
     OutlinedButton(
         onClick = onTryOnClick,
+        enabled = bloqueo == null,
         modifier = Modifier
             .fillMaxWidth()
             .height(50.dp),
@@ -455,13 +453,44 @@ private fun VirtualFittingSection(
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
         )
-        if (!tieneConsentimiento) {
+    }
+
+    if (bloqueo != null) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Info,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(16.dp),
+            )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "(${stringResource(R.string.fitting_consent_declined_badge)})",
+                text = bloqueo.motivo,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
             )
+            if (bloqueo.accion != null && bloqueo.onAccion != null) {
+                TextButton(onClick = bloqueo.onAccion) { Text(bloqueo.accion) }
+            }
         }
+    } else if (usoHoy != null) {
+        Text(
+            text = "Te quedan ${usoHoy.restantes} de ${usoHoy.limite} pruebas virtuales hoy.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
+
+/** Motivo por el que 'Probarme' está deshabilitado y, si aplica, cómo resolverlo (HU-12 CA-01). */
+private class BloqueoProbador(
+    val motivo: String,
+    val accion: String? = null,
+    val onAccion: (() -> Unit)? = null,
+)

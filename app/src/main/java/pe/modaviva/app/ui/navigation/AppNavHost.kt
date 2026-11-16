@@ -403,6 +403,7 @@ private fun NavGraphBuilder.overlayGraph(
             onBack = { navController.popBackStack() },
             onCartClick = { navController.navigate(Routes.CART) },
             onFittingClick = { navController.navigate(TopLevelDestination.FITTING.route) },
+            onLoginClick = { navController.navigate(Routes.LOGIN) },
             onChatClick = { prendaCodigo ->
                 requireAuth(defaultPrompt) {
                     navController.navigate(Routes.chat(prendaCodigo))
