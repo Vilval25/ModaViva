@@ -44,7 +44,12 @@ sealed interface TryOnUiState {
     data object Idle : TryOnUiState
     data object Loading : TryOnUiState
     /** [accionEnCurso]: se está guardando o descartando el resultado (HU-12 CA-06). */
-    data class Success(val resultado: ResultadoPruebaVirtual, val accionEnCurso: Boolean = false) : TryOnUiState
+    data class Success(
+        val resultado: ResultadoPruebaVirtual,
+        val accionEnCurso: Boolean = false,
+        /** HU-12 CA-03: segundos desde que el cliente tocó 'Probarme' hasta ver el resultado. */
+        val segundosEspera: Double? = null,
+    ) : TryOnUiState
     data class Error(val mensaje: String) : TryOnUiState
 }
 
@@ -65,6 +70,7 @@ class ProductDetailViewModel @Inject constructor(
 
     /** Trabajo de generación que esta pantalla está siguiendo (HU-12 CA-04). */
     private var trabajoSeguido: UUID? = null
+    private var inicioGeneracion: Long? = null
 
     private val _mensajes = MutableSharedFlow<String>(extraBufferCapacity = 1)
     /** Mensajes breves para el snackbar (guardada, descartada…). */
@@ -111,11 +117,17 @@ class ProductDetailViewModel @Inject constructor(
                 val info = infos.firstOrNull { it.id == trabajoSeguido } ?: return@collect
                 _tryOnState.value = when (info.state) {
                     WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING, WorkInfo.State.BLOCKED -> TryOnUiState.Loading
-                    WorkInfo.State.SUCCEEDED -> TryOnUiState.Success(TryOnWorker.resultado(info))
+                    WorkInfo.State.SUCCEEDED -> TryOnUiState.Success(
+                        resultado = TryOnWorker.resultado(info),
+                        segundosEspera = inicioGeneracion?.let { (System.currentTimeMillis() - it) / 1000.0 },
+                    )
                     WorkInfo.State.FAILED -> TryOnUiState.Error(TryOnWorker.error(info))
                     WorkInfo.State.CANCELLED -> TryOnUiState.Idle
                 }
-                if (info.state.isFinished) trabajoSeguido = null
+                if (info.state.isFinished) {
+                    trabajoSeguido = null
+                    inicioGeneracion = null
+                }
             }
         }
     }
@@ -167,6 +179,7 @@ class ProductDetailViewModel @Inject constructor(
             forzar = forzarRegeneracion,
         )
         trabajoSeguido = solicitud.id
+        inicioGeneracion = System.currentTimeMillis()
         _tryOnState.value = TryOnUiState.Loading
         workManager.enqueueUniqueWork(TryOnWorker.nombreUnico(prenda.codigo), ExistingWorkPolicy.KEEP, solicitud)
     }
@@ -180,7 +193,7 @@ class ProductDetailViewModel @Inject constructor(
             tryOnRepository.gestionarResultado(prendaCodigo, guardar)
                 .onSuccess {
                     if (guardar) {
-                        _tryOnState.value = TryOnUiState.Success(actual.resultado.copy(guardada = true))
+                        _tryOnState.value = actual.copy(resultado = actual.resultado.copy(guardada = true), accionEnCurso = false)
                         _mensajes.tryEmit("Prueba guardada en tu historial.")
                     } else {
                         _tryOnState.value = TryOnUiState.Idle

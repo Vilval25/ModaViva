@@ -281,6 +281,17 @@ fun VirtualTryOnSheet(
                         )
                     }
 
+                    // HU-12 CA-03: tiempo de espera de esta generación (meta: menos de 30 s).
+                    if (!resultado.cached) {
+                        state.segundosEspera?.let { seg ->
+                            Text(
+                                text = "Generada en ${String.format(java.util.Locale.US, "%.1f", seg)} s",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+
                     // HU-15 CA-02: talla recomendada para esta prenda junto al resultado.
                     RecomendacionEnResultado(recomendacion)
 
