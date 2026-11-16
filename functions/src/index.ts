@@ -23,3 +23,4 @@ export { crearPedido } from "./crearPedido.js";
 export { registrarTarjeta } from "./pasarela.js";
 export { avisarCambioSolicitud } from "./avisos.js";
 export { gestionarPruebaVirtual } from "./pruebasVirtuales.js";
+export { sincronizarStock } from "./stock.js";
