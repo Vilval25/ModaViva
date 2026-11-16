@@ -77,6 +77,11 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     // HU-12 CA-04: la prueba virtual sigue generándose aunque el cliente salga de la pantalla.
     implementation(libs.androidx.work.runtime.ktx)
+    // HU-06 CA-05: resultados de búsqueda en páginas de 20 con Paging 3.
+    implementation(libs.androidx.paging.runtime)
+    implementation(libs.androidx.paging.compose)
+    // HU-06: búsquedas recientes guardadas en el teléfono.
+    implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
