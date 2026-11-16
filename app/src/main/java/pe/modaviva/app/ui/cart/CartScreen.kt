@@ -226,7 +226,7 @@ private fun CartItemCard(
                     .data(item.foto)
                     .crossfade(true)
                     .build(),
-                contentDescription = item.nombre,
+                contentDescription = null, // el nombre ya está escrito al lado
                 modifier = Modifier
                     .size(80.dp)
                     .clip(MaterialTheme.shapes.medium),
