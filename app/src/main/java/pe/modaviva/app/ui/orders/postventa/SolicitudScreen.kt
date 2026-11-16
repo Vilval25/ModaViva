@@ -83,6 +83,8 @@ import pe.modaviva.app.ui.components.MvSnackbarHost
 import java.io.File
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.res.stringResource
+import pe.modaviva.app.R
 
 /** HU-24 — Pantalla completa para solicitar un cambio o una devolución. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -150,7 +152,7 @@ fun SolicitudScreen(
                 title = { Text("Cambio o devolución", modifier = Modifier.semantics { heading() }) },
                 navigationIcon = {
                     IconButton(onClick = onBack, enabled = !state.enviando) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 },
             )

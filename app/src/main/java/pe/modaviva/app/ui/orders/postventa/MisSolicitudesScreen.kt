@@ -46,6 +46,8 @@ import coil3.compose.AsyncImage
 import pe.modaviva.app.domain.model.SolicitudPostventa
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.res.stringResource
+import pe.modaviva.app.R
 
 /** HU-24 CA-07 — Mis solicitudes: todas las solicitudes del cliente con su estado. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,7 +65,7 @@ fun MisSolicitudesScreen(
                 title = { Text("Mis solicitudes", modifier = Modifier.semantics { heading() }) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 },
             )
