@@ -1,6 +1,7 @@
 package pe.modaviva.app.ui.product.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -25,6 +27,7 @@ import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Straighten
+import androidx.compose.material.icons.outlined.ZoomIn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -56,6 +59,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import pe.modaviva.app.domain.model.RecomendacionTalla
+import pe.modaviva.app.ui.component.MvImageGalleryDialog
 import pe.modaviva.app.ui.components.MvPrimaryButton
 import pe.modaviva.app.ui.product.TryOnUiState
 
@@ -203,7 +207,22 @@ fun VirtualTryOnSheet(
                 is TryOnUiState.Success -> {
                     val resultado = state.resultado
                     var mostrarOriginal by remember(resultado.resultadoUrl) { mutableStateOf(false) }
+                    var mostrarZoom by remember(resultado.resultadoUrl) { mutableStateOf(false) }
                     val tieneOriginal = resultado.fotoOriginalUrl.isNotBlank()
+
+                    if (mostrarZoom) {
+                        val fotosZoom = remember(resultado.resultadoUrl, resultado.fotoOriginalUrl) {
+                            listOfNotNull(
+                                resultado.resultadoUrl.takeIf { it.isNotBlank() },
+                                resultado.fotoOriginalUrl.takeIf { it.isNotBlank() },
+                            )
+                        }
+                        MvImageGalleryDialog(
+                            fotos = fotosZoom,
+                            initialPage = if (mostrarOriginal && fotosZoom.size > 1) 1 else 0,
+                            onDismiss = { mostrarZoom = false },
+                        )
+                    }
 
                     if (tieneOriginal) {
                         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
@@ -235,17 +254,35 @@ fun VirtualTryOnSheet(
                             .fillMaxWidth(0.84f)
                             .aspectRatio(3f / 4f)
                             .clip(RoundedCornerShape(18.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .clickable { mostrarZoom = true },
                     ) {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(imageToShow)
                                 .crossfade(true)
                                 .build(),
-                            contentDescription = "Resultado del probador virtual",
+                            contentDescription = "Resultado del probador virtual (toca para hacer zoom)",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize(),
                         )
+
+                        Surface(
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
+                            shape = CircleShape,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(10.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.ZoomIn,
+                                contentDescription = "Ampliar imagen",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier
+                                    .padding(6.dp)
+                                    .size(18.dp),
+                            )
+                        }
 
                         Surface(
                             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),

@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,6 +40,7 @@ import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.material.icons.outlined.ZoomIn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -76,6 +78,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import pe.modaviva.app.R
 import pe.modaviva.app.domain.model.UserProfile
+import pe.modaviva.app.ui.component.MvImageGalleryDialog
 import pe.modaviva.app.ui.components.MvConfirmDialog
 import pe.modaviva.app.ui.components.MvDestructiveButton
 import pe.modaviva.app.ui.components.MvEmptyState
@@ -616,6 +619,14 @@ private fun FittingActivePhotoScreen(
     modifier: Modifier = Modifier,
 ) {
     var showPhotoSourceSheet by remember { mutableStateOf(false) }
+    var showPhotoZoom by remember { mutableStateOf(false) }
+
+    if (showPhotoZoom) {
+        MvImageGalleryDialog(
+            fotos = listOf(photoUrl),
+            onDismiss = { showPhotoZoom = false },
+        )
+    }
 
     if (showPhotoSourceSheet) {
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -684,14 +695,32 @@ private fun FittingActivePhotoScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(3f / 4f)
-                        .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp)),
+                        .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
+                        .clickable { showPhotoZoom = true },
                 ) {
                     AsyncImage(
                         model = photoUrl,
-                        contentDescription = "Foto registrada",
+                        contentDescription = "Foto registrada (toca para hacer zoom)",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
                     )
+
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
+                        shape = CircleShape,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(10.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.ZoomIn,
+                            contentDescription = "Ampliar foto",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .padding(6.dp)
+                                .size(18.dp),
+                        )
+                    }
 
                     Surface(
                         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
