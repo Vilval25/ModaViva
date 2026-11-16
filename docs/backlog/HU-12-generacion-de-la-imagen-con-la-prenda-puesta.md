@@ -35,13 +35,13 @@ Desde el detalle de una prenda habilitada, el cliente toca 'Probarme', elige tal
 
 ## Criterios de aceptación
 
-- [ ] **CA-01** Dado que no tengo sesión, foto registrada o consentimiento vigente, cuando veo una prenda, entonces 'Probarme' aparece deshabilitado con el motivo y un acceso para resolverlo.
-- [ ] **CA-02** Dado que toco 'Probarme' con talla y color elegidos, cuando se genera la imagen, entonces muestra la prenda en el color elegido sobre mi foto, respetando mi pose y contextura.
+- [x] **CA-01** Dado que no tengo sesión, foto registrada o consentimiento vigente, cuando veo una prenda, entonces 'Probarme' aparece deshabilitado con el motivo y un acceso para resolverlo.
+- [x] **CA-02** Dado que toco 'Probarme' con talla y color elegidos, cuando se genera la imagen, entonces muestra la prenda en el color elegido sobre mi foto, respetando mi pose y contextura.
 - [ ] **CA-03** Dado que la generación está en curso, cuando espero, entonces veo un indicador de progreso y el resultado llega en menos de 30 s en al menos 9 de cada 10 intentos de prueba.
-- [ ] **CA-04** Dado que salgo de la pantalla mientras se genera la imagen, cuando la imagen está lista, entonces recibo un aviso en Notificaciones que abre el resultado.
-- [ ] **CA-05** Dado que veo el resultado, cuando lo reviso, entonces siempre aparece la leyenda 'Simulación referencial generada por IA'.
-- [ ] **CA-06** Dado que veo el resultado, cuando elijo 'Agregar al carrito', 'Guardar' o 'Descartar', entonces se ejecuta esa acción; al descartar, la imagen no se guarda.
-- [ ] **CA-07** Dado que el servicio de IA falla o tarda más de 60 s, cuando termina el intento, entonces veo un error con 'Reintentar' y ese intento no se descuenta de mi límite diario.
+- [x] **CA-04** Dado que salgo de la pantalla mientras se genera la imagen, cuando la imagen está lista, entonces recibo un aviso en Notificaciones que abre el resultado.
+- [x] **CA-05** Dado que veo el resultado, cuando lo reviso, entonces siempre aparece la leyenda 'Simulación referencial generada por IA'.
+- [x] **CA-06** Dado que veo el resultado, cuando elijo 'Agregar al carrito', 'Guardar' o 'Descartar', entonces se ejecuta esa acción; al descartar, la imagen no se guarda.
+- [x] **CA-07** Dado que el servicio de IA falla o tarda más de 60 s, cuando termina el intento, entonces veo un error con 'Reintentar' y ese intento no se descuenta de mi límite diario.
 
 ## Tecnologías
 
