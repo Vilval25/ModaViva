@@ -66,6 +66,7 @@ import pe.modaviva.app.ui.product.components.ProductHeroTopBar
 import pe.modaviva.app.ui.product.components.ProductSizeAndQuantitySection
 import pe.modaviva.app.ui.product.components.SizeGuideBottomSheet
 import pe.modaviva.app.ui.product.components.ComoCalculamosTallaSheet
+import pe.modaviva.app.ui.product.components.EntregaEstimadaCard
 import pe.modaviva.app.ui.product.components.VirtualTryOnSheet
 import pe.modaviva.app.ui.stock.StockViewModel
 import java.time.Instant
@@ -94,6 +95,7 @@ fun ProductDetailScreen(
     val cartItemCount by viewModel.cartItemCount.collectAsStateWithLifecycle()
     val tryOnState by viewModel.tryOnState.collectAsStateWithLifecycle()
     val usoProbadorHoy by viewModel.usoProbadorHoy.collectAsStateWithLifecycle()
+    val envioEstimado by viewModel.envioEstimado.collectAsStateWithLifecycle()
 
     // HU-12 CA-04: mientras esta prenda está a la vista, el resultado se muestra aquí mismo y
     // no hace falta un aviso; al salir (o pasar la app a segundo plano) sí llega el aviso.
@@ -273,6 +275,18 @@ fun ProductDetailScreen(
                     onDecreaseQty = { if (cantidad > 1) cantidad-- },
                     onIncreaseQty = { if (cantidad < maxStock) cantidad++ },
                 )
+
+                // HU-07 CA-05: con una talla disponible elegida se ve el plazo y las tiendas con stock.
+                val talla = tallaSeleccionada
+                val stockTalla = stock
+                if (talla != null && stockTalla != null && stockTalla.total > 0) {
+                    EntregaEstimadaCard(
+                        talla = talla,
+                        stock = stockTalla,
+                        tiendas = tiendas,
+                        envio = envioEstimado,
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(4.dp))
 

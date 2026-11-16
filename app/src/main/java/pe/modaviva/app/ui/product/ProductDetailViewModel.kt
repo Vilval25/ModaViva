@@ -11,6 +11,15 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import pe.modaviva.app.worker.TryOnWorker
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import pe.modaviva.app.domain.model.DestinoEntrega
+import pe.modaviva.app.domain.model.aDestinoEntrega
+import pe.modaviva.app.domain.repository.BackendRepository
+import pe.modaviva.app.domain.repository.DireccionRepository
+import pe.modaviva.app.domain.usecase.CalculateDeliveryEstimateUseCase
+import pe.modaviva.app.ui.format.formatearSoles
+import pe.modaviva.app.ui.product.components.EnvioEstimado
 import java.util.UUID
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -63,6 +72,9 @@ class ProductDetailViewModel @Inject constructor(
     private val fittingConfigRepository: FittingConfigRepository,
     private val recommendSizeUseCase: RecommendSizeUseCase,
     private val tryOnRepository: TryOnRepository,
+    private val direccionRepository: DireccionRepository,
+    private val backendRepository: BackendRepository,
+    private val calcularEntrega: CalculateDeliveryEstimateUseCase,
 ) : ViewModel() {
 
     private val workManager = WorkManager.getInstance(context)
@@ -95,6 +107,48 @@ class ProductDetailViewModel @Inject constructor(
         .distinctUntilChanged()
         .flatMapLatest { uid -> if (uid == null) flowOf(null) else tryOnRepository.observarUsoHoy() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /**
+     * HU-07 CA-05: plazo de envío a domicilio. Con dirección principal registrada se calcula para
+     * su distrito; si no, se muestra el rango general de Lima según las tarifas.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val envioEstimado: StateFlow<EnvioEstimado?> = combine(
+        sessionRepository.currentUser
+            .map { it?.uid?.ifBlank { null } }
+            .distinctUntilChanged()
+            .flatMapLatest { uid -> if (uid == null) flowOf(emptyList()) else direccionRepository.observarDirecciones() },
+        flow { emit(backendRepository.obtenerTarifasEnvio().getOrDefault(emptyList())) },
+    ) { direcciones, tarifas ->
+        if (tarifas.isEmpty()) return@combine null
+        val principal = direcciones.firstOrNull { it.esPrincipal } ?: direcciones.firstOrNull()
+        if (principal != null) {
+            val est = calcularEntrega(principal.aDestinoEntrega(), tarifas)
+            if (est.tieneCobertura) {
+                EnvioEstimado(
+                    titulo = "Envío a ${principal.distrito}: ${est.rangoDiasTexto}",
+                    detalle = "A tu dirección principal. Costo de envío: ${formatearSoles(est.costoEnvio)}.",
+                )
+            } else {
+                EnvioEstimado(
+                    titulo = "Envío a domicilio: ${est.rangoDiasTexto}",
+                    detalle = est.mensajeInformativo ?: "Puedes elegir otra dirección o recojo en tienda al pagar.",
+                )
+            }
+        } else {
+            val plazos = tarifas.filter { it.cobertura }.map {
+                calcularEntrega(DestinoEntrega(distrito = it.distrito, distritoSlug = it.id), tarifas)
+            }.filter { it.tieneCobertura }
+            if (plazos.isEmpty()) {
+                null
+            } else {
+                EnvioEstimado(
+                    titulo = "Envío a domicilio: ${plazos.minOf { it.plazoMinDias }} a ${plazos.maxOf { it.plazoMaxDias }} días hábiles",
+                    detalle = "Según tu distrito en Lima Metropolitana. Registra una dirección para ver tu plazo exacto.",
+                )
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     init {
         codigoPrenda?.let { codigo ->
