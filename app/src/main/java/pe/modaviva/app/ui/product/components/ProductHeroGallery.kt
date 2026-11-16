@@ -70,10 +70,10 @@ fun ProductHeroGallery(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(fotos[pagina])
                         .build(),
-                    contentDescription = "$nombrePrenda, foto ${pagina + 1}",
+                    contentDescription = stringResource(R.string.cd_product_photo, nombrePrenda, pagina + 1, fotos.size),
                     modifier = Modifier
                         .fillMaxSize()
-                        .clickable { onPhotoClick(pagina) },
+                        .clickable(onClickLabel = stringResource(R.string.cd_action_enlarge_photo)) { onPhotoClick(pagina) },
                     contentScale = ContentScale.Crop,
                 )
             }

@@ -39,6 +39,8 @@ import androidx.compose.ui.unit.dp
 import pe.modaviva.app.domain.model.Prenda
 import pe.modaviva.app.domain.model.RecomendacionTalla
 import pe.modaviva.app.domain.model.Stock
+import androidx.compose.ui.res.stringResource
+import pe.modaviva.app.R
 
 /** Sección de recomendación de talla IA, selector de tallas y control de cantidad. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -155,7 +157,7 @@ fun ProductSizeAndQuantitySection(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Remove,
-                        contentDescription = "Disminuir cantidad",
+                        contentDescription = stringResource(R.string.cd_quantity_decrease),
                         modifier = Modifier.size(16.dp),
                     )
                 }
@@ -174,7 +176,7 @@ fun ProductSizeAndQuantitySection(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Aumentar cantidad",
+                        contentDescription = stringResource(R.string.cd_quantity_increase),
                         modifier = Modifier.size(16.dp),
                     )
                 }

@@ -318,4 +318,10 @@
 
     <!-- Accesibilidad: métodos de pago -->
     <string name="cd_card_delete">Eliminar tarjeta %1$s</string>
+
+    <!-- Accesibilidad: ficha de la prenda -->
+    <string name="cd_product_photo">%1$s, foto %2$d de %3$d</string>
+    <string name="cd_action_enlarge_photo">ampliar la foto</string>
+    <string name="cd_quantity_decrease">Disminuir cantidad</string>
+    <string name="cd_quantity_increase">Aumentar cantidad</string>
 </resources>
