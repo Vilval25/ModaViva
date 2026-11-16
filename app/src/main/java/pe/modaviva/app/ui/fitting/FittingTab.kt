@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -42,12 +43,17 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -289,8 +295,14 @@ fun FittingTab(
                 FittingActivePhotoScreen(
                     photoUrl = currentUser.fotoProbadorUrl!!,
                     alturaCm = currentUser.alturaCm,
+                    photoError = photoError,
                     onEditHeightClick = viewModel::openHeightDialog,
-                    onChangePhotoClick = requestCamera,
+                    onTakePhotoClick = requestCamera,
+                    onChooseGalleryClick = {
+                        galleryLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
                     onExploreClick = onExploreClick,
                     isDeleting = eliminacionActual is EstadoEliminacion.Eliminando,
                     deleteError = (eliminacionActual as? EstadoEliminacion.Fallida)?.motivo,
@@ -588,111 +600,203 @@ private fun FittingPhotoPreviewScreen(
 /**
  * Pantalla cuando la foto ya está registrada y validada (HU-11 CA-05 + HU-14 CA-01).
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FittingActivePhotoScreen(
     photoUrl: String,
     alturaCm: Int?,
+    photoError: String?,
     onEditHeightClick: () -> Unit,
-    onChangePhotoClick: () -> Unit,
+    onTakePhotoClick: () -> Unit,
+    onChooseGalleryClick: () -> Unit,
     onExploreClick: () -> Unit,
     isDeleting: Boolean,
     deleteError: MotivoFallo?,
     onDeletePhotoClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var showPhotoSourceSheet by remember { mutableStateOf(false) }
+
+    if (showPhotoSourceSheet) {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
+            onDismissRequest = { showPhotoSourceSheet = false },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surface,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 24.dp)
+                    .navigationBarsPadding(),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.fitting_change_photo_btn),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = "Elige cómo deseas actualizar tu fotografía de cuerpo completo.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                MvPrimaryButton(
+                    text = stringResource(R.string.fitting_take_photo_btn),
+                    onClick = {
+                        showPhotoSourceSheet = false
+                        onTakePhotoClick()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                MvSecondaryButton(
+                    text = stringResource(R.string.fitting_choose_gallery_btn),
+                    onClick = {
+                        showPhotoSourceSheet = false
+                        onChooseGalleryClick()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        // Tarjeta con foto registrada
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(0.7f)
-                .aspectRatio(3f / 4f)
-                .clip(RoundedCornerShape(16.dp))
-                .border(2.dp, MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(16.dp)),
-        ) {
-            AsyncImage(
-                model = photoUrl,
-                contentDescription = "Foto registrada",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
-                    .padding(vertical = 8.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Outlined.CheckCircle,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Foto lista para probar",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-            }
-        }
-
-        // Tarjeta de información de altura (HU-14)
+        // Tarjeta unificada: fotografía + estado + altura integrada al pie
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(0.76f),
+            shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
             ),
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Outlined.Straighten,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+            Column {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(3f / 4f)
+                        .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp)),
+                ) {
+                    AsyncImage(
+                        model = photoUrl,
+                        contentDescription = "Foto registrada",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = if (alturaCm != null) "Altura: $alturaCm cm" else "Altura no registrada",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Text(
-                            text = if (alturaCm != null) "Recomendación de talla activada" else "Registra tu altura para sugerirte talla",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                        shape = RoundedCornerShape(50),
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(10.dp),
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(15.dp),
+                            )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = "Foto lista",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
                     }
                 }
-                TextButton(onClick = onEditHeightClick) {
-                    Text(if (alturaCm != null) "Editar" else "Registrar")
+
+                // Franja integrada de estatura (HU-14)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Straighten,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = if (alturaCm != null) "Altura: $alturaCm cm" else "Altura sin registrar",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Text(
+                                text = if (alturaCm != null) "Talla sugerida activa" else "Para sugerirte talla",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                    TextButton(onClick = onEditHeightClick) {
+                        Text(if (alturaCm != null) "Editar" else "Registrar")
+                    }
                 }
             }
         }
 
-        // Botón para cambiar fotografía (CA-05)
-        OutlinedButton(
-            onClick = onChangePhotoClick,
-            enabled = !isDeleting,
+        if (photoError != null) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = photoError,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
+            }
+        }
+
+        // 1° Acción principal: Explorar prendas para probar
+        MvPrimaryButton(
+            text = "Explorar prendas para probar",
+            onClick = onExploreClick,
             modifier = Modifier.fillMaxWidth(),
+        )
+
+        // 2° Acción secundaria: Cambiar fotografía (abre selector Cámara / Galería)
+        OutlinedButton(
+            onClick = { showPhotoSourceSheet = true },
+            enabled = !isDeleting,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
         ) {
             Icon(
                 imageVector = Icons.Outlined.Refresh,
@@ -703,16 +807,10 @@ private fun FittingActivePhotoScreen(
             Text(stringResource(R.string.fitting_change_photo_btn))
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Botón principal: Explorar catálogo para probar prendas
-        MvPrimaryButton(
-            text = "Explorar prendas para probar",
-            onClick = onExploreClick,
-            modifier = Modifier.fillMaxWidth(),
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 4.dp),
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         // HU-17: si falló, la foto sigue registrada y el botón permite reintentar
         if (deleteError != null) {
@@ -744,7 +842,7 @@ private fun FittingActivePhotoScreen(
             }
         }
 
-        // HU-17 CA-01: opción para eliminar la foto registrada
+        // 3° Acción destructiva al final (HU-17 CA-01)
         MvDestructiveButton(
             text = stringResource(R.string.fitting_delete_photo_btn),
             onClick = onDeletePhotoClick,
