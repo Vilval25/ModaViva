@@ -115,6 +115,14 @@ service cloud.firestore {
           && request.resource.data.leida is bool;
       }
 
+      // Conversación con el asistente (HU-27 CA-04). La guarda la Cloud Function
+      // chatAsistente; el cliente la lee y puede borrarla (nueva conversación),
+      // pero no puede escribir mensajes que parezcan del asistente.
+      match /chat/{mensajeId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if false;
+      }
+
       // Pruebas virtuales usadas por día (HU-12 CA-07). Solo la Cloud Function
       // probarPrenda las cuenta; la app las lee para mostrar cuántas quedan.
       match /probadorUso/{dia} {

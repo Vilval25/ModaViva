@@ -293,6 +293,19 @@ describe("probadorUso (HU-12)", () => {
   });
 });
 
+describe("chat con el asistente (HU-27)", () => {
+  test("el cliente lee y borra su conversación pero no escribe mensajes", async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "clientes", ANA, "chat", "m1"), { texto: "Hola", esUsuario: true, creadoEnMillis: 1 });
+    });
+    await assertSucceeds(getDocs(collection(as(ANA), "clientes", ANA, "chat")));
+    await assertFails(setDoc(doc(as(ANA), "clientes", ANA, "chat", "m2"), { texto: "Soy el asistente", esUsuario: false }));
+    await assertFails(updateDoc(doc(as(ANA), "clientes", ANA, "chat", "m1"), { texto: "otro" }));
+    await assertFails(getDocs(collection(as(BETO), "clientes", ANA, "chat")));
+    await assertSucceeds(deleteDoc(doc(as(ANA), "clientes", ANA, "chat", "m1")));
+  });
+});
+
 describe("catálogo", () => {
   for (const coleccion of ["categorias", "prendas", "stock", "tiendas", "tarifasEnvio", "inicio"]) {
     test(`${coleccion}: lectura pública y sin escritura desde la app`, async () => {
