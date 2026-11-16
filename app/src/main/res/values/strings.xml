@@ -344,4 +344,8 @@
     <string name="cd_state_collapsed">Contraída</string>
     <string name="cd_action_expand">expandir</string>
     <string name="cd_action_collapse">contraer</string>
+
+    <!-- Accesibilidad: acciones al tocar -->
+    <string name="cd_action_open_garment">ver la prenda</string>
+    <string name="cd_action_open_categories">ver sus categorías</string>
 </resources>
