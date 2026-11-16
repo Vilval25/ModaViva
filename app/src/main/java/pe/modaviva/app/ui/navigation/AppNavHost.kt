@@ -394,6 +394,10 @@ private fun NavGraphBuilder.overlayGraph(
             navArgument("codigo") {
                 type = NavType.StringType
             },
+            navArgument("abrirPrueba") {
+                type = NavType.BoolType
+                defaultValue = false
+            },
         ),
     ) { backStackEntry ->
         val codigo = backStackEntry.arguments?.getString("codigo").orEmpty()
@@ -652,7 +656,7 @@ private fun NavHostController.abrirBusqueda(filtro: String, valor: String) {
 private fun NavHostController.abrirDestinoDeAviso(tipo: TipoNotificacion, refId: String?): Boolean {
     val ref = refId?.takeIf { it.isNotBlank() } ?: return false
     val ruta = when (tipo) {
-        TipoNotificacion.PRUEBA_VIRTUAL -> Routes.prenda(ref)
+        TipoNotificacion.PRUEBA_VIRTUAL -> Routes.prendaConPrueba(ref)
         TipoNotificacion.PEDIDO -> Routes.orderDetail(ref)
         // HU-24: los avisos de solicitudes abren su detalle; los antiguos apuntaban al pedido.
         TipoNotificacion.SOLICITUD -> if (ref.startsWith("ped_")) Routes.orderDetail(ref) else Routes.solicitudDetalle(ref)

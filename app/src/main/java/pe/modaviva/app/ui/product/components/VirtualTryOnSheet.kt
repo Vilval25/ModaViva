@@ -18,10 +18,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BookmarkAdd
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Checkroom
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.ShoppingBag
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -68,6 +70,8 @@ fun VirtualTryOnSheet(
     onRetry: () -> Unit,
     onRegenerate: () -> Unit,
     onAddToCartClick: () -> Unit,
+    onGuardar: () -> Unit = {},
+    onDescartar: () -> Unit = {},
 ) {
     if (state is TryOnUiState.Idle) return
 
@@ -308,29 +312,46 @@ fun VirtualTryOnSheet(
                         modifier = Modifier.fillMaxWidth(),
                     )
 
+                    // HU-12 CA-06: Guardar o Descartar el resultado.
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        TextButton(onClick = onRegenerate) {
+                        OutlinedButton(
+                            onClick = onGuardar,
+                            enabled = !resultado.guardada && !state.accionEnCurso,
+                            modifier = Modifier.weight(1f),
+                        ) {
                             Icon(
-                                imageVector = Icons.Outlined.Refresh,
+                                imageVector = if (resultado.guardada) Icons.Outlined.CheckCircle else Icons.Outlined.BookmarkAdd,
                                 contentDescription = null,
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(18.dp),
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Regenerar (1 crédito)")
+                            Text(if (resultado.guardada) "Guardada" else "Guardar")
                         }
-                        TextButton(onClick = onDismiss) {
-                            Icon(
-                                imageVector = Icons.Outlined.ShoppingBag,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                            )
+                        OutlinedButton(
+                            onClick = onDescartar,
+                            enabled = !state.accionEnCurso,
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Icon(Icons.Outlined.DeleteOutline, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Seguir viendo")
+                            Text("Descartar")
                         }
+                    }
+                    if (state.accionEnCurso) {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    }
+
+                    TextButton(onClick = onRegenerate, enabled = !state.accionEnCurso) {
+                        Icon(
+                            imageVector = Icons.Outlined.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Generar otra vez (usa 1 prueba del día)")
                     }
                 }
             }

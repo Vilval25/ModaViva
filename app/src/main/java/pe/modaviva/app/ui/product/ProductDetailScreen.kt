@@ -54,6 +54,8 @@ import pe.modaviva.app.R
 import pe.modaviva.app.domain.model.Prenda
 import pe.modaviva.app.domain.model.RecomendacionTalla
 import pe.modaviva.app.domain.model.UsoProbadorHoy
+import pe.modaviva.app.worker.PruebaEnPantalla
+import androidx.lifecycle.compose.LifecycleStartEffect
 import pe.modaviva.app.ui.component.MvImageGalleryDialog
 import pe.modaviva.app.ui.components.MvSnackbarHost
 import pe.modaviva.app.ui.format.formatearSoles
@@ -91,6 +93,15 @@ fun ProductDetailScreen(
     val cartItemCount by viewModel.cartItemCount.collectAsStateWithLifecycle()
     val tryOnState by viewModel.tryOnState.collectAsStateWithLifecycle()
     val usoProbadorHoy by viewModel.usoProbadorHoy.collectAsStateWithLifecycle()
+
+    // HU-12 CA-04: mientras esta prenda está a la vista, el resultado se muestra aquí mismo y
+    // no hace falta un aviso; al salir (o pasar la app a segundo plano) sí llega el aviso.
+    LifecycleStartEffect(codigo) {
+        PruebaEnPantalla.prendaVisible = codigo
+        onStopOrDispose {
+            if (PruebaEnPantalla.prendaVisible == codigo) PruebaEnPantalla.prendaVisible = null
+        }
+    }
     val allStocks by stockViewModel.stocksMap.collectAsStateWithLifecycle()
     val tiendas by stockViewModel.tiendas.collectAsStateWithLifecycle()
     val stock by stockViewModel.stock.collectAsState()
@@ -107,6 +118,10 @@ fun ProductDetailScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        viewModel.mensajes.collect { snackbarHostState.showSnackbar(it) }
+    }
 
     LaunchedEffect(tallaSeleccionada) {
         cantidad = 1
@@ -323,6 +338,8 @@ fun ProductDetailScreen(
         recomendacion = recomendacionTalla,
         onRetry = { tallaSeleccionada?.let { viewModel.iniciarPruebaVirtual(item, it) } },
         onRegenerate = { tallaSeleccionada?.let { viewModel.iniciarPruebaVirtual(item, it, forzarRegeneracion = true) } },
+        onGuardar = { viewModel.gestionarResultado(item.codigo, guardar = true) },
+        onDescartar = { viewModel.gestionarResultado(item.codigo, guardar = false) },
         onAddToCartClick = {
             val talla = tallaSeleccionada
             viewModel.cerrarPruebaVirtual()

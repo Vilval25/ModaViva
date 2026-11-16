@@ -22,11 +22,13 @@ object Routes {
     const val ADDRESSES = "addresses"
     const val MY_ACTIVITY = "my_activity"
     const val PAYMENT_METHODS = "payment_methods"
-    const val PRENDA = "prenda/{codigo}"
+    const val PRENDA = "prenda/{codigo}?abrirPrueba={abrirPrueba}"
     const val CHAT = "chat?prendaCodigo={prendaCodigo}"
     const val CONSTANCIA_FOTO = "constancia_foto/{eliminadaEnMillis}"
 
     fun prenda(codigo: String) = "prenda/$codigo"
+    /** HU-12 CA-04: abre la prenda mostrando el resultado de su prueba virtual. */
+    fun prendaConPrueba(codigo: String) = "prenda/$codigo?abrirPrueba=true"
     fun chat(prendaCodigo: String? = null) =
         if (prendaCodigo.isNullOrBlank()) "chat" else "chat?prendaCodigo=$prendaCodigo"
     fun orderConfirmed(pedidoId: String) = "order_confirmed/$pedidoId"

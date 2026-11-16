@@ -1,8 +1,17 @@
 package pe.modaviva.app.ui.product
 
-import pe.modaviva.app.domain.model.TipoNotificacion
-import pe.modaviva.app.domain.repository.NotificacionRepository
+import android.content.Context
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.work.ExistingWorkPolicy
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import pe.modaviva.app.worker.TryOnWorker
+import java.util.UUID
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -34,20 +43,32 @@ import javax.inject.Inject
 sealed interface TryOnUiState {
     data object Idle : TryOnUiState
     data object Loading : TryOnUiState
-    data class Success(val resultado: ResultadoPruebaVirtual) : TryOnUiState
+    /** [accionEnCurso]: se está guardando o descartando el resultado (HU-12 CA-06). */
+    data class Success(val resultado: ResultadoPruebaVirtual, val accionEnCurso: Boolean = false) : TryOnUiState
     data class Error(val mensaje: String) : TryOnUiState
 }
 
 @HiltViewModel
 class ProductDetailViewModel @Inject constructor(
+    @ApplicationContext context: Context,
+    savedStateHandle: SavedStateHandle,
     catalogoRepository: CatalogoRepository,
     private val cartRepository: CartRepository,
     sessionRepository: SessionRepository,
     private val fittingConfigRepository: FittingConfigRepository,
     private val recommendSizeUseCase: RecommendSizeUseCase,
     private val tryOnRepository: TryOnRepository,
-    private val notificaciones: NotificacionRepository,
 ) : ViewModel() {
+
+    private val workManager = WorkManager.getInstance(context)
+    private val codigoPrenda: String? = savedStateHandle["codigo"]
+
+    /** Trabajo de generación que esta pantalla está siguiendo (HU-12 CA-04). */
+    private var trabajoSeguido: UUID? = null
+
+    private val _mensajes = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    /** Mensajes breves para el snackbar (guardada, descartada…). */
+    val mensajes: SharedFlow<String> = _mensajes.asSharedFlow()
 
     val currentUser: StateFlow<UserProfile?> = sessionRepository.currentUser
 
@@ -68,6 +89,45 @@ class ProductDetailViewModel @Inject constructor(
         .distinctUntilChanged()
         .flatMapLatest { uid -> if (uid == null) flowOf(null) else tryOnRepository.observarUsoHoy() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    init {
+        codigoPrenda?.let { codigo ->
+            seguirGeneracion(codigo)
+            // HU-12 CA-04: al llegar desde el aviso 'Tu prueba virtual está lista' se abre el resultado.
+            if (savedStateHandle.get<Boolean>("abrirPrueba") == true) abrirResultadoGuardado(codigo)
+        }
+    }
+
+    /**
+     * Sigue el trabajo de generación de esta prenda. Si al entrar ya hay uno en curso (el cliente
+     * salió y volvió), se muestra el progreso y luego el resultado.
+     */
+    private fun seguirGeneracion(codigo: String) {
+        viewModelScope.launch {
+            workManager.getWorkInfosForUniqueWorkFlow(TryOnWorker.nombreUnico(codigo)).collect { infos ->
+                if (trabajoSeguido == null) {
+                    infos.firstOrNull { !it.state.isFinished }?.let { trabajoSeguido = it.id }
+                }
+                val info = infos.firstOrNull { it.id == trabajoSeguido } ?: return@collect
+                _tryOnState.value = when (info.state) {
+                    WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING, WorkInfo.State.BLOCKED -> TryOnUiState.Loading
+                    WorkInfo.State.SUCCEEDED -> TryOnUiState.Success(TryOnWorker.resultado(info))
+                    WorkInfo.State.FAILED -> TryOnUiState.Error(TryOnWorker.error(info))
+                    WorkInfo.State.CANCELLED -> TryOnUiState.Idle
+                }
+                if (info.state.isFinished) trabajoSeguido = null
+            }
+        }
+    }
+
+    private fun abrirResultadoGuardado(codigo: String) {
+        viewModelScope.launch {
+            _tryOnState.value = TryOnUiState.Loading
+            tryOnRepository.probarPrenda(prendaId = codigo, soloHistorial = true)
+                .onSuccess { _tryOnState.value = TryOnUiState.Success(it) }
+                .onFailure { _tryOnState.value = TryOnUiState.Error(it.message ?: "Esta prueba virtual ya no está disponible.") }
+        }
+    }
 
     fun calcularRecomendacionTalla(prenda: Prenda): RecomendacionTalla {
         return recommendSizeUseCase(prenda, currentUser.value)
@@ -97,34 +157,40 @@ class ProductDetailViewModel @Inject constructor(
         forzarRegeneracion: Boolean = false,
     ) {
         if (_tryOnState.value is TryOnUiState.Loading) return
-        val prendaCodigo = prenda.codigo
-        val prendaNombre = prenda.nombre
+        // HU-12 CA-02 y CA-04: se envían talla y color, y la generación corre en WorkManager para
+        // que siga aunque el cliente salga de la pantalla.
+        val solicitud = TryOnWorker.solicitud(
+            prendaId = prenda.codigo,
+            nombre = prenda.nombre,
+            talla = talla,
+            color = prenda.color.nombre,
+            forzar = forzarRegeneracion,
+        )
+        trabajoSeguido = solicitud.id
+        _tryOnState.value = TryOnUiState.Loading
+        workManager.enqueueUniqueWork(TryOnWorker.nombreUnico(prenda.codigo), ExistingWorkPolicy.KEEP, solicitud)
+    }
+
+    /** HU-12 CA-06: Guardar deja la imagen en el historial; Descartar la borra. */
+    fun gestionarResultado(prendaCodigo: String, guardar: Boolean) {
+        val actual = _tryOnState.value as? TryOnUiState.Success ?: return
+        if (actual.accionEnCurso) return
+        _tryOnState.value = actual.copy(accionEnCurso = true)
         viewModelScope.launch {
-            _tryOnState.value = TryOnUiState.Loading
-            // HU-12 CA-02: se envían la talla y el color elegidos.
-            tryOnRepository.probarPrenda(
-                prendaId = prendaCodigo,
-                talla = talla,
-                color = prenda.color.nombre,
-                mock = false,
-                forzarRegeneracion = forzarRegeneracion,
-            ).onSuccess { resultado ->
-                _tryOnState.value = TryOnUiState.Success(resultado)
-                // HU-18: aviso de imagen lista (solo para generaciones nuevas, no las del historial).
-                if (!resultado.cached) {
-                    notificaciones.crear(
-                        tipo = TipoNotificacion.PRUEBA_VIRTUAL,
-                        titulo = "Tu prueba virtual está lista",
-                        texto = "Mira cómo te queda: $prendaNombre.",
-                        refId = prendaCodigo,
-                    )
+            tryOnRepository.gestionarResultado(prendaCodigo, guardar)
+                .onSuccess {
+                    if (guardar) {
+                        _tryOnState.value = TryOnUiState.Success(actual.resultado.copy(guardada = true))
+                        _mensajes.tryEmit("Prueba guardada en tu historial.")
+                    } else {
+                        _tryOnState.value = TryOnUiState.Idle
+                        _mensajes.tryEmit("Prueba descartada. La imagen no se guardó.")
+                    }
                 }
-            }.onFailure { error ->
-                _tryOnState.value = TryOnUiState.Error(
-                    error.localizedMessage?.takeIf { it.isNotBlank() }
-                        ?: "No se pudo generar la prueba virtual. Inténtalo nuevamente."
-                )
-            }
+                .onFailure { e ->
+                    _tryOnState.value = actual
+                    _mensajes.tryEmit(e.message ?: "No se pudo completar la acción.")
+                }
         }
     }
 
