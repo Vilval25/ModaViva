@@ -143,7 +143,7 @@ fun SearchEditorialBar(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Close,
-                    contentDescription = "Limpiar búsqueda",
+                    contentDescription = stringResource(R.string.cd_search_clear),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp),
                 )
@@ -191,7 +191,7 @@ fun SearchControlsSection(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Volver a explorar",
+                        contentDescription = stringResource(R.string.cd_search_back_explore),
                         modifier = Modifier.size(20.dp),
                     )
                 }

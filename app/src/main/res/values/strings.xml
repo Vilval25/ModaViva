@@ -324,4 +324,8 @@
     <string name="cd_action_enlarge_photo">ampliar la foto</string>
     <string name="cd_quantity_decrease">Disminuir cantidad</string>
     <string name="cd_quantity_increase">Aumentar cantidad</string>
+
+    <!-- Accesibilidad: búsqueda -->
+    <string name="cd_search_clear">Borrar lo escrito</string>
+    <string name="cd_search_back_explore">Volver a explorar</string>
 </resources>

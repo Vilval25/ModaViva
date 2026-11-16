@@ -62,6 +62,8 @@ import pe.modaviva.app.ui.search.components.SearchFiltersSheet
 import pe.modaviva.app.ui.search.components.SearchSortSheet
 import java.time.Clock
 import java.time.Instant
+import androidx.compose.ui.res.stringResource
+import pe.modaviva.app.R
 
 /**
  * Pestaña unificada de búsqueda y exploración por categorías/públicos.
@@ -356,7 +358,7 @@ private fun ActiveExtraFilterChips(
                 trailingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Close,
-                        contentDescription = "Quitar $etiqueta",
+                        contentDescription = stringResource(R.string.cd_remove_filter, etiqueta),
                     )
                 },
             )
