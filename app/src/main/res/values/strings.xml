@@ -291,4 +291,9 @@
     <string name="cd_address_edit">Editar dirección %1$s</string>
     <string name="cd_address_delete">Eliminar dirección %1$s</string>
     <string name="address_default_alias">Dirección</string>
+
+    <!-- Accesibilidad: asistente -->
+    <string name="cd_chat_open">Abrir el asistente de ModaViva</string>
+    <string name="cd_chat_new">Nueva conversación</string>
+    <string name="cd_chat_send">Enviar mensaje</string>
 </resources>

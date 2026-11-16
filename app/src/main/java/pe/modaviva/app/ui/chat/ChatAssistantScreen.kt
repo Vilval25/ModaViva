@@ -173,7 +173,7 @@ fun ChatAssistantScreen(
                 actions = {
                     if (state.hayConversacion) {
                         IconButton(onClick = { confirmarNueva = true }) {
-                            Icon(Icons.Outlined.DeleteSweep, contentDescription = "Nueva conversación")
+                            Icon(Icons.Outlined.DeleteSweep, contentDescription = stringResource(R.string.cd_chat_new))
                         }
                     }
                 },
@@ -232,7 +232,7 @@ fun ChatAssistantScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Enviar",
+                            contentDescription = stringResource(R.string.cd_chat_send),
                         )
                     }
                 }
