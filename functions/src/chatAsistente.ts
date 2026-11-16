@@ -1,7 +1,8 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { getApps, initializeApp } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { cargarPoliticas } from "./politicasTienda.js";
 
 if (!getApps().length) {
   initializeApp();
@@ -10,6 +11,10 @@ if (!getApps().length) {
 const groqApiKey = defineSecret("GROQ_API_KEY");
 
 const GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions";
+/** HU-27 CA-05: si el modelo no responde en este tiempo se corta y la app ofrece Reintentar. */
+const TIEMPO_MAXIMO_LLM_MS = 20_000;
+/** Mensajes previos de la conversación que se envían al modelo. */
+const TURNOS_HISTORIAL = 6;
 
 const GROQ_MODELS: Array<{ id: string; reasoning: boolean }> = [
   { id: "qwen/qwen3.8-27b", reasoning: false },
@@ -55,6 +60,14 @@ function normalizar(texto: string): string {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
+}
+
+function promocionVigente(d: FirebaseFirestore.DocumentData): number | null {
+  const promo = d.precioPromo ?? d.precioPromocional;
+  if (promo == null) return null;
+  const hasta = d.promoHasta?.toDate?.() as Date | undefined;
+  if (hasta && hasta.getTime() < Date.now()) return null;
+  return Number(promo);
 }
 
 function precioVigente(p: PrendaCatalogoResumen): number {
@@ -136,11 +149,14 @@ export const chatAsistente = onCall(
 
     const db = getFirestore();
 
-    const [prendasSnap, tarifasSnap, clienteSnap, pedidosSnap] = await Promise.all([
+    const chatRef = db.collection("clientes").doc(uid).collection("chat");
+    const [prendasSnap, tarifasSnap, clienteSnap, pedidosSnap, chatSnap, politicas] = await Promise.all([
       db.collection("prendas").limit(60).get(),
       db.collection("tarifasEnvio").get(),
       db.collection("clientes").doc(uid).get(),
       db.collection("clientes").doc(uid).collection("pedidos").limit(10).get(),
+      chatRef.orderBy("creadoEnMillis", "desc").limit(TURNOS_HISTORIAL).get(),
+      cargarPoliticas(),
     ]);
 
     const catalogo: PrendaCatalogoResumen[] = prendasSnap.docs.map((doc) => {
@@ -157,7 +173,8 @@ export const chatAsistente = onCall(
         subcategoria: String(d.subcategoria || ""),
         color: String(colorObj?.nombre || ""),
         precio: Number(d.precio || 0),
-        precioPromocional: d.precioPromocional != null ? Number(d.precioPromocional) : null,
+        // El catálogo guarda la promoción en precioPromo con vigencia hasta promoHasta.
+        precioPromocional: promocionVigente(d),
         tallas: Array.isArray(d.tallas) ? d.tallas.map(String) : [],
         stockTotal: Number(d.stockTotal || 0),
         fotoUrl: fotos[0] || "",
@@ -170,7 +187,20 @@ export const chatAsistente = onCall(
       ? catalogo.find((p) => p.codigo.toLowerCase() === prendaCodigo.toLowerCase())
       : undefined;
 
-    const historialSeguro = Array.isArray(historial) ? historial.slice(-4) : [];
+    // HU-27 CA-04: la conversación guardada en Firestore es la fuente del historial; el que
+    // envía la app solo se usa si aún no hay nada guardado.
+    const historialGuardado: ChatTurnInput[] = chatSnap.docs
+      .map((doc) => ({
+        role: doc.get("esUsuario") === true ? "user" : "assistant",
+        content: String(doc.get("texto") ?? ""),
+      }))
+      .reverse();
+    const historialSeguro =
+      historialGuardado.length > 0
+        ? historialGuardado
+        : Array.isArray(historial)
+          ? historial.slice(-4)
+          : [];
     const textoContextoConsulta = [
       textoUsuario,
       ...historialSeguro.slice(-2).map((h) => String(h.content || "")),
@@ -198,10 +228,11 @@ export const chatAsistente = onCall(
       const d = doc.data() ?? {};
       const nombre = String(d.nombre || d.distrito || doc.id);
       const precio = Number(d.precio ?? d.costo ?? 0);
-      const activo = d.activo !== false;
+      const activo = d.activo !== false && d.cobertura !== false;
+      const plazo = typeof d.plazoDias === "number" ? ` (${d.plazoDias + 2}-${d.plazoDias + 3} días hábiles)` : "";
       nombresDistritosNorm.push(normalizar(nombre));
       if (activo && precio > 0) {
-        distritosConCobertura.push(`${nombre}: S/${precio.toFixed(2)}`);
+        distritosConCobertura.push(`${nombre}: S/${precio.toFixed(2)}${plazo}`);
       } else {
         distritosSinCobertura.push(nombre);
       }
@@ -241,7 +272,15 @@ export const chatAsistente = onCall(
       : "";
 
     const systemPrompt = `Eres el Asistente Virtual de ModaViva (Lima, Perú). Responde en español, breve y práctico (máx 120 palabras).
-REGLAS: Usa SOLO datos del catálogo/envíos abajo; nunca inventes precios ni prendas. Al recomendar una prenda escribe su código entre corchetes ej. [MV-101]. Si un distrito no tiene cobertura o es S/0, indica que no hay delivery y sugiere recojo gratis en tienda. Para probar ropa, menciona el botón "Probarme" (requiere foto en Probador).
+TEMAS: tallas, envíos y recojo, cambios y devoluciones, pagos, el probador virtual, prendas del catálogo y los pedidos del cliente.
+REGLAS:
+- Responde SOLO con la información de POLÍTICAS, ENVÍOS, PEDIDOS y CATÁLOGO de abajo; nunca inventes precios, stock, prendas, pedidos, plazos ni políticas.
+- Si preguntan algo fuera de esos temas, di amablemente que solo puedes ayudar con compras en ModaViva y menciona los temas.
+- Si el dato no está abajo (por ejemplo, un pedido que no aparece o un distrito sin tarifa), di claramente que no tienes esa información; no la supongas.
+- Al recomendar una prenda escribe su código entre corchetes ej. [MV-101].
+- Si un distrito no tiene cobertura o es S/0, indica que no hay delivery y sugiere el recojo gratis en tienda.
+POLÍTICAS:
+${politicas}
 CLIENTE: ${nombreCliente || "Cliente"} | Altura: ${alturaCm} | Foto probador: ${tieneFotoProbador ? "Sí" : "No"}${resumenPedidos}
 ${seccionEnvios}${contextoPrendaActual}
 CATÁLOGO RELEVANTE (${prendasSeleccionadas.length} de ${catalogo.length}):
@@ -277,14 +316,26 @@ ${resumenCatalogo}`;
       if (modelo.reasoning) {
         payload.reasoning_effort = "low";
       }
-      return fetch(GROQ_CHAT_URL, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const corte = new AbortController();
+      const temporizador = setTimeout(() => corte.abort(), TIEMPO_MAXIMO_LLM_MS);
+      try {
+        return await fetch(GROQ_CHAT_URL, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+          signal: corte.signal,
+        });
+      } catch {
+        throw new HttpsError(
+          "unavailable",
+          "El asistente no respondió a tiempo. Toca Reintentar para volver a enviar tu mensaje."
+        );
+      } finally {
+        clearTimeout(temporizador);
+      }
     }
 
     let groqRes: Response | null = null;
@@ -329,6 +380,25 @@ ${resumenCatalogo}`;
         precio: precioVigente(p),
         fotoUrl: p.fotoUrl,
       }));
+
+    // HU-27 CA-04: se guardan la pregunta y la respuesta juntas solo si hubo respuesta; si
+    // falló, la app conserva el mensaje para reintentar.
+    const ahora = Date.now();
+    const lote = db.batch();
+    lote.set(chatRef.doc(), {
+      texto: textoUsuario,
+      esUsuario: true,
+      creadoEnMillis: ahora,
+      creadoEn: FieldValue.serverTimestamp(),
+    });
+    lote.set(chatRef.doc(), {
+      texto: respuesta,
+      esUsuario: false,
+      prendasSugeridas,
+      creadoEnMillis: ahora + 1,
+      creadoEn: FieldValue.serverTimestamp(),
+    });
+    await lote.commit();
 
     return {
       ok: true,
