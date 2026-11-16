@@ -280,6 +280,19 @@ describe("solicitudes de cambio o devolución (HU-24)", () => {
   });
 });
 
+describe("probadorUso (HU-12)", () => {
+  test("el cliente lee su uso diario pero no puede cambiarlo", async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "clientes", ANA, "probadorUso", "2026-11-30"), { usadas: 5, limite: 5 });
+    });
+    const ref = doc(as(ANA), "clientes", ANA, "probadorUso", "2026-11-30");
+    await assertSucceeds(getDoc(ref));
+    await assertFails(updateDoc(ref, { usadas: 0 }));
+    await assertFails(setDoc(doc(as(ANA), "clientes", ANA, "probadorUso", "2026-12-01"), { usadas: 0 }));
+    await assertFails(getDoc(doc(as(BETO), "clientes", ANA, "probadorUso", "2026-11-30")));
+  });
+});
+
 describe("catálogo", () => {
   for (const coleccion of ["categorias", "prendas", "stock", "tiendas", "tarifasEnvio", "inicio"]) {
     test(`${coleccion}: lectura pública y sin escritura desde la app`, async () => {

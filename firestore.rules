@@ -115,6 +115,13 @@ service cloud.firestore {
           && request.resource.data.leida is bool;
       }
 
+      // Pruebas virtuales usadas por día (HU-12 CA-07). Solo la Cloud Function
+      // probarPrenda las cuenta; la app las lee para mostrar cuántas quedan.
+      match /probadorUso/{dia} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+
       // Caché de imágenes generadas por el probador virtual (escritura solo desde Cloud Functions)
       match /probadorCache/{prendaId} {
         allow read, delete: if isOwner(uid);
