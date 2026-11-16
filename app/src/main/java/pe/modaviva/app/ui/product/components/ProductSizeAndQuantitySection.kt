@@ -303,12 +303,12 @@ private fun SizeRecommendationBanner(
             }
         }
 
-        // HU-15 CA-05: la foto no permitió detectar el cuerpo → registrar otra y tabla genérica.
+        // HU-15 CA-05: la foto no permitió detectar el cuerpo → opción para registrar otra foto.
         is RecomendacionTalla.FotoInvalidaParaMedidas -> {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.22f),
                 ),
                 shape = RoundedCornerShape(12.dp),
             ) {
@@ -323,9 +323,9 @@ private fun SizeRecommendationBanner(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "En tu foto no pudimos detectar bien tus hombros y caderas, así que no podemos " +
-                                "recomendarte una talla. Registra otra foto de cuerpo completo o guíate por la tabla genérica.",
+                                "recomendarte una talla. Registra otra foto de cuerpo completo o revisa la Guía de tallas.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                     OutlinedButton(onClick = onRegistrarFoto, modifier = Modifier.fillMaxWidth()) {
@@ -333,7 +333,6 @@ private fun SizeRecommendationBanner(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Registrar otra foto")
                     }
-                    TablaTallasGenerica()
                 }
             }
         }
