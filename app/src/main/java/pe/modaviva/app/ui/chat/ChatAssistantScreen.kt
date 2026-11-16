@@ -73,6 +73,7 @@ import androidx.compose.material.icons.outlined.DeleteSweep
 import pe.modaviva.app.domain.model.MensajeChat
 import pe.modaviva.app.domain.model.PrendaSugeridaChat
 import pe.modaviva.app.ui.format.formatearSoles
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -139,7 +140,7 @@ fun ChatAssistantScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
+                            contentDescription = stringResource(R.string.cd_back),
                         )
                     }
                 },

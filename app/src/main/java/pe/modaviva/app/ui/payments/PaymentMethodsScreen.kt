@@ -62,6 +62,8 @@ import pe.modaviva.app.ui.components.MvConfirmDialog
 import pe.modaviva.app.ui.components.MvSnackbarHost
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.res.stringResource
+import pe.modaviva.app.R
 
 /** HU-21 — Perfil > Métodos de pago: lista, agregar y eliminar tarjetas (CA-04, CA-05, CA-06). */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,7 +89,7 @@ fun PaymentMethodsScreen(
                 title = { Text("Métodos de pago", modifier = Modifier.semantics { heading() }) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 },
             )
