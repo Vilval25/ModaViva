@@ -13,6 +13,9 @@ interface SolicitudRepository {
     /** Solicitudes de un pedido (puede tener varias, una por prenda). */
     fun observarSolicitudesDePedido(pedidoId: String): Flow<List<SolicitudPostventa>>
 
+    /** Una solicitud por su id; emite null si no existe. */
+    fun observarSolicitud(solicitudId: String): Flow<SolicitudPostventa?>
+
     /**
      * Sube las fotos (máximo 3) a Storage y registra la solicitud 'En evaluación' con su número
      * (CA-04, CA-05). Marca si hubo prueba virtual previa de la prenda (CA-06).

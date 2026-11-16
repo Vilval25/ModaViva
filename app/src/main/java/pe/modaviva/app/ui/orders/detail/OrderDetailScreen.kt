@@ -67,8 +67,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
 import pe.modaviva.app.domain.model.EstadoPedido
-import pe.modaviva.app.domain.model.EstadoSolicitud
 import pe.modaviva.app.domain.model.SolicitudPostventa
+import pe.modaviva.app.ui.orders.postventa.EstadoSolicitudChip
 import pe.modaviva.app.domain.model.HitoPedido
 import pe.modaviva.app.domain.model.ItemPedido
 import pe.modaviva.app.domain.model.TipoMedioPago
@@ -84,6 +84,7 @@ import java.time.format.DateTimeFormatter
 fun OrderDetailScreen(
     onBack: () -> Unit,
     onSolicitarCambio: (String) -> Unit = {},
+    onVerSolicitud: (String) -> Unit = {},
     viewModel: OrderDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -406,7 +407,7 @@ fun OrderDetailScreen(
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
                                 )
-                                state.solicitudes.forEach { sol -> FilaSolicitud(sol) }
+                                state.solicitudes.forEach { sol -> FilaSolicitud(sol, onClick = { onVerSolicitud(sol.id) }) }
                                 if (puedeSolicitar) {
                                     Text(
                                         text = "Tienes hasta 7 días calendario desde la entrega para solicitar un cambio o una devolución.",
@@ -610,11 +611,14 @@ private fun FilaImporte(
     }
 }
 
-/** Una solicitud del pedido con su número y estado (HU-24 CA-05). */
+/** Una solicitud del pedido con su número y estado; al tocarla abre su detalle (HU-24 CA-05, CA-07). */
 @Composable
-private fun FilaSolicitud(sol: SolicitudPostventa) {
+private fun FilaSolicitud(sol: SolicitudPostventa, onClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
@@ -630,20 +634,7 @@ private fun FilaSolicitud(sol: SolicitudPostventa) {
             )
         }
         Spacer(modifier = Modifier.width(8.dp))
-        val (fondo, texto) = when (sol.estado) {
-            EstadoSolicitud.EN_EVALUACION -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
-            EstadoSolicitud.APROBADA -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
-            EstadoSolicitud.RECHAZADA -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
-        }
-        Surface(shape = RoundedCornerShape(12.dp), color = fondo) {
-            Text(
-                text = sol.estado.etiqueta,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = texto,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-            )
-        }
+        EstadoSolicitudChip(sol.estado)
     }
 }
 

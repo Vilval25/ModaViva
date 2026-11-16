@@ -53,6 +53,19 @@ class FirestoreSolicitudRepository @Inject constructor(
     override fun observarSolicitudesDePedido(pedidoId: String): Flow<List<SolicitudPostventa>> =
         observar { it.whereEqualTo("pedidoId", pedidoId) }
 
+    override fun observarSolicitud(solicitudId: String): Flow<SolicitudPostventa?> = callbackFlow {
+        val uid = auth.currentUser?.uid
+        if (uid == null) {
+            trySend(null)
+            close()
+            return@callbackFlow
+        }
+        val registro = coleccion(uid).document(solicitudId).addSnapshotListener { snap, error ->
+            trySend(if (error != null) null else snap?.data?.let { mapear(snap.id, it) })
+        }
+        awaitClose { registro.remove() }
+    }
+
     private fun observar(filtro: (Query) -> Query): Flow<List<SolicitudPostventa>> = callbackFlow {
         val uid = auth.currentUser?.uid
         if (uid == null) {
@@ -148,7 +161,7 @@ class FirestoreSolicitudRepository @Inject constructor(
             tipo = TipoNotificacion.SOLICITUD,
             titulo = "Solicitud ${solicitud.numeroSolicitud} registrada",
             texto = "Tu solicitud de ${solicitud.tipo.etiqueta.lowercase()} de ${solicitud.prendaNombre} está En evaluación.",
-            refId = solicitud.pedidoId,
+            refId = solicitud.id,
         )
         solicitud
     }
