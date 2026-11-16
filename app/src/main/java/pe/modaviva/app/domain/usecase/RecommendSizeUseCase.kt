@@ -14,7 +14,8 @@ import kotlin.math.abs
  * - CA-02: Reutilizable en el resultado del probador virtual y en la ficha del producto.
  * - CA-03: Si las medidas caen entre dos tallas, retorna ambas (ej. 'Entre M y L').
  * - CA-04: Aviso referencial visible en el resultado.
- * - CA-05: Si no hay datos suficientes o foto no permite pose, retorna fallback a tabla genérica.
+ * - CA-05: Sin altura o foto → SinDatosSuficientes; si la foto no permitió detectar hombros y
+ *   caderas → FotoInvalidaParaMedidas (registrar otra foto y tabla genérica).
  */
 class RecommendSizeUseCase @Inject constructor() {
 
@@ -31,9 +32,12 @@ class RecommendSizeUseCase @Inject constructor() {
             return RecomendacionTalla.SinDatosSuficientes
         }
 
+        // CA-05: si en la foto no se detectaron los puntos del cuerpo (hombros y caderas), no se
+        // inventan medidas: se pide registrar otra foto y se muestra la tabla de tallas genérica.
+        val ratioHombro = userProfile.ratioHombro ?: return RecomendacionTalla.FotoInvalidaParaMedidas
+        val ratioCadera = userProfile.ratioCadera ?: return RecomendacionTalla.FotoInvalidaParaMedidas
+
         // Estimación antropométrica a partir de la pose y altura del cliente:
-        val ratioHombro = userProfile.ratioHombro ?: 0.245
-        val ratioCadera = userProfile.ratioCadera ?: 0.220
 
         val hombroEstimado = ratioHombro * altura
         val pechoEstimado = hombroEstimado * 2.18

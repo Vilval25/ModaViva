@@ -227,16 +227,18 @@ class FirebaseFittingRepository @Inject constructor(
                 "fotoUrl" to downloadUrl,
                 "fotoActualizadaEn" to FieldValue.serverTimestamp(),
             )
-            if (rHombro != null) probadorMap["ratioHombro"] = rHombro
-            if (rCadera != null) probadorMap["ratioCadera"] = rCadera
+            probadorMap["ratioHombro"] = rHombro ?: FieldValue.delete()
+            probadorMap["ratioCadera"] = rCadera ?: FieldValue.delete()
 
             val updates = mutableMapOf<String, Any>(
                 "fotoProbadorUrl" to downloadUrl,
                 "probador" to probadorMap,
                 "actualizadoEn" to FieldValue.serverTimestamp(),
             )
-            if (rHombro != null) updates["ratioHombro"] = rHombro
-            if (rCadera != null) updates["ratioCadera"] = rCadera
+            // HU-15 CA-05: si en la nueva foto no se detectaron hombros y caderas, se borran las
+            // proporciones de la foto anterior para no recomendar tallas con datos que ya no valen.
+            updates["ratioHombro"] = rHombro ?: FieldValue.delete()
+            updates["ratioCadera"] = rCadera ?: FieldValue.delete()
 
             firestore.collection("clientes").document(user.uid)
                 .set(updates, SetOptions.merge())
@@ -248,8 +250,8 @@ class FirebaseFittingRepository @Inject constructor(
                 sessionRepository.signIn(
                     currentProfile.copy(
                         fotoProbadorUrl = downloadUrl,
-                        ratioHombro = rHombro ?: currentProfile.ratioHombro,
-                        ratioCadera = rCadera ?: currentProfile.ratioCadera,
+                        ratioHombro = rHombro,
+                        ratioCadera = rCadera,
                     )
                 )
             }

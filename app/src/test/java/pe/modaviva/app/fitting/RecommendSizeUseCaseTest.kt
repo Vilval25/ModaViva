@@ -58,8 +58,9 @@ class RecommendSizeUseCaseTest {
     private fun crearUsuario(
         alturaCm: Int?,
         fotoUrl: String? = "https://storage.modaviva.pe/user_1/foto.webp",
-        ratioHombro: Double? = null,
-        ratioCadera: Double? = null,
+        // Proporciones típicas detectadas en una foto de cuerpo completo.
+        ratioHombro: Double? = 0.245,
+        ratioCadera: Double? = 0.220,
     ): UserProfile {
         return UserProfile(
             uid = "user_1",
@@ -127,6 +128,17 @@ class RecommendSizeUseCaseTest {
 
         val sinSesion = null
         assertEquals(RecomendacionTalla.SinDatosSuficientes, useCase(prenda, sinSesion))
+    }
+
+    @Test
+    fun `HU-15 CA-05 foto sin puntos del cuerpo detectados retorna FotoInvalidaParaMedidas`() {
+        val prenda = crearPrendaPrueba()
+
+        val sinHombros = crearUsuario(alturaCm = 168, ratioHombro = null)
+        assertEquals(RecomendacionTalla.FotoInvalidaParaMedidas, useCase(prenda, sinHombros))
+
+        val sinCaderas = crearUsuario(alturaCm = 168, ratioCadera = null)
+        assertEquals(RecomendacionTalla.FotoInvalidaParaMedidas, useCase(prenda, sinCaderas))
     }
 
     @Test
