@@ -280,4 +280,9 @@
     <string name="cd_checkout_back_delivery">Volver a entrega</string>
     <string name="cd_close_alert">Cerrar alerta</string>
     <string name="cd_remove_coupon">Quitar cupón %1$s</string>
+
+    <!-- Accesibilidad: carrito -->
+    <string name="cd_cart_decrease">Quitar una unidad de %1$s</string>
+    <string name="cd_cart_increase">Agregar una unidad de %1$s</string>
+    <string name="cd_cart_remove">Quitar %1$s del carrito</string>
 </resources>

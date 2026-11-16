@@ -322,7 +322,7 @@ private fun CartItemCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Remove,
-                            contentDescription = "Disminuir",
+                            contentDescription = stringResource(R.string.cd_cart_decrease, item.nombre),
                             modifier = Modifier.size(16.dp),
                         )
                     }
@@ -340,7 +340,7 @@ private fun CartItemCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = "Aumentar",
+                            contentDescription = stringResource(R.string.cd_cart_increase, item.nombre),
                             modifier = Modifier.size(16.dp),
                         )
                     }
@@ -361,7 +361,7 @@ private fun CartItemCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.DeleteOutline,
-                    contentDescription = "Eliminar ítem",
+                    contentDescription = stringResource(R.string.cd_cart_remove, item.nombre),
                     tint = MaterialTheme.colorScheme.error,
                 )
             }
