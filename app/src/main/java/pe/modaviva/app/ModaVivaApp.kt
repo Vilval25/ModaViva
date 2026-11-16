@@ -1,5 +1,6 @@
 package pe.modaviva.app
 
+import pe.modaviva.app.worker.StockSyncWorker
 import pe.modaviva.app.domain.repository.PushTokenRepository
 import pe.modaviva.app.push.NotificacionesSistema
 import android.app.Application
@@ -24,6 +25,8 @@ class ModaVivaApp : Application() {
     override fun onCreate() {
         super.onCreate()
         NotificacionesSistema.crearCanal(this)
+        // HU-05 CA-03: el stock local se refresca al abrir la app y luego cada 15 min.
+        StockSyncWorker.programar(this)
         if (BuildConfig.DEBUG) checkBackend()
     }
 
