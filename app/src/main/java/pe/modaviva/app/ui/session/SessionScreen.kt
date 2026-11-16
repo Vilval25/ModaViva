@@ -17,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.AssignmentReturn
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.outlined.CreditCard
@@ -75,6 +76,7 @@ fun SessionScreen(
     onNavigateToAddresses: () -> Unit = {},
     onNavigateToActivity: () -> Unit = {},
     onNavigateToPaymentMethods: () -> Unit = {},
+    onNavigateToSolicitudes: () -> Unit = {},
     viewModel: SessionViewModel = hiltViewModel(),
 ) {
     val user by viewModel.currentUser.collectAsStateWithLifecycle()
@@ -198,6 +200,12 @@ fun SessionScreen(
                         title = paymentsTitle,
                         subtitle = stringResource(R.string.profile_item_payments_desc),
                         onClick = onNavigateToPaymentMethods,
+                    )
+                    ProfileItemRow(
+                        icon = Icons.AutoMirrored.Outlined.AssignmentReturn,
+                        title = "Mis solicitudes",
+                        subtitle = "Cambios y devoluciones de tus pedidos",
+                        onClick = onNavigateToSolicitudes,
                     )
                     ProfileItemRow(
                         icon = Icons.Outlined.Insights,

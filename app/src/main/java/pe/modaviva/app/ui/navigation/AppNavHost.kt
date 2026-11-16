@@ -1,5 +1,7 @@
 package pe.modaviva.app.ui.navigation
 
+import pe.modaviva.app.ui.orders.postventa.MisSolicitudesScreen
+import pe.modaviva.app.ui.orders.postventa.SolicitudDetalleScreen
 import pe.modaviva.app.ui.orders.postventa.SolicitudScreen
 import pe.modaviva.app.ui.payments.PaymentMethodsScreen
 import pe.modaviva.app.push.AvisoPush
@@ -304,6 +306,7 @@ private fun NavGraphBuilder.topLevelGraph(
             onNavigateToAddresses = { navController.navigate(Routes.ADDRESSES) },
             onNavigateToActivity = { navController.navigate(Routes.MY_ACTIVITY) },
             onNavigateToPaymentMethods = { navController.navigate(Routes.PAYMENT_METHODS) },
+            onNavigateToSolicitudes = { navController.navigate(Routes.MIS_SOLICITUDES) },
         )
     }
     composable(Routes.PAYMENT_METHODS) {
@@ -497,6 +500,22 @@ private fun NavGraphBuilder.overlayGraph(
         OrderDetailScreen(
             onBack = { navController.popBackStack() },
             onSolicitarCambio = { pedidoId -> navController.navigate(Routes.solicitud(pedidoId)) },
+            onVerSolicitud = { id -> navController.navigate(Routes.solicitudDetalle(id)) },
+        )
+    }
+    composable(Routes.MIS_SOLICITUDES) {
+        MisSolicitudesScreen(
+            onBack = { navController.popBackStack() },
+            onSolicitudClick = { id -> navController.navigate(Routes.solicitudDetalle(id)) },
+        )
+    }
+    composable(
+        route = Routes.SOLICITUD_DETALLE,
+        arguments = listOf(navArgument("solicitudId") { type = NavType.StringType }),
+    ) {
+        SolicitudDetalleScreen(
+            onBack = { navController.popBackStack() },
+            onVerPedido = { pedidoId -> navController.navigate(Routes.orderDetail(pedidoId)) },
         )
     }
     composable(
@@ -633,7 +652,9 @@ private fun NavHostController.abrirDestinoDeAviso(tipo: TipoNotificacion, refId:
     val ref = refId?.takeIf { it.isNotBlank() } ?: return false
     val ruta = when (tipo) {
         TipoNotificacion.PRUEBA_VIRTUAL -> Routes.prenda(ref)
-        TipoNotificacion.PEDIDO, TipoNotificacion.SOLICITUD -> Routes.orderDetail(ref)
+        TipoNotificacion.PEDIDO -> Routes.orderDetail(ref)
+        // HU-24: los avisos de solicitudes abren su detalle; los antiguos apuntaban al pedido.
+        TipoNotificacion.SOLICITUD -> if (ref.startsWith("ped_")) Routes.orderDetail(ref) else Routes.solicitudDetalle(ref)
         TipoNotificacion.ELIMINACION_FOTO -> ref.toLongOrNull()?.let { Routes.constanciaFoto(it) }
         TipoNotificacion.GENERAL -> null
     } ?: return false

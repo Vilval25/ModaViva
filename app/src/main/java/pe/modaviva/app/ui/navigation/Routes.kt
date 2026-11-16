@@ -17,6 +17,8 @@ object Routes {
     const val ORDER_CONFIRMED = "order_confirmed/{pedidoId}"
     const val ORDER_DETAIL = "order_detail/{pedidoId}"
     const val SOLICITUD = "solicitud/{pedidoId}"
+    const val MIS_SOLICITUDES = "mis_solicitudes"
+    const val SOLICITUD_DETALLE = "solicitud_detalle/{solicitudId}"
     const val ADDRESSES = "addresses"
     const val MY_ACTIVITY = "my_activity"
     const val PAYMENT_METHODS = "payment_methods"
@@ -30,5 +32,6 @@ object Routes {
     fun orderConfirmed(pedidoId: String) = "order_confirmed/$pedidoId"
     fun orderDetail(pedidoId: String) = "order_detail/$pedidoId"
     fun solicitud(pedidoId: String) = "solicitud/$pedidoId"
+    fun solicitudDetalle(solicitudId: String) = "solicitud_detalle/$solicitudId"
     fun constanciaFoto(eliminadaEnMillis: Long) = "constancia_foto/$eliminadaEnMillis"
 }
