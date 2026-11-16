@@ -40,6 +40,11 @@ import pe.modaviva.app.domain.model.Prenda
 import pe.modaviva.app.domain.model.Stock
 import pe.modaviva.app.domain.model.Tienda
 import pe.modaviva.app.ui.stock.StockAvailability
+import androidx.compose.ui.res.stringResource
+import pe.modaviva.app.R
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 
 /**
  * Secciones desplegables de información de la prenda (Detalles, Material y cuidado,
@@ -263,12 +268,15 @@ private fun AccordionItem(
     onToggle: () -> Unit,
     content: @Composable () -> Unit,
 ) {
+    val estado = stringResource(if (isExpanded) R.string.cd_state_expanded else R.string.cd_state_collapsed)
+    val accion = stringResource(if (isExpanded) R.string.cd_action_collapse else R.string.cd_action_expand)
     Column(modifier = Modifier.fillMaxWidth()) {
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onToggle)
+                .clickable(onClickLabel = accion, role = Role.Button, onClick = onToggle)
+                .semantics { stateDescription = estado }
                 .padding(vertical = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
@@ -281,7 +289,7 @@ private fun AccordionItem(
             )
             Icon(
                 imageVector = if (isExpanded) Icons.Default.Remove else Icons.Default.Add,
-                contentDescription = if (isExpanded) "Colapsar $title" else "Expandir $title",
+                contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(20.dp),
             )

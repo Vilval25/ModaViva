@@ -338,4 +338,10 @@
 
     <!-- Accesibilidad: selector de talla -->
     <string name="cd_size_sold_out">Agotada</string>
+
+    <!-- Accesibilidad: secciones desplegables -->
+    <string name="cd_state_expanded">Expandida</string>
+    <string name="cd_state_collapsed">Contraída</string>
+    <string name="cd_action_expand">expandir</string>
+    <string name="cd_action_collapse">contraer</string>
 </resources>
